@@ -1,0 +1,14 @@
+*.o
+Makefile
+Makefile.in
+missing
+ar-lib
+autom4te.cache/
+compile
+config.guess
+config.log
+config.status
+config.sub
+configure
+depcomp
+aclocal.m4
