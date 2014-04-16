@@ -12,3 +12,10 @@ config.sub
 configure
 depcomp
 aclocal.m4
+.deps
+.libs
+ircd
+m4/
+ltmain.sh
+install-sh
+libtool

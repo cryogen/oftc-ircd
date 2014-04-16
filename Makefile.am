@@ -1,1 +1,1 @@
-SUBDIRS=libuv src
+SUBDIRS=json-c libuv src include

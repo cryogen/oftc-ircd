@@ -13,9 +13,10 @@ AC_PROG_INSTALL
 AC_PROG_CC
 AC_PROG_CC_C99
 
-AC_CONFIG_SUBDIRS([libuv])
 
-AC_CONFIG_FILES([Makefile\
-                  src/Makefile])
+AC_CONFIG_SUBDIRS([libuv json-c])
+AC_CONFIG_FILES([ Makefile      \
+                  src/Makefile  \
+                  include/Makefile])
 
 AC_OUTPUT
