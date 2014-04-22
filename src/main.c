@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "serverstate.h"
+
 static void
 process_commandline(char *const *args, int arg_count)
 {
@@ -39,17 +41,23 @@ process_commandline(char *const *args, int arg_count)
     switch(opt)
     {
       case 'c':
+        serverstate_set_config_path(optarg);
         break;
 
       default:
-        fprintf(stderr, "Unknown option: %c", opt);
+        fprintf(stderr, "Usage: some stuff");
         exit(EXIT_FAILURE);
         break;
     }
   }
+
+  if(serverstate_get_config_path() == NULL)
+  {
+    serverstate_set_config_path("ircd.conf");
+  }
 }
 
-int main(char *argv[], int argc)
+int main(int argc, char *argv[])
 {
   uv_loop_t *uv_loop;
 

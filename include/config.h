@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014, Stuart Walsh
  * All rights reserved.
- * config.c config subsystem
+ * config.h config subsystem
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met: 
@@ -24,7 +24,4 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-void
-config_init()
-{
-}
+void config_init();

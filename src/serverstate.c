@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014, Stuart Walsh
  * All rights reserved.
- * config.c config subsystem
+ * serverstate.c server state related code
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met: 
@@ -24,7 +24,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-void
-config_init()
+#include <stdlib.h>
+#include <string.h>
+
+#include "serverstate.h"
+
+static struct server_state ServerState = { 0 };
+
+const char *
+serverstate_get_config_path()
 {
+  return ServerState.config_path;
+}
+
+void
+serverstate_set_config_path(const char *path)
+{
+  free((void *)ServerState.config_path);
+  ServerState.config_path = strdup(path);
 }
