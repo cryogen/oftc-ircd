@@ -24,7 +24,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <json.h>
+#include "serverstate.h"
+
 void
 config_init()
 {
+}
+
+void
+config_load()
+{
+  const char *path = serverstate_get_config_path();
+
+  if(path == NULL)
+    return;
+
+
 }

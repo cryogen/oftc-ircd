@@ -30,6 +30,7 @@
 #include <stdlib.h>
 
 #include "serverstate.h"
+#include "config.h"
 
 static void
 process_commandline(char *const *args, int arg_count)
@@ -62,10 +63,11 @@ int main(int argc, char *argv[])
   uv_loop_t *uv_loop;
 
   process_commandline(argv, argc);
+  config_init();
 
   uv_loop = uv_default_loop();
 
-  uv_run(uv_loop, UV_RUN_ONCE);
+  uv_run(uv_loop, UV_RUN_DEFAULT);
 
   return 0;
 }
