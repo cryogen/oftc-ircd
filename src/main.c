@@ -30,6 +30,8 @@
 #include <stdlib.h>
 
 #include "serverstate.h"
+#include "hash.h"
+#include "config.h"
 
 static void
 process_commandline(char *const *args, int arg_count)
@@ -60,6 +62,9 @@ process_commandline(char *const *args, int arg_count)
 int main(int argc, char *argv[])
 {
   uv_loop_t *uv_loop;
+
+  hash_init();
+  config_init();
 
   process_commandline(argv, argc);
 

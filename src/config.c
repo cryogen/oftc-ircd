@@ -24,7 +24,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "hash.h"
+
+static Hash *ConfigHash;
+
 void
 config_init()
 {
+  ConfigHash = hash_new("Configuration", HASHLEN);
+}
+
+void 
+config_register_section(const char *sectionName)
+{
+  
 }

@@ -25,3 +25,5 @@
  */
 
 void config_init();
+
+void config_register_section(const char *sectionName);
