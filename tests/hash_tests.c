@@ -25,6 +25,7 @@
  */
 
 #include <check.h>
+#include <stdlib.h>
 
 #include "hash.h"
 #include "murmurhash3.h"
@@ -57,6 +58,7 @@ START_TEST(hash_new_WhenCalledWithNameAndLenReturnsHash)
     ck_assert(h != NULL);
     ck_assert(h->Name != NULL);
     ck_assert_str_eq(h->Name, "Test hash");
+    ck_assert(h->Buckets != NULL);
 }
 END_TEST
 

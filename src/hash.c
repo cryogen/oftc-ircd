@@ -59,7 +59,7 @@ hash_new(const char *name, unsigned int length)
 
     newHash->Name = name;
     newHash->Length = length;
-    newHash->Buckets = Malloc(length * sizeof(void *));
+    newHash->Buckets = Malloc(length * sizeof(uint32_t));
 
     return newHash;
 }
