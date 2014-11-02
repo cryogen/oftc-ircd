@@ -4,13 +4,13 @@
  * hash.c hashing subsystem
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met: 
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, thi
- *    list of conditions and the following disclaimer. 
+ *    list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution. 
+ *    and/or other materials provided with the distribution.
 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" A
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -30,7 +30,7 @@
 
 #include <string.h>
 
-void 
+void
 hash_init()
 {
 }
@@ -38,29 +38,29 @@ hash_init()
 Hash *
 hash_new(const char *name, unsigned int length)
 {
-  Hash *newHash;
+    Hash *newHash;
 
-  if(length == 0)
-  {
-    return NULL;
-  }
+    if(length == 0)
+    {
+        return NULL;
+    }
 
-  newHash = Malloc(sizeof(Hash));
+    newHash = Malloc(sizeof(Hash));
 
-  newHash->Name = name;
-  newHash->Length = length;
-  newHash->Buckets = Malloc(length * sizeof(void *));
+    newHash->Name = name;
+    newHash->Length = length;
+    newHash->Buckets = Malloc(length * sizeof(void *));
 
-  return newHash;
+    return newHash;
 }
 
 void
 hash_add_string(Hash *hash, const char *key, HashItem *value)
 {
-  unsigned int hashVal;
-  
-  MurmurHash3_x86_32(key, strlen(key), HASHSEED, &hashVal);
-  
-  value->Next = hash->Buckets[hashVal];
-  hash->Buckets[hashVal] = value;
+    unsigned int hashVal;
+
+    MurmurHash3_x86_32(key, strlen(key), HASHSEED, &hashVal);
+
+    value->Next = hash->Buckets[hashVal];
+    hash->Buckets[hashVal] = value;
 }

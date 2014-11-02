@@ -4,13 +4,13 @@
  * main.c main startup functions
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met: 
+ * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer. 
+ *    list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution. 
+ *    and/or other materials provided with the distribution.
 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -36,41 +36,41 @@
 static void
 process_commandline(char *const *args, int arg_count)
 {
-  int opt;
+    int opt;
 
-  while((opt = getopt(arg_count, args, "c:")) != -1)
-  {
-    switch(opt)
+    while((opt = getopt(arg_count, args, "c:")) != -1)
     {
-      case 'c':
-        serverstate_set_config_path(optarg);
-        break;
+        switch(opt)
+        {
+            case 'c':
+                serverstate_set_config_path(optarg);
+                break;
 
-      default:
-        fprintf(stderr, "Usage: some stuff");
-        exit(EXIT_FAILURE);
-        break;
+            default:
+                fprintf(stderr, "Usage: some stuff");
+                exit(EXIT_FAILURE);
+                break;
+        }
     }
-  }
 
-  if(serverstate_get_config_path() == NULL)
-  {
-    serverstate_set_config_path("ircd.conf");
-  }
+    if(serverstate_get_config_path() == NULL)
+    {
+        serverstate_set_config_path("ircd.conf");
+    }
 }
 
 int main(int argc, char *argv[])
 {
-  uv_loop_t *uv_loop;
+    uv_loop_t *uv_loop;
 
-  hash_init();
-  config_init();
-
-  process_commandline(argv, argc);
-
-  uv_loop = uv_default_loop();
-
-  uv_run(uv_loop, UV_RUN_ONCE);
-
-  return 0;
+    hash_init();
+    config_init();
+    
+    process_commandline(argv, argc);
+    
+    uv_loop = uv_default_loop();
+    
+    uv_run(uv_loop, UV_RUN_ONCE);
+    
+    return 0;
 }
