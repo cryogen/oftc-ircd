@@ -43,5 +43,5 @@ struct _HashItem
 };
 
 void hash_init();
-Hash *hash_new(const char *name, int length);
+Hash *hash_new(const char *name, unsigned int length);
 void hash_add_string(Hash *hash, const char *key, HashItem *value);

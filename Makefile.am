@@ -1,1 +1,1 @@
-SUBDIRS=json-c libuv src include
+SUBDIRS=json-c libuv src include tests

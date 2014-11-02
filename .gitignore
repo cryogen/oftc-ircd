@@ -1,4 +1,6 @@
 *.o
+*.lo
+*.la
 Makefile
 Makefile.in
 missing
@@ -20,3 +22,6 @@ ltmain.sh
 install-sh
 libtool
 test-driver
+tests/hash_tests
+*.log
+*.trs

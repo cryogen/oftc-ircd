@@ -36,9 +36,16 @@ hash_init()
 }
 
 Hash *
-hash_new(const char *name, int length)
+hash_new(const char *name, unsigned int length)
 {
-  Hash *newHash = Malloc(sizeof(Hash));
+  Hash *newHash;
+
+  if(length == 0)
+  {
+    return NULL;
+  }
+
+  newHash = Malloc(sizeof(Hash));
 
   newHash->Name = name;
   newHash->Length = length;
