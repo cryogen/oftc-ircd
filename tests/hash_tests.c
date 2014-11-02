@@ -28,6 +28,17 @@
 #include <stdlib.h>
 
 #include "hash.h"
+#include "murmurhash3.h"
+
+static unsigned int
+get_hash_value(const char *key)
+{
+    unsigned int hashVal;
+
+    MurmurHash3_x86_32(key, strlen(key), HASHSEED, &hashVal);
+
+    return hashVal;
+}
 
 void
 setup()
@@ -66,6 +77,36 @@ START_TEST(hash_new_WhenCalledWithZeroLenReturnsNull)
 }
 END_TEST
 
+START_TEST(hash_add_string_WhenCalledPutsValueInHash)
+{
+    HashItem *item = malloc(sizeof(HashItem));
+    Hash *h = hash_new("Test", HASHLEN);
+    unsigned int hashKey = get_hash_value("Test");
+
+    hash_add_string(h, "Test", item);
+
+    ck_assert(h->Buckets[hashKey] != NULL);
+    ck_assert(h->Buckets[hashKey] == item);
+}
+END_TEST
+
+START_TEST(hash_add_string_WhenCalledTwicePutsValueInHashBucket)
+{
+    HashItem *item = malloc(sizeof(HashItem));
+    HashItem *item2 = malloc(sizeof(HashItem));
+    Hash *h = hash_new("Test", HASHLEN);
+    unsigned int hashKey = get_hash_value("Test");
+
+    hash_add_string(h, "Test", item);
+    hash_add_string(h, "Test", item2);
+
+    ck_assert(h->Buckets[hashKey] != NULL);
+    ck_assert(h->Buckets[hashKey] == item2);
+    ck_assert(h->Buckets[hashKey]->Next != NULL);
+    ck_assert(h->Buckets[hashKey]->Next == item);
+}
+END_TEST
+
 Suite *
 hash_suite()
 {
@@ -80,6 +121,8 @@ hash_suite()
     tcase_add_test(tcCore, hash_new_WhenCalledWithNameAndLenReturnsHash);
     tcase_add_test(tcCore, hash_new_WhenCalledWithNullNameAndLenReturnsHash);
     tcase_add_test(tcCore, hash_new_WhenCalledWithZeroLenReturnsNull);
+    tcase_add_test(tcCore, hash_add_string_WhenCalledPutsValueInHash);
+    tcase_add_test(tcCore, hash_add_string_WhenCalledTwicePutsValueInHashBucket);
     suite_add_tcase(s, tcCore);
 
     return s;

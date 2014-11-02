@@ -27,15 +27,15 @@
 #define HASHLEN 4294967295 /* Max unsigned int */
 #define HASHSEED 0x6d4c2a10
 
+typedef struct _Hash Hash;
+typedef struct _HashItem HashItem;
+
 struct _Hash
 {
     const char *Name;
     unsigned int Length;
-    void **Buckets;
+    HashItem **Buckets;
 };
-
-typedef struct _Hash Hash;
-typedef struct _HashItem HashItem;
 
 struct _HashItem
 {

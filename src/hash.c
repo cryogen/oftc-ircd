@@ -30,6 +30,16 @@
 
 #include <string.h>
 
+static unsigned int
+get_hash_value(const char *key)
+{
+    unsigned int hashVal;
+
+    MurmurHash3_x86_32(key, strlen(key), HASHSEED, &hashVal);
+
+    return hashVal;
+}
+
 void
 hash_init()
 {
@@ -57,9 +67,7 @@ hash_new(const char *name, unsigned int length)
 void
 hash_add_string(Hash *hash, const char *key, HashItem *value)
 {
-    unsigned int hashVal;
-
-    MurmurHash3_x86_32(key, strlen(key), HASHSEED, &hashVal);
+    unsigned int hashVal = get_hash_value(key);
 
     value->Next = hash->Buckets[hashVal];
     hash->Buckets[hashVal] = value;
