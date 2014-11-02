@@ -24,6 +24,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-void config_init();
+typedef struct _ConfigSection ConfigSection;
 
-void config_register_section(const char *sectionName);
+struct _ConfigSection
+{
+    ConfigSection *Next;
+    const char *Name;
+};
+
+void config_init();
+ConfigSection *config_register_section(const char *sectionName);

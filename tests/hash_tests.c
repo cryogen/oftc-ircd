@@ -25,7 +25,6 @@
  */
 
 #include <check.h>
-#include <stdlib.h>
 
 #include "hash.h"
 #include "murmurhash3.h"
@@ -40,13 +39,13 @@ get_hash_value(const char *key)
     return hashVal;
 }
 
-void
+static void
 setup()
 {
     hash_init();
 }
 
-void
+static void
 cleanup()
 {
 }
@@ -110,7 +109,7 @@ END_TEST
 Suite *
 hash_suite()
 {
-    Suite  *s;
+    Suite *s;
     TCase *tcCore;
 
     s = suite_create("Hash");
@@ -118,29 +117,14 @@ hash_suite()
     tcCore = tcase_create("Core");
 
     tcase_add_unchecked_fixture(tcCore, setup, cleanup);
+
     tcase_add_test(tcCore, hash_new_WhenCalledWithNameAndLenReturnsHash);
     tcase_add_test(tcCore, hash_new_WhenCalledWithNullNameAndLenReturnsHash);
     tcase_add_test(tcCore, hash_new_WhenCalledWithZeroLenReturnsNull);
     tcase_add_test(tcCore, hash_add_string_WhenCalledPutsValueInHash);
     tcase_add_test(tcCore, hash_add_string_WhenCalledTwicePutsValueInHashBucket);
+
     suite_add_tcase(s, tcCore);
 
     return s;
-}
-
-int
-main()
-{
-    int numberFailed;
-    Suite *s;
-    SRunner *sr;
-
-    s = hash_suite();
-    sr = srunner_create(s);
-
-    srunner_run_all(sr, CK_NORMAL);
-    numberFailed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-    
-    return (numberFailed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

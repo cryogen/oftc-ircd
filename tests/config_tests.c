@@ -24,26 +24,47 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "hash.h"
-#include "memory.h"
+#include <check.h>
+
 #include "config.h"
 
-static Hash *ConfigHash;
-
-void
-config_init()
+static void
+setup()
 {
-    ConfigHash = hash_new("Configuration", HASHLEN);
+    config_init();
 }
 
-ConfigSection *
-config_register_section(const char *sectionName)
+static void
+cleanup()
 {
-    ConfigSection *newSection = Malloc(sizeof(ConfigSection));
+}
 
-    newSection->Name = sectionName;
 
-    hash_add_string(ConfigHash, sectionName, (HashItem *)newSection);
+START_TEST(config_register_section_WhenCalledWithNameReturnsSection)
+{
+    ConfigSection *section = config_register_section("Test");
 
-    return newSection;
+    ck_assert(section != NULL);
+    ck_assert(section->Name != NULL);
+    ck_assert_str_eq(section->Name, "Test");
+}
+END_TEST
+
+Suite *
+config_suite()
+{
+    Suite *s;
+    TCase *tcCore;
+
+    s = suite_create("config");
+
+    tcCore = tcase_create("Core");
+
+    tcase_add_unchecked_fixture(tcCore, setup, cleanup);
+
+    tcase_add_test(tcCore, config_register_section_WhenCalledWithNameReturnsSection);
+
+    suite_add_tcase(s, tcCore);
+    
+    return s;
 }

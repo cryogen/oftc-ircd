@@ -1,5 +1,9 @@
-TESTS = hash_tests
-check_PROGRAMS = hash_tests
-hash_tests_SOURCES = hash_tests.c $(top_builddir)/include/hash.h
-hash_tests_CFLAGS = @CHECK_CFLAGS@ -I$(top_builddir)/include
-hash_tests_LDADD = $(top_builddir)/src/libircd.la @CHECK_LIBS@
+TESTS = oftc_ircd_tests
+check_PROGRAMS = oftc_ircd_tests
+
+oftc_ircd_tests_SOURCES =   oftc_ircd_tests.c \
+                            hash_tests.c \
+                            config_tests.c
+
+AM_CPPFLAGS = @CHECK_CFLAGS@ -I$(top_builddir)/include
+oftc_ircd_tests_LDADD = $(top_builddir)/src/libircd.la @CHECK_LIBS@

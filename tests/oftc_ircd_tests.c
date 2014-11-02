@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014, Stuart Walsh
  * All rights reserved.
- * config.c config subsystem
+ * oftc_ircd_tests - Main test runner
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,26 +24,26 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "hash.h"
-#include "memory.h"
-#include "config.h"
+#include <check.h>
+#include <stdlib.h>
 
-static Hash *ConfigHash;
+Suite *hash_suite();
+Suite *config_suite();
 
-void
-config_init()
+int
+main()
 {
-    ConfigHash = hash_new("Configuration", HASHLEN);
-}
+    int numberFailed;
+    SRunner *sr;
 
-ConfigSection *
-config_register_section(const char *sectionName)
-{
-    ConfigSection *newSection = Malloc(sizeof(ConfigSection));
+    sr = srunner_create(hash_suite());
+    sr = srunner_create(config_suite());
 
-    newSection->Name = sectionName;
+    srunner_run_all(sr, CK_NORMAL);
 
-    hash_add_string(ConfigHash, sectionName, (HashItem *)newSection);
+    numberFailed = srunner_ntests_failed(sr);
 
-    return newSection;
+    srunner_free(sr);
+
+    return (numberFailed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
