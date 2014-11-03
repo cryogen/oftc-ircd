@@ -37,7 +37,7 @@ main()
     SRunner *sr;
 
     sr = srunner_create(hash_suite());
-    sr = srunner_create(config_suite());
+    srunner_add_suite(sr, config_suite());
 
     srunner_run_all(sr, CK_NORMAL);
 

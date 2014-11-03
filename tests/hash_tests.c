@@ -70,11 +70,12 @@ START_TEST(hash_new_WhenCalledWithNullNameAndLenReturnsHash)
 }
 END_TEST
 
-START_TEST(hash_new_WhenCalledWithZeroLenReturnsNull)
+START_TEST(hash_new_WhenCalledWithZeroLenReturnsHashWithDefaultLength)
 {
-    Hash *h = hash_new("Fail", 0);
+    Hash *h = hash_new("Test", 0);
 
-    ck_assert(h == NULL);
+    ck_assert(h != NULL);
+    ck_assert_int_eq(h->Length, DEFAULT_HASH_SIZE);
 }
 END_TEST
 
@@ -86,8 +87,8 @@ START_TEST(hash_add_string_WhenCalledPutsValueInHash)
 
     hash_add_string(h, "Test", item);
 
-    ck_assert(h->Buckets[hashKey] != NULL);
-    ck_assert(h->Buckets[hashKey] == item);
+    ck_assert(h->Buckets[hashKey % DEFAULT_HASH_SIZE] != NULL);
+    ck_assert(h->Buckets[hashKey % DEFAULT_HASH_SIZE] == item);
 }
 END_TEST
 
@@ -96,7 +97,7 @@ START_TEST(hash_add_string_WhenCalledTwicePutsValueInHashBucket)
     HashItem *item = malloc(sizeof(HashItem));
     HashItem *item2 = malloc(sizeof(HashItem));
     Hash *h = hash_new("Test", DEFAULT_HASH_SIZE);
-    unsigned int hashKey = get_hash_value("Test");
+    unsigned int hashKey = get_hash_value("Test") % DEFAULT_HASH_SIZE;
 
     hash_add_string(h, "Test", item);
     hash_add_string(h, "Test", item2);
@@ -122,7 +123,7 @@ hash_suite()
 
     tcase_add_test(tcCore, hash_new_WhenCalledWithNameAndLenReturnsHash);
     tcase_add_test(tcCore, hash_new_WhenCalledWithNullNameAndLenReturnsHash);
-    tcase_add_test(tcCore, hash_new_WhenCalledWithZeroLenReturnsNull);
+    tcase_add_test(tcCore, hash_new_WhenCalledWithZeroLenReturnsHashWithDefaultLength);
     tcase_add_test(tcCore, hash_add_string_WhenCalledPutsValueInHash);
     tcase_add_test(tcCore, hash_add_string_WhenCalledTwicePutsValueInHashBucket);
 
