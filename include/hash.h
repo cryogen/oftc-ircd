@@ -24,7 +24,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define HASHLEN 4294967295 /* Max unsigned int */
+#define DEFAULT_HASH_SIZE 65535
 #define HASHSEED 0x6d4c2a10
 
 typedef struct _Hash Hash;

@@ -53,7 +53,7 @@ cleanup()
 
 START_TEST(hash_new_WhenCalledWithNameAndLenReturnsHash)
 {
-    Hash *h = hash_new("Test hash", HASHLEN);
+    Hash *h = hash_new("Test hash", DEFAULT_HASH_SIZE);
 
     ck_assert(h != NULL);
     ck_assert(h->Name != NULL);
@@ -64,7 +64,7 @@ END_TEST
 
 START_TEST(hash_new_WhenCalledWithNullNameAndLenReturnsHash)
 {
-    Hash *h = hash_new(NULL, HASHLEN);
+    Hash *h = hash_new(NULL, DEFAULT_HASH_SIZE);
 
     ck_assert(h != NULL);
 }
@@ -81,7 +81,7 @@ END_TEST
 START_TEST(hash_add_string_WhenCalledPutsValueInHash)
 {
     HashItem *item = malloc(sizeof(HashItem));
-    Hash *h = hash_new("Test", HASHLEN);
+    Hash *h = hash_new("Test", DEFAULT_HASH_SIZE);
     unsigned int hashKey = get_hash_value("Test");
 
     hash_add_string(h, "Test", item);
@@ -95,7 +95,7 @@ START_TEST(hash_add_string_WhenCalledTwicePutsValueInHashBucket)
 {
     HashItem *item = malloc(sizeof(HashItem));
     HashItem *item2 = malloc(sizeof(HashItem));
-    Hash *h = hash_new("Test", HASHLEN);
+    Hash *h = hash_new("Test", DEFAULT_HASH_SIZE);
     unsigned int hashKey = get_hash_value("Test");
 
     hash_add_string(h, "Test", item);

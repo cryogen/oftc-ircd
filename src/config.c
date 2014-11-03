@@ -33,7 +33,7 @@ static Hash *ConfigHash;
 void
 config_init()
 {
-    ConfigHash = hash_new("Configuration", HASHLEN);
+    ConfigHash = hash_new("Configuration", DEFAULT_HASH_SIZE);
 }
 
 ConfigSection *
