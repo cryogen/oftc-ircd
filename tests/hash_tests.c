@@ -88,7 +88,7 @@ START_TEST(hash_add_string_WhenCalledPutsValueInHash)
     hash_add_string(h, "Test", item);
 
     ck_assert(h->Buckets[hashKey % DEFAULT_HASH_SIZE] != NULL);
-    ck_assert(h->Buckets[hashKey % DEFAULT_HASH_SIZE] == item);
+    ck_assert(h->Buckets[hashKey % DEFAULT_HASH_SIZE]->Data == item);
 }
 END_TEST
 
@@ -103,9 +103,9 @@ START_TEST(hash_add_string_WhenCalledTwicePutsValueInHashBucket)
     hash_add_string(h, "Test", item2);
 
     ck_assert(h->Buckets[hashKey] != NULL);
-    ck_assert(h->Buckets[hashKey] == item2);
+    ck_assert(h->Buckets[hashKey]->Data == item2);
     ck_assert(h->Buckets[hashKey]->Next != NULL);
-    ck_assert(h->Buckets[hashKey]->Next == item);
+    ck_assert(h->Buckets[hashKey]->Next->Data == item);
 }
 END_TEST
 

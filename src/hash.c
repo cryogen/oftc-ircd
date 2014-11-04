@@ -70,10 +70,12 @@ hash_new(const char *name, unsigned int length)
 }
 
 void
-hash_add_string(Hash *hash, const char *key, HashItem *value)
+hash_add_string(Hash *hash, const char *key, void *value)
 {
     unsigned int hashVal = get_hash_value(key) % hash->Length;
+    HashItem *newItem = Malloc(sizeof(HashItem));
 
-    value->Next = hash->Buckets[hashVal];
-    hash->Buckets[hashVal] = value;
+    newItem->Next = hash->Buckets[hashVal];
+    newItem->Data = value;
+    hash->Buckets[hashVal] = newItem;
 }

@@ -31,6 +31,7 @@
 static void
 setup()
 {
+    hash_init();
     config_init();
 }
 
@@ -39,7 +40,6 @@ cleanup()
 {
 }
 
-
 START_TEST(config_register_section_WhenCalledWithNameReturnsSection)
 {
     ConfigSection *section = config_register_section("Test");
@@ -47,6 +47,26 @@ START_TEST(config_register_section_WhenCalledWithNameReturnsSection)
     ck_assert(section != NULL);
     ck_assert(section->Name != NULL);
     ck_assert_str_eq(section->Name, "Test");
+}
+END_TEST
+
+START_TEST(config_register_field_WhenCalledWithSectionSucceeds)
+{
+    ConfigSection *section = config_register_section("Test");
+
+    ck_assert(section != NULL);
+
+    config_register_field(section, "Test", json_type_string);
+}
+END_TEST
+
+START_TEST(config_register_field_WhenCalledWithNullSectionDoesNotCrash)
+{
+    ConfigSection *section = config_register_section("Test");
+
+    ck_assert(section != NULL);
+
+    config_register_field(NULL, "Test", json_type_string);
 }
 END_TEST
 
@@ -63,7 +83,8 @@ config_suite()
     tcase_add_unchecked_fixture(tcCore, setup, cleanup);
 
     tcase_add_test(tcCore, config_register_section_WhenCalledWithNameReturnsSection);
-
+    tcase_add_test(tcCore, config_register_field_WhenCalledWithSectionSucceeds);
+    tcase_add_test(tcCore, config_register_field_WhenCalledWithNullSectionDoesNotCrash);
     suite_add_tcase(s, tcCore);
     
     return s;

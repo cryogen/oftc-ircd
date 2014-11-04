@@ -43,10 +43,11 @@ struct _Hash
 struct _HashItem
 {
     HashItem *Next;
+    void *Data;
 };
 
 void hash_init();
 Hash *hash_new(const char *name, unsigned int length);
-void hash_add_string(Hash *hash, const char *key, HashItem *value);
+void hash_add_string(Hash *hash, const char *key, void *value);
 
 #endif /* defined(__oftc_ircd__hash__) */
