@@ -24,6 +24,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __oftc_ircd__hash__
+#define __oftc_ircd__hash__
+
 #define DEFAULT_HASH_SIZE 65535
 #define HASHSEED 0x6d4c2a10
 
@@ -45,3 +48,5 @@ struct _HashItem
 void hash_init();
 Hash *hash_new(const char *name, unsigned int length);
 void hash_add_string(Hash *hash, const char *key, HashItem *value);
+
+#endif /* defined(__oftc_ircd__hash__) */

@@ -26,3 +26,6 @@ tests/hash_tests
 *.log
 *.trs
 oftc_ircd_tests
+*.gcno
+cov
+*.info

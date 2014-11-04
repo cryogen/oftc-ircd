@@ -24,13 +24,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __oftc_ircd__config__
+#define __oftc_ircd__config__
+
+#include <json-c/json.h>
+
+#include "hash.h"
+
 typedef struct _ConfigSection ConfigSection;
+typedef struct _ConfigField ConfigField;
 
 struct _ConfigSection
 {
+    /* HashItem implementation, this needs to be at the top */
     ConfigSection *Next;
+    /* End HashItem implementation */
     const char *Name;
+    Hash *Fields;
+};
+
+struct _ConfigField
+{
+    /* HashItem implementation, this needs to be at the top */
+    ConfigField *Next;
+    /* End HashItem implementation */
+    const char *Name;
+    json_type Type;
 };
 
 void config_init();
 ConfigSection *config_register_section(const char *sectionName);
+void config_register_field(ConfigSection *section, const char *fieldName,
+                           json_type fieldType);
+
+#endif /* defined(__oftc_ircd__config__) */

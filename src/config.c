@@ -42,8 +42,20 @@ config_register_section(const char *sectionName)
     ConfigSection *newSection = Malloc(sizeof(ConfigSection));
 
     newSection->Name = sectionName;
+    newSection->Fields = hash_new("Config Section", DEFAULT_HASH_SIZE);
 
     hash_add_string(ConfigHash, sectionName, (HashItem *)newSection);
 
     return newSection;
+}
+
+void
+config_register_field(ConfigSection *section, const char *fieldName,
+                           json_type fieldType)
+{
+    ConfigField *field = Malloc(sizeof(ConfigField));
+    field->Name = fieldName;
+    field->Type = fieldType;
+
+    hash_add_string(section->Fields, fieldName, (HashItem *)field);
 }

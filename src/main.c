@@ -32,13 +32,14 @@
 #include "serverstate.h"
 #include "hash.h"
 #include "config.h"
+#include "listener.h"
 
 static void
-process_commandline(char *const *args, int arg_count)
+process_commandline(char *const *args, int argCount)
 {
     int opt;
 
-    while((opt = getopt(arg_count, args, "c:")) != -1)
+    while((opt = getopt(argCount, args, "c:")) != -1)
     {
         switch(opt)
         {
@@ -65,6 +66,7 @@ int main(int argc, char *argv[])
 
     hash_init();
     config_init();
+    listener_init();
     
     process_commandline(argv, argc);
     

@@ -24,5 +24,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __oftc_ircd__memory__
+#define __oftc_ircd__memory__
+
 void *Malloc(unsigned int length);
 void Free(void *ptr);
+
+#endif /* defined(__oftc_ircd__memory__) */
