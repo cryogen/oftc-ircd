@@ -47,6 +47,7 @@ struct _ConfigField
 };
 
 void config_init();
+void config_load();
 ConfigSection *config_register_section(const char *sectionName);
 void config_register_field(ConfigSection *section, const char *fieldName,
                            json_type fieldType);

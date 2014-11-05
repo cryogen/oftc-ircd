@@ -27,9 +27,11 @@
 #ifndef __oftc_ircd__serverstate__
 #define __oftc_ircd__serverstate__
 
-struct server_state
+typedef struct _ServerState ServerState;
+
+struct _ServerState
 {
-    const char *config_path;
+    const char *ConfigPath;
 };
 
 void serverstate_set_config_path(const char *);

@@ -29,17 +29,17 @@
 
 #include "serverstate.h"
 
-static struct server_state ServerState = { 0 };
+static ServerState CurrentServerState = { 0 };
 
 const char *
 serverstate_get_config_path()
 {
-    return ServerState.config_path;
+    return CurrentServerState.ConfigPath;
 }
 
 void
 serverstate_set_config_path(const char *path)
 {
-    free((void *)ServerState.config_path);
-    ServerState.config_path = strdup(path);
+    free((void *)CurrentServerState.ConfigPath);
+    CurrentServerState.ConfigPath = strdup(path);
 }

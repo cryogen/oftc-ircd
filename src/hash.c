@@ -79,3 +79,16 @@ hash_add_string(Hash *hash, const char *key, void *value)
     newItem->Data = value;
     hash->Buckets[hashVal] = newItem;
 }
+
+void *
+hash_find(Hash *hash, const char *key)
+{
+    unsigned int hashVal = get_hash_value(key) % hash->Length;
+
+    if(hash->Buckets[hashVal] == NULL)
+    {
+        return NULL;
+    }
+
+    return hash->Buckets[hashVal]->Data;
+}

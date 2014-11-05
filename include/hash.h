@@ -49,5 +49,6 @@ struct _HashItem
 void hash_init();
 Hash *hash_new(const char *name, unsigned int length);
 void hash_add_string(Hash *hash, const char *key, void *value);
+void *hash_find(Hash *hash, const char *key);
 
 #endif /* defined(__oftc_ircd__hash__) */

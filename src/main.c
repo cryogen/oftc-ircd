@@ -69,7 +69,9 @@ int main(int argc, char *argv[])
     listener_init();
     
     process_commandline(argv, argc);
-    
+
+    config_load();
+
     uv_loop = uv_default_loop();
     
     uv_run(uv_loop, UV_RUN_ONCE);

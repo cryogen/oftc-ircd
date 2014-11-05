@@ -27,6 +27,11 @@
 #include "hash.h"
 #include "memory.h"
 #include "config.h"
+#include "serverstate.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <json-c/json.h>
 
 static Hash *ConfigHash;
 
@@ -34,6 +39,60 @@ void
 config_init()
 {
     ConfigHash = hash_new("Configuration", DEFAULT_HASH_SIZE);
+}
+
+void
+config_load()
+{
+    FILE *fptr = fopen(serverstate_get_config_path(), "r");
+    char fileBuffer[8192];
+    json_object *obj;
+    struct json_tokener *tokener = json_tokener_new();
+
+    if(fptr == NULL)
+    {
+        fprintf(stderr, "Error opening config %s\n", serverstate_get_config_path());
+        return;
+    }
+
+    while(fgets(fileBuffer, sizeof(fileBuffer), fptr) != NULL)
+    {
+        obj = json_tokener_parse_ex(tokener, fileBuffer, strlen(fileBuffer));
+
+        if(obj == NULL &&
+           json_tokener_get_error(tokener) != json_tokener_continue)
+        {
+            fprintf(stderr, "Error parsing config\n");
+            break;
+        }
+
+        if(obj != NULL)
+        {
+            if(json_object_get_type(obj) != json_type_object)
+            {
+                fprintf(stderr, "Invalid config, could not find root object\n");
+                return;
+            }
+
+            json_object_object_foreach(obj, key, val)
+            {
+                ConfigSection *section;
+
+                section = hash_find(ConfigHash, key);
+
+                if(section == NULL)
+                {
+                    fprintf(stderr, "Unknown config section: %s\n", key);
+                }
+            }
+        }
+    }
+
+    if(obj == NULL)
+    {
+        enum json_tokener_error err = json_tokener_get_error(tokener);
+        printf("%p %s\n", obj, json_tokener_error_desc(err));
+    }
 }
 
 ConfigSection *
