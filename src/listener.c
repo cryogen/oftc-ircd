@@ -24,13 +24,38 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdio.h>
+
 #include "listener.h"
 #include "config.h"
+#include "memory.h"
+
+static void
+listener_set_name(Listener *listener, json_object *obj)
+{
+    listener->Name = json_object_get_string(obj);
+
+    printf("%s\n", listener->Name);
+}
+
+static Listener *
+listener_new_listener()
+{
+    return Malloc(sizeof(Listener));
+}
 
 void
 listener_init()
 {
-    ConfigSection *section = config_register_section("listeners");
+    ConfigSection *section = config_register_section("listeners", true);
 
-    config_register_field(section, "name", json_type_string);
+    section->NewElement = (ConfigNewElementHandler)listener_new_listener;
+
+    ConfigField *field = Malloc(sizeof(ConfigField));
+
+    field->Name = "name";
+    field->Type = json_type_string;
+    field->Handler = (ConfigFieldHandler)listener_set_name;
+
+    config_register_field(section, field);
 }

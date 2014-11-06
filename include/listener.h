@@ -27,6 +27,13 @@
 #ifndef __oftc_ircd__listener__
 #define __oftc_ircd__listener__
 
+typedef struct _Listener Listener;
+
+struct _Listener
+{
+    const char *Name;
+};
+
 void listener_init();
 
 #endif /* defined(__oftc_ircd__listener__) */

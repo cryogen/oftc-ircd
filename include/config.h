@@ -28,28 +28,34 @@
 #define __oftc_ircd__config__
 
 #include <json-c/json.h>
+#include <stdbool.h>
 
 #include "hash.h"
 
 typedef struct _ConfigSection ConfigSection;
 typedef struct _ConfigField ConfigField;
 
+typedef void (*ConfigFieldHandler)(void *, json_object *);
+typedef void *(*ConfigNewElementHandler)(void);
+
 struct _ConfigSection
 {
     const char *Name;
     Hash *Fields;
+    bool IsArray;
+    ConfigNewElementHandler NewElement;
 };
 
 struct _ConfigField
 {
     const char *Name;
     json_type Type;
+    ConfigFieldHandler Handler;
 };
 
 void config_init();
 void config_load();
-ConfigSection *config_register_section(const char *sectionName);
-void config_register_field(ConfigSection *section, const char *fieldName,
-                           json_type fieldType);
+ConfigSection *config_register_section(const char *sectionName, bool isArray);
+void config_register_field(ConfigSection *section, ConfigField *field);
 
 #endif /* defined(__oftc_ircd__config__) */

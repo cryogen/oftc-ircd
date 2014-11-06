@@ -33,12 +33,12 @@
 #include <string.h>
 #include <json-c/json.h>
 
-static Hash *ConfigHash;
+static Hash *ConfigSections;
 
 void
 config_init()
 {
-    ConfigHash = hash_new("Configuration", DEFAULT_HASH_SIZE);
+    ConfigSections = hash_new("Configuration", DEFAULT_HASH_SIZE);
 }
 
 void
@@ -46,7 +46,7 @@ config_load()
 {
     FILE *fptr = fopen(serverstate_get_config_path(), "r");
     char fileBuffer[8192];
-    json_object *obj;
+    struct json_object *obj;
     struct json_tokener *tokener = json_tokener_new();
 
     if(fptr == NULL)
@@ -66,23 +66,62 @@ config_load()
             break;
         }
 
-        if(obj != NULL)
+        if(obj == NULL)
         {
-            if(json_object_get_type(obj) != json_type_object)
+            continue;
+        }
+
+        if(json_object_get_type(obj) != json_type_object)
+        {
+            fprintf(stderr, "Invalid config, could not find root object\n");
+            break;
+        }
+
+        json_object_object_foreach(obj, key, val)
+        {
+            ConfigSection *section;
+
+            section = hash_find(ConfigSections, key);
+
+            if(section == NULL)
             {
-                fprintf(stderr, "Invalid config, could not find root object\n");
-                return;
+                fprintf(stderr, "Unknown config section: %s\n", key);
+                break;
             }
 
-            json_object_object_foreach(obj, key, val)
+            if(section->IsArray)
             {
-                ConfigSection *section;
+                int index = 0;
 
-                section = hash_find(ConfigHash, key);
-
-                if(section == NULL)
+                for(index = 0; index < json_object_array_length(val); index++)
                 {
-                    fprintf(stderr, "Unknown config section: %s\n", key);
+                    json_object *obj = json_object_array_get_idx(val, index);
+                    void *element = section->NewElement();
+
+                    if(json_object_get_type(obj) != json_type_object)
+                    {
+                        break;
+                    }
+
+                    json_object_object_foreach(obj, subKey, subVal)
+                    {
+                        ConfigField *field = hash_find(section->Fields, subKey);
+
+                        if(field == NULL)
+                        {
+                            fprintf(stderr, "Unknown field %s\n", subKey);
+                            break;
+                        }
+
+                        if(json_object_get_type(subVal) != field->Type)
+                        {
+                            fprintf(stderr, "Wrong field type in field %s\n",
+                                    subKey);
+                            break;
+                        }
+
+                        field->Handler(element, subVal);
+                    }
                 }
             }
         }
@@ -93,35 +132,31 @@ config_load()
         enum json_tokener_error err = json_tokener_get_error(tokener);
         printf("%p %s\n", obj, json_tokener_error_desc(err));
     }
+
+    fclose(fptr);
 }
 
 ConfigSection *
-config_register_section(const char *sectionName)
+config_register_section(const char *sectionName, bool isArray)
 {
     ConfigSection *newSection = Malloc(sizeof(ConfigSection));
 
     newSection->Name = sectionName;
     newSection->Fields = hash_new("Config Section", DEFAULT_HASH_SIZE);
+    newSection->IsArray = isArray;
 
-    hash_add_string(ConfigHash, sectionName, newSection);
+    hash_add_string(ConfigSections, sectionName, newSection);
 
     return newSection;
 }
 
 void
-config_register_field(ConfigSection *section, const char *fieldName,
-                           json_type fieldType)
+config_register_field(ConfigSection *section, ConfigField *field)
 {
-    ConfigField *field;
-
-    if(section == NULL)
+    if(section == NULL || field == NULL)
     {
         return;
     }
 
-    field = Malloc(sizeof(ConfigField));
-    field->Name = fieldName;
-    field->Type = fieldType;
-
-    hash_add_string(section->Fields, fieldName, field);
+    hash_add_string(section->Fields, field->Name, field);
 }
