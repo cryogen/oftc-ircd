@@ -97,7 +97,12 @@ vector_get(Vector *this, size_t index)
 {
     if(this == NULL)
     {
-        return 0;
+        return NULL;
+    }
+
+    if(index >= this->Length)
+    {
+        return NULL;
     }
 
     return this->Data + (index * this->ElementSize);

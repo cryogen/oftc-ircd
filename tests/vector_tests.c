@@ -202,6 +202,20 @@ START_TEST(vector_get_WhenCalledReturnsCorrectValue)
 }
 END_TEST
 
+START_TEST(vector_get_WhenCalledWithOutOfRangeIndexReturnsNull)
+{
+    Vector *vector;
+
+    vector = vector_new(0, 4);
+
+    vector_push_back(vector, "TEST");
+    vector_push_back(vector, "1TES");
+
+    ck_assert(vector_get(vector, 2) == NULL);
+    ck_assert_str_eq(vector_get(vector, 1), "1TES");
+}
+END_TEST
+
 Suite *
 vector_suite()
 {
@@ -228,6 +242,7 @@ vector_suite()
     tcase_add_test(tcCore, vector_length_WhenCalledReturnsCorrectLength);
     tcase_add_test(tcCore, vector_get_WhenCalledWithNullThisReturnsNull);
     tcase_add_test(tcCore, vector_get_WhenCalledReturnsCorrectValue);
+    tcase_add_test(tcCore, vector_get_WhenCalledWithOutOfRangeIndexReturnsNull);
 
     suite_add_tcase(s, tcCore);
     
