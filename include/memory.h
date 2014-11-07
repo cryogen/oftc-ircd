@@ -27,7 +27,10 @@
 #ifndef __oftc_ircd__memory__
 #define __oftc_ircd__memory__
 
-void *Malloc(unsigned int length);
+#include <stddef.h>
+
+void *Malloc(size_t length);
+void *Realloc(void *ptr, size_t length);
 void Free(void *ptr);
 
 #endif /* defined(__oftc_ircd__memory__) */

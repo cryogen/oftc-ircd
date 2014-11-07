@@ -122,6 +122,8 @@ config_load()
 
                         field->Handler(element, subVal);
                     }
+
+                    section->SectionDone(element);
                 }
             }
         }

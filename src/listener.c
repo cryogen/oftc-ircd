@@ -29,6 +29,9 @@
 #include "listener.h"
 #include "config.h"
 #include "memory.h"
+#include "vector.h"
+
+static Vector *listeners;
 
 static void
 listener_set_name(Listener *listener, json_object *obj)
@@ -44,12 +47,21 @@ listener_new_listener()
     return Malloc(sizeof(Listener));
 }
 
+static void
+listener_add(Listener *listener)
+{
+    vector_push_back(listeners, listener);
+    
+    Free(listener);
+}
+
 void
 listener_init()
 {
     ConfigSection *section = config_register_section("listeners", true);
 
     section->NewElement = (ConfigNewElementHandler)listener_new_listener;
+    section->SectionDone = (ConfigSectionDoneHandler)listener_add;
 
     ConfigField *field = Malloc(sizeof(ConfigField));
 
@@ -58,4 +70,6 @@ listener_init()
     field->Handler = (ConfigFieldHandler)listener_set_name;
 
     config_register_field(section, field);
+
+    listeners = vector_new(0, sizeof(Listener));
 }

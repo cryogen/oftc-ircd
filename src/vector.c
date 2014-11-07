@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014, Stuart Walsh
  * All rights reserved.
- * oftc_ircd_tests - Main test runner
+ * main.c main startup functions
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,30 +24,81 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <check.h>
-#include <stdlib.h>
+#include <string.h>
 
-Suite *hash_suite();
-Suite *config_suite();
-Suite *listener_suite();
-Suite *vector_suite();
+#include "vector.h"
+#include "memory.h"
 
-int
-main()
+static void
+vector_resize(Vector *this, size_t newSize)
 {
-    int numberFailed;
-    SRunner *sr;
+    if(newSize <= this->Capacity)
+    {
+        return;
+    }
 
-    sr = srunner_create(hash_suite());
-    srunner_add_suite(sr, config_suite());
-    srunner_add_suite(sr, listener_suite());
-    srunner_add_suite(sr, vector_suite());
+    this->Capacity *= 2;
+    this->Data = Realloc(this->Data, this->Capacity * this->ElementSize);
+}
 
-    srunner_run_all(sr, CK_NORMAL);
+Vector *
+vector_new(size_t capacity, size_t elementSize)
+{
+    Vector *newVector;
 
-    numberFailed = srunner_ntests_failed(sr);
+    if(elementSize == 0)
+    {
+        return NULL;
+    }
 
-    srunner_free(sr);
+    if(capacity == 0)
+    {
+        capacity = DEFAULT_VECTOR_CAPACITY;
+    }
 
-    return (numberFailed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+    newVector = Malloc(sizeof(Vector));
+
+    newVector->Data = Malloc(sizeof(elementSize * capacity));
+    newVector->Capacity = capacity;
+    newVector->ElementSize = elementSize;
+
+    return newVector;
+}
+
+void
+vector_push_back(Vector *this, void *element)
+{
+    if(this == NULL || element == NULL)
+    {
+        return;
+    }
+    
+    vector_resize(this, this->Length + 1);
+
+    memcpy(this->Data + (this->Length * this->ElementSize), element,
+           this->ElementSize);
+
+    ++this->Length;
+}
+
+inline size_t
+vector_length(Vector *this)
+{
+    if(this == NULL)
+    {
+        return 0;
+    }
+    
+    return this->Length;
+}
+
+inline void *
+vector_get(Vector *this, size_t index)
+{
+    if(this == NULL)
+    {
+        return 0;
+    }
+
+    return this->Data + (index * this->ElementSize);
 }

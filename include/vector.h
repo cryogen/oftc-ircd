@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014, Stuart Walsh
  * All rights reserved.
- * memory.c memory related functions
+ * vector.c vector implementation
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,28 +24,26 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
+#ifndef __oftc_ircd__vector__
+#define __oftc_ircd__vector__
 
-#include "memory.h"
+#include <stddef.h>
 
-inline void *
-Malloc(size_t length)
+#define DEFAULT_VECTOR_CAPACITY 4096
+
+typedef struct _Vector Vector;
+
+struct _Vector
 {
-    void *ptr = calloc(1, length);
+    size_t Length;
+    size_t Capacity;
+    size_t ElementSize;
+    char *Data;
+};
 
-    return ptr;
-}
+Vector *vector_new(size_t capacity, size_t elementSize);
+void vector_push_back(Vector *this, void *data);
+void *vector_get(Vector *this, size_t index);
+size_t vector_length(Vector *this);
 
-inline void *
-Realloc(void *ptr, size_t size)
-{
-    void *newPtr = realloc(ptr, size);
-
-    return newPtr;
-}
-
-inline void
-Free(void *ptr)
-{
-    free(ptr);
-}
+#endif /* defined(__oftc_ircd__vector__) */

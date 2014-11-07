@@ -42,7 +42,7 @@ cleanup()
 
 START_TEST(config_register_section_WhenCalledWithNameReturnsSection)
 {
-    ConfigSection *section = config_register_section("Test");
+    ConfigSection *section = config_register_section("Test", false);
 
     ck_assert(section != NULL);
     ck_assert(section->Name != NULL);
@@ -52,21 +52,29 @@ END_TEST
 
 START_TEST(config_register_field_WhenCalledWithSectionSucceeds)
 {
-    ConfigSection *section = config_register_section("Test");
+    ConfigSection *section = config_register_section("Test", false);
+    ConfigField field;
+
+    field.Name = "Test";
+    field.Type = json_type_string;
 
     ck_assert(section != NULL);
 
-    config_register_field(section, "Test", json_type_string);
+    config_register_field(section, &field);
 }
 END_TEST
 
 START_TEST(config_register_field_WhenCalledWithNullSectionDoesNotCrash)
 {
-    ConfigSection *section = config_register_section("Test");
+    ConfigSection *section = config_register_section("Test", false);
+    ConfigField field;
+
+    field.Name = "Test";
+    field.Type = json_type_string;
 
     ck_assert(section != NULL);
 
-    config_register_field(NULL, "Test", json_type_string);
+    config_register_field(NULL, &field);
 }
 END_TEST
 

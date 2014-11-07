@@ -37,6 +37,7 @@ typedef struct _ConfigField ConfigField;
 
 typedef void (*ConfigFieldHandler)(void *, json_object *);
 typedef void *(*ConfigNewElementHandler)(void);
+typedef void (*ConfigSectionDoneHandler)(void *);
 
 struct _ConfigSection
 {
@@ -44,6 +45,7 @@ struct _ConfigSection
     Hash *Fields;
     bool IsArray;
     ConfigNewElementHandler NewElement;
+    ConfigSectionDoneHandler SectionDone;
 };
 
 struct _ConfigField
