@@ -30,9 +30,9 @@
 #include "memory.h"
 
 static void
-vector_resize(Vector *this, size_t newSize)
+vector_check_size(Vector *this)
 {
-    if(newSize <= this->Capacity)
+    if(this->Length < this->Capacity)
     {
         return;
     }
@@ -73,7 +73,7 @@ vector_push_back(Vector *this, void *element)
         return;
     }
     
-    vector_resize(this, this->Length + 1);
+    vector_check_size(this);
 
     memcpy(this->Data + (this->Length * this->ElementSize), element,
            this->ElementSize);
