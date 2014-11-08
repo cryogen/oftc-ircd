@@ -54,28 +54,20 @@ END_TEST
 START_TEST(config_register_field_WhenCalledWithSectionSucceeds)
 {
     ConfigSection *section = config_register_section("Test", false);
-    ConfigField field;
-
-    field.Name = "Test";
-    field.Type = json_type_string;
 
     ck_assert(section != NULL);
 
-    config_register_field(section, &field);
+    config_register_field(section, "Test", json_type_string, NULL);
 }
 END_TEST
 
 START_TEST(config_register_field_WhenCalledWithNullSectionDoesNotCrash)
 {
     ConfigSection *section = config_register_section("Test", false);
-    ConfigField field;
-
-    field.Name = "Test";
-    field.Type = json_type_string;
 
     ck_assert(section != NULL);
 
-    config_register_field(NULL, &field);
+    config_register_field(NULL, "Test", json_type_string, NULL);
 }
 END_TEST
 
@@ -163,20 +155,14 @@ START_TEST(config_load_NonArrayNoHandlerDoesNotCrash)
 {
     bool ret;
     ConfigSection *section;
-    ConfigField *field;
 
     serverstate_set_config_path("test5.conf");
 
     section = config_register_section("test", false);
 
-    field = malloc(sizeof(ConfigField));
-    field->Name = "foo";
-    field->Type = json_type_string;
-    field->Handler = NULL;
-
     callbackCalled = false;
 
-    config_register_field(section, field);
+    config_register_field(section, "foo", json_type_string, NULL);
 
     ret = config_load();
 
@@ -189,18 +175,12 @@ START_TEST(config_load_NotArrayAndConfigHasArrayDoesNotCrash)
 {
     bool ret;
     ConfigSection *section;
-    ConfigField *field;
 
     serverstate_set_config_path("test6.conf");
 
     section = config_register_section("test", false);
 
-    field = malloc(sizeof(ConfigField));
-    field->Name = "foo";
-    field->Type = json_type_string;
-    field->Handler = NULL;
-
-    config_register_field(section, field);
+    config_register_field(section, "foo", json_type_string, NULL);
 
     callbackCalled = false;
 
@@ -215,7 +195,6 @@ START_TEST(config_load_ArrayNoNewElementHandlerDoesNotCrash)
 {
     bool ret;
     ConfigSection *section;
-    ConfigField *field;
 
     serverstate_set_config_path("test6.conf");
 
@@ -233,18 +212,12 @@ START_TEST(config_load_ArrayNoHandlerDoesNotCrash)
 {
     bool ret;
     ConfigSection *section;
-    ConfigField *field;
 
     serverstate_set_config_path("test6.conf");
 
     section = config_register_section("test", true);
 
-    field = malloc(sizeof(ConfigField));
-    field->Name = "foo";
-    field->Type = json_type_string;
-    field->Handler = NULL;
-
-    config_register_field(section, field);
+    config_register_field(section, "foo", json_type_string, NULL);
 
     callbackCalled = false;
 
@@ -259,18 +232,12 @@ START_TEST(config_load_NonArraySectionSetsValue)
 {
     bool ret;
     ConfigSection *section;
-    ConfigField *field;
 
     serverstate_set_config_path("test5.conf");
 
     section = config_register_section("test", false);
 
-    field = malloc(sizeof(ConfigField));
-    field->Name = "foo";
-    field->Type = json_type_string;
-    field->Handler = foo_field_handler;
-
-    config_register_field(section, field);
+    config_register_field(section, "foo", json_type_string, foo_field_handler);
 
     callbackCalled = false;
     ret = config_load();
@@ -284,7 +251,6 @@ START_TEST(config_load_ArraySectionWrongTypeDoesNotCrash)
 {
     bool ret;
     ConfigSection *section;
-    ConfigField *field;
 
     serverstate_set_config_path("test6.conf");
 
@@ -300,18 +266,12 @@ START_TEST(config_load_ArraySectionSetsValue)
 {
     bool ret;
     ConfigSection *section;
-    ConfigField *field;
 
     serverstate_set_config_path("test6.conf");
 
     section = config_register_section("test", true);
 
-    field = malloc(sizeof(ConfigField));
-    field->Name = "foo";
-    field->Type = json_type_string;
-    field->Handler = foo_field_handler;
-
-    config_register_field(section, field);
+    config_register_field(section, "foo", json_type_string, foo_field_handler);
 
     callbackCalled = false;
     ret = config_load();
@@ -325,18 +285,12 @@ START_TEST(config_load_WhenFieldHasWrongTypeDoesNotCrash)
 {
     bool ret;
     ConfigSection *section;
-    ConfigField *field;
 
     serverstate_set_config_path("test7.conf");
 
     section = config_register_section("test", true);
 
-    field = malloc(sizeof(ConfigField));
-    field->Name = "foo";
-    field->Type = json_type_string;
-    field->Handler = foo_field_handler;
-
-    config_register_field(section, field);
+    config_register_field(section, "foo", json_type_string, foo_field_handler);
 
     ret = config_load();
 
@@ -366,20 +320,14 @@ START_TEST(config_load_WhenNewElementSpecifiedIsCalledPerItem)
 {
     bool ret;
     ConfigSection *section;
-    ConfigField *field;
 
     serverstate_set_config_path("test8.conf");
 
     section = config_register_section("test", true);
     section->NewElement = new_element_callback;
-    section->SectionDone = section_done_callback;
+    section->ElementDone = section_done_callback;
 
-    field = malloc(sizeof(ConfigField));
-    field->Name = "foo";
-    field->Type = json_type_string;
-    field->Handler = NULL;
-
-    config_register_field(section, field);
+    config_register_field(section, "foo", json_type_string, NULL);
 
     newElementCounter = 0;
     doneElementCounter = 0;

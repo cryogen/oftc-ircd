@@ -156,9 +156,9 @@ config_load()
 
                     process_object(section, element, item);
 
-                    if(section->SectionDone != NULL)
+                    if(section->ElementDone != NULL)
                     {
-                        section->SectionDone(element);
+                        section->ElementDone(element);
                     }
                 }
             }
@@ -200,12 +200,20 @@ config_register_section(const char *sectionName, bool isArray)
 }
 
 void
-config_register_field(ConfigSection *section, ConfigField *field)
+config_register_field(ConfigSection *section, const char *name, json_type type,
+                      ConfigFieldHandler handler)
 {
-    if(section == NULL || field == NULL)
+    ConfigField *field;
+
+    if(section == NULL)
     {
         return;
     }
+
+    field = Malloc(sizeof(ConfigField));
+    field->Name = name;
+    field->Type = type;
+    field->Handler = handler;
 
     hash_add_string(section->Fields, field->Name, field);
 }

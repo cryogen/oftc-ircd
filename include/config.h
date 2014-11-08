@@ -36,16 +36,18 @@ typedef struct _ConfigSection ConfigSection;
 typedef struct _ConfigField ConfigField;
 
 typedef void (*ConfigFieldHandler)(void *, json_object *);
-typedef void *(*ConfigNewElementHandler)(void);
+typedef void *(*ConfigNewElementHandler)();
 typedef void (*ConfigSectionDoneHandler)(void *);
+typedef void (*ConfigSetDefaultsHandler)();
 
 struct _ConfigSection
 {
     const char *Name;
     Hash *Fields;
     bool IsArray;
+    ConfigSetDefaultsHandler SetDefaults;
     ConfigNewElementHandler NewElement;
-    ConfigSectionDoneHandler SectionDone;
+    ConfigSectionDoneHandler ElementDone;
 };
 
 struct _ConfigField
@@ -58,6 +60,6 @@ struct _ConfigField
 void config_init();
 bool config_load();
 ConfigSection *config_register_section(const char *sectionName, bool isArray);
-void config_register_field(ConfigSection *section, ConfigField *field);
+void config_register_field(ConfigSection *, const char *, json_type, ConfigFieldHandler);
 
 #endif /* defined(__oftc_ircd__config__) */

@@ -61,15 +61,10 @@ listener_init()
     ConfigSection *section = config_register_section("listeners", true);
 
     section->NewElement = (ConfigNewElementHandler)listener_new_listener;
-    section->SectionDone = (ConfigSectionDoneHandler)listener_add;
+    section->ElementDone = (ConfigSectionDoneHandler)listener_add;
 
-    ConfigField *field = Malloc(sizeof(ConfigField));
-
-    field->Name = "name";
-    field->Type = json_type_string;
-    field->Handler = (ConfigFieldHandler)listener_set_name;
-
-    config_register_field(section, field);
+    config_register_field(section, "name", json_type_string,
+                          (ConfigFieldHandler)listener_set_name);
 
     listeners = vector_new(0, sizeof(Listener));
 }
