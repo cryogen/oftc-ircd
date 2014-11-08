@@ -27,6 +27,7 @@
 #include <check.h>
 
 #include "config.h"
+#include "serverstate.h"
 
 static void
 setup()
@@ -78,6 +79,128 @@ START_TEST(config_register_field_WhenCalledWithNullSectionDoesNotCrash)
 }
 END_TEST
 
+START_TEST(config_load_WhenPathIsNullReturnsFalse)
+{
+    bool ret = config_load();
+
+    ck_assert(!ret);
+}
+END_TEST
+
+START_TEST(config_load_WhenPathNotFoundReturnsFalse)
+{
+    bool ret;
+
+    serverstate_set_config_path("not.found");
+
+    ret = config_load();
+
+    ck_assert(!ret);
+}
+END_TEST
+
+START_TEST(config_load_WhenFileInvalidJsonReturnsFalse)
+{
+    bool ret;
+
+    serverstate_set_config_path("test1.conf");
+
+    ret = config_load();
+
+    ck_assert(!ret);
+}
+END_TEST
+
+START_TEST(config_load_WhenFileNoObjectRootReturnsFalse)
+{
+    bool ret;
+
+    serverstate_set_config_path("test2.conf");
+
+    ret = config_load();
+
+    ck_assert(!ret);
+}
+END_TEST
+
+START_TEST(config_load_WhenObjectValueWrongTypeReturnsOk)
+{
+    bool ret;
+
+    serverstate_set_config_path("test3.conf");
+
+    config_register_section("test", false);
+
+    ret = config_load();
+
+    ck_assert(ret);
+}
+END_TEST
+
+START_TEST(config_load_WhenUnknownSectionReturnsOk)
+{
+    bool ret;
+
+    serverstate_set_config_path("test4.conf");
+
+    config_register_section("test", false);
+
+    ret = config_load();
+
+    ck_assert(ret);
+}
+END_TEST
+
+static void foo_field_handler(void *unused, json_object *obj)
+{
+    ck_assert_str_eq(json_object_get_string(obj), "bar");
+}
+
+START_TEST(config_load_NonArraySectionSetsValue)
+{
+    bool ret;
+    ConfigSection *section;
+    ConfigField *field;
+
+    serverstate_set_config_path("test5.conf");
+
+    section = config_register_section("test", false);
+
+    field = malloc(sizeof(ConfigField));
+    field->Name = "foo";
+    field->Type = json_type_string;
+    field->Handler = foo_field_handler;
+
+    config_register_field(section, field);
+
+    ret = config_load();
+
+    ck_assert(ret);
+}
+END_TEST
+
+START_TEST(config_load_NonArrayNoHandlerDoesNotCrash)
+{
+    bool ret;
+    ConfigSection *section;
+    ConfigField *field;
+
+    serverstate_set_config_path("test5.conf");
+
+    section = config_register_section("test", false);
+
+    field = malloc(sizeof(ConfigField));
+    field->Name = "foo";
+    field->Type = json_type_string;
+
+    config_register_field(section, field);
+
+    ret = config_load();
+
+    ck_assert(ret);
+}
+END_TEST
+
 Suite *
 config_suite()
 {
@@ -93,6 +216,14 @@ config_suite()
     tcase_add_test(tcCore, config_register_section_WhenCalledWithNameReturnsSection);
     tcase_add_test(tcCore, config_register_field_WhenCalledWithSectionSucceeds);
     tcase_add_test(tcCore, config_register_field_WhenCalledWithNullSectionDoesNotCrash);
+    tcase_add_test(tcCore, config_load_WhenPathIsNullReturnsFalse);
+    tcase_add_test(tcCore, config_load_WhenPathNotFoundReturnsFalse);
+    tcase_add_test(tcCore, config_load_WhenFileInvalidJsonReturnsFalse);
+    tcase_add_test(tcCore, config_load_WhenFileNoObjectRootReturnsFalse);
+    tcase_add_test(tcCore, config_load_WhenObjectValueWrongTypeReturnsOk);
+    tcase_add_test(tcCore, config_load_WhenUnknownSectionReturnsOk);
+    tcase_add_test(tcCore, config_load_NonArraySectionSetsValue);
+    tcase_add_test(tcCore, config_load_NonArrayNoHandlerDoesNotCrash);
     suite_add_tcase(s, tcCore);
     
     return s;

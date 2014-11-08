@@ -56,7 +56,7 @@ struct _ConfigField
 };
 
 void config_init();
-void config_load();
+bool config_load();
 ConfigSection *config_register_section(const char *sectionName, bool isArray);
 void config_register_field(ConfigSection *section, ConfigField *field);
 

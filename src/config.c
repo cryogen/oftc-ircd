@@ -35,34 +35,72 @@
 
 static Hash *ConfigSections;
 
+static void
+process_object(ConfigSection *section, void *element, json_object *obj)
+{
+    json_object_object_foreach(obj, subKey, subVal)
+    {
+        ConfigField *field = hash_find(section->Fields, subKey);
+
+        if(field == NULL)
+        {
+            fprintf(stderr, "Unknown field %s\n", subKey);
+            return;
+        }
+
+        if(json_object_get_type(subVal) != field->Type)
+        {
+            fprintf(stderr, "Wrong field type in field %s\n", subKey);
+            return;
+        }
+
+        if(field->Handler != NULL)
+        {
+            field->Handler(element, subVal);
+        }
+    }
+}
+
+
 void
 config_init()
 {
     ConfigSections = hash_new("Configuration", DEFAULT_HASH_SIZE);
 }
 
-void
+bool
 config_load()
 {
-    FILE *fptr = fopen(serverstate_get_config_path(), "r");
+    FILE *fptr;
     char fileBuffer[8192];
+    const char *configPath;
     struct json_object *obj = NULL;
-    struct json_tokener *tokener = json_tokener_new();
+    struct json_tokener *tokener;
 
+    configPath = serverstate_get_config_path();
+
+    if(configPath == NULL)
+    {
+        return false;
+    }
+
+    fptr = fopen(configPath, "r");
     if(fptr == NULL)
     {
         fprintf(stderr, "Error opening config %s\n", serverstate_get_config_path());
-        return;
+        return false;
     }
+
+    tokener = json_tokener_new();
 
     while(fgets(fileBuffer, sizeof(fileBuffer), fptr) != NULL)
     {
         obj = json_tokener_parse_ex(tokener, fileBuffer, strlen(fileBuffer));
+        enum json_tokener_error err = json_tokener_get_error(tokener);
 
-        if(obj == NULL &&
-           json_tokener_get_error(tokener) != json_tokener_continue)
+        if(obj == NULL && err != json_tokener_continue)
         {
-            fprintf(stderr, "Error parsing config\n");
+            fprintf(stderr, "Error parsing config %s\n", json_tokener_error_desc(err));
             break;
         }
 
@@ -74,18 +112,27 @@ config_load()
         if(json_object_get_type(obj) != json_type_object)
         {
             fprintf(stderr, "Invalid config, could not find root object\n");
-            break;
+            json_tokener_free(tokener);
+            return false;
         }
 
         json_object_object_foreach(obj, key, val)
         {
             ConfigSection *section;
+            json_type type;
 
             section = hash_find(ConfigSections, key);
 
             if(section == NULL)
             {
                 fprintf(stderr, "Unknown config section: %s\n", key);
+                break;
+            }
+
+            type = json_object_get_type(val);
+            if(type != json_type_object && type != json_type_array)
+            {
+                fprintf(stderr, "Wrong type for config section value\n");
                 break;
             }
 
@@ -103,40 +150,28 @@ config_load()
                         break;
                     }
 
-                    json_object_object_foreach(obj, subKey, subVal)
-                    {
-                        ConfigField *field = hash_find(section->Fields, subKey);
-
-                        if(field == NULL)
-                        {
-                            fprintf(stderr, "Unknown field %s\n", subKey);
-                            break;
-                        }
-
-                        if(json_object_get_type(subVal) != field->Type)
-                        {
-                            fprintf(stderr, "Wrong field type in field %s\n",
-                                    subKey);
-                            break;
-                        }
-
-                        field->Handler(element, subVal);
-                    }
+                    process_object(section, element, obj);
 
                     section->SectionDone(element);
                 }
             }
+            else
+            {
+                process_object(section, NULL, val);
+            }
         }
     }
 
+    json_tokener_free(tokener);
+
     if(obj == NULL)
     {
-        enum json_tokener_error err = json_tokener_get_error(tokener);
-        printf("%p %s\n", obj, json_tokener_error_desc(err));
+        return false;
     }
 
-    json_tokener_free(tokener);
     fclose(fptr);
+
+    return true;
 }
 
 ConfigSection *
