@@ -61,7 +61,6 @@ process_object(ConfigSection *section, void *element, json_object *obj)
     }
 }
 
-
 void
 config_init()
 {
@@ -142,22 +141,34 @@ config_load()
 
                 for(index = 0; index < json_object_array_length(val); index++)
                 {
-                    json_object *obj = json_object_array_get_idx(val, index);
-                    void *element = section->NewElement();
+                    json_object *item = json_object_array_get_idx(val, index);
+                    void *element = NULL;
 
-                    if(json_object_get_type(obj) != json_type_object)
+                    if(section->NewElement != NULL)
+                    {
+                        element = section->NewElement();
+                    }
+
+                    if(json_object_get_type(item) != json_type_object)
                     {
                         break;
                     }
 
-                    process_object(section, element, obj);
+                    process_object(section, element, item);
 
-                    section->SectionDone(element);
+                    if(section->SectionDone != NULL)
+                    {
+                        section->SectionDone(element);
+                    }
                 }
+            }
+            else if(type == json_type_object)
+            {
+                process_object(section, NULL, val);
             }
             else
             {
-                process_object(section, NULL, val);
+                fprintf(stderr, "Found array for non array section\n");
             }
         }
     }

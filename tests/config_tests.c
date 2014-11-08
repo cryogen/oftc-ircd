@@ -151,10 +151,109 @@ START_TEST(config_load_WhenUnknownSectionReturnsOk)
 }
 END_TEST
 
+static bool callbackCalled = false;
+
 static void foo_field_handler(void *unused, json_object *obj)
 {
+    callbackCalled = true;
     ck_assert_str_eq(json_object_get_string(obj), "bar");
 }
+
+START_TEST(config_load_NonArrayNoHandlerDoesNotCrash)
+{
+    bool ret;
+    ConfigSection *section;
+    ConfigField *field;
+
+    serverstate_set_config_path("test5.conf");
+
+    section = config_register_section("test", false);
+
+    field = malloc(sizeof(ConfigField));
+    field->Name = "foo";
+    field->Type = json_type_string;
+    field->Handler = NULL;
+
+    callbackCalled = false;
+
+    config_register_field(section, field);
+
+    ret = config_load();
+
+    ck_assert(ret);
+    ck_assert(!callbackCalled);
+}
+END_TEST
+
+START_TEST(config_load_NotArrayAndConfigHasArrayDoesNotCrash)
+{
+    bool ret;
+    ConfigSection *section;
+    ConfigField *field;
+
+    serverstate_set_config_path("test6.conf");
+
+    section = config_register_section("test", false);
+
+    field = malloc(sizeof(ConfigField));
+    field->Name = "foo";
+    field->Type = json_type_string;
+    field->Handler = NULL;
+
+    config_register_field(section, field);
+
+    callbackCalled = false;
+
+    ret = config_load();
+
+    ck_assert(ret);
+    ck_assert(!callbackCalled);
+}
+END_TEST
+
+START_TEST(config_load_ArrayNoNewElementHandlerDoesNotCrash)
+{
+    bool ret;
+    ConfigSection *section;
+    ConfigField *field;
+
+    serverstate_set_config_path("test6.conf");
+
+    section = config_register_section("test", true);
+
+    callbackCalled = false;
+    ret = config_load();
+
+    ck_assert(ret);
+    ck_assert(!callbackCalled);
+}
+END_TEST
+
+START_TEST(config_load_ArrayNoHandlerDoesNotCrash)
+{
+    bool ret;
+    ConfigSection *section;
+    ConfigField *field;
+
+    serverstate_set_config_path("test6.conf");
+
+    section = config_register_section("test", true);
+
+    field = malloc(sizeof(ConfigField));
+    field->Name = "foo";
+    field->Type = json_type_string;
+    field->Handler = NULL;
+
+    config_register_field(section, field);
+
+    callbackCalled = false;
+
+    ret = config_load();
+
+    ck_assert(ret);
+    ck_assert(!callbackCalled);
+}
+END_TEST
 
 START_TEST(config_load_NonArraySectionSetsValue)
 {
@@ -173,31 +272,122 @@ START_TEST(config_load_NonArraySectionSetsValue)
 
     config_register_field(section, field);
 
+    callbackCalled = false;
+    ret = config_load();
+
+    ck_assert(ret);
+    ck_assert(callbackCalled);
+}
+END_TEST
+
+START_TEST(config_load_ArraySectionWrongTypeDoesNotCrash)
+{
+    bool ret;
+    ConfigSection *section;
+    ConfigField *field;
+
+    serverstate_set_config_path("test6.conf");
+
+    section = config_register_section("test", true);
+
     ret = config_load();
 
     ck_assert(ret);
 }
 END_TEST
 
-START_TEST(config_load_NonArrayNoHandlerDoesNotCrash)
+START_TEST(config_load_ArraySectionSetsValue)
 {
     bool ret;
     ConfigSection *section;
     ConfigField *field;
 
-    serverstate_set_config_path("test5.conf");
+    serverstate_set_config_path("test6.conf");
 
-    section = config_register_section("test", false);
+    section = config_register_section("test", true);
 
     field = malloc(sizeof(ConfigField));
     field->Name = "foo";
     field->Type = json_type_string;
+    field->Handler = foo_field_handler;
+
+    config_register_field(section, field);
+
+    callbackCalled = false;
+    ret = config_load();
+
+    ck_assert(ret);
+    ck_assert(callbackCalled);
+}
+END_TEST
+
+START_TEST(config_load_WhenFieldHasWrongTypeDoesNotCrash)
+{
+    bool ret;
+    ConfigSection *section;
+    ConfigField *field;
+
+    serverstate_set_config_path("test7.conf");
+
+    section = config_register_section("test", true);
+
+    field = malloc(sizeof(ConfigField));
+    field->Name = "foo";
+    field->Type = json_type_string;
+    field->Handler = foo_field_handler;
 
     config_register_field(section, field);
 
     ret = config_load();
 
     ck_assert(ret);
+}
+END_TEST
+
+static int newElementCounter = 0;
+
+static void *
+new_element_callback()
+{
+    newElementCounter++;
+
+    return NULL;
+}
+
+static int doneElementCounter = 0;
+
+static void
+section_done_callback(void *unused)
+{
+    doneElementCounter++;
+}
+
+START_TEST(config_load_WhenNewElementSpecifiedIsCalledPerItem)
+{
+    bool ret;
+    ConfigSection *section;
+    ConfigField *field;
+
+    serverstate_set_config_path("test8.conf");
+
+    section = config_register_section("test", true);
+    section->NewElement = new_element_callback;
+    section->SectionDone = section_done_callback;
+
+    field = malloc(sizeof(ConfigField));
+    field->Name = "foo";
+    field->Type = json_type_string;
+    field->Handler = NULL;
+
+    config_register_field(section, field);
+
+    newElementCounter = 0;
+    doneElementCounter = 0;
+    ret = config_load();
+
+    ck_assert(ret);
+    ck_assert_int_eq(newElementCounter, 2);
+    ck_assert_int_eq(doneElementCounter, 2);
 }
 END_TEST
 
@@ -224,6 +414,13 @@ config_suite()
     tcase_add_test(tcCore, config_load_WhenUnknownSectionReturnsOk);
     tcase_add_test(tcCore, config_load_NonArraySectionSetsValue);
     tcase_add_test(tcCore, config_load_NonArrayNoHandlerDoesNotCrash);
+    tcase_add_test(tcCore, config_load_ArrayNoNewElementHandlerDoesNotCrash);
+    tcase_add_test(tcCore, config_load_ArrayNoHandlerDoesNotCrash);
+    tcase_add_test(tcCore, config_load_NotArrayAndConfigHasArrayDoesNotCrash);
+    tcase_add_test(tcCore, config_load_WhenFieldHasWrongTypeDoesNotCrash);
+    tcase_add_test(tcCore, config_load_ArraySectionSetsValue);
+    tcase_add_test(tcCore, config_load_WhenFieldHasWrongTypeDoesNotCrash);
+    tcase_add_test(tcCore, config_load_WhenNewElementSpecifiedIsCalledPerItem);
     suite_add_tcase(s, tcCore);
     
     return s;
