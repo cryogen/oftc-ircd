@@ -46,7 +46,7 @@ config_load()
 {
     FILE *fptr = fopen(serverstate_get_config_path(), "r");
     char fileBuffer[8192];
-    struct json_object *obj;
+    struct json_object *obj = NULL;
     struct json_tokener *tokener = json_tokener_new();
 
     if(fptr == NULL)
@@ -135,6 +135,7 @@ config_load()
         printf("%p %s\n", obj, json_tokener_error_desc(err));
     }
 
+    json_tokener_free(tokener);
     fclose(fptr);
 }
 

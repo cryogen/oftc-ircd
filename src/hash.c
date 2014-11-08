@@ -30,14 +30,14 @@
 
 #include <string.h>
 
-static unsigned int
-get_hash_value(const char *key)
+static uint32_t
+get_hash_value(Hash *hash, const char *key)
 {
-    unsigned int hashVal;
+    uint32_t hashVal;
 
     MurmurHash3_x86_32(key, strlen(key), HASHSEED, &hashVal);
 
-    return hashVal;
+    return hashVal % hash->Length;
 }
 
 void
@@ -46,10 +46,10 @@ hash_init()
 }
 
 Hash *
-hash_new(const char *name, unsigned int length)
+hash_new(const char *name, size_t length)
 {
     Hash *newHash;
-    unsigned int hashSize;
+    size_t hashSize;
 
     if(length == 0)
     {
@@ -70,25 +70,40 @@ hash_new(const char *name, unsigned int length)
 }
 
 void
-hash_add_string(Hash *hash, const char *key, void *value)
+hash_add_string(Hash *this, const char *key, void *value)
 {
-    unsigned int hashVal = get_hash_value(key) % hash->Length;
-    HashItem *newItem = Malloc(sizeof(HashItem));
+    uint32_t hashVal;
+    HashItem *newItem;
 
-    newItem->Next = hash->Buckets[hashVal];
+    if(this == NULL)
+    {
+        return;
+    }
+
+    hashVal = get_hash_value(this, key);
+    newItem = Malloc(sizeof(HashItem));
+
+    newItem->Next = this->Buckets[hashVal];
     newItem->Data = value;
-    hash->Buckets[hashVal] = newItem;
+    this->Buckets[hashVal] = newItem;
 }
 
 void *
-hash_find(Hash *hash, const char *key)
+hash_find(Hash *this, const char *key)
 {
-    unsigned int hashVal = get_hash_value(key) % hash->Length;
+    uint32_t hashVal;
 
-    if(hash->Buckets[hashVal] == NULL)
+    if(this == NULL)
     {
         return NULL;
     }
 
-    return hash->Buckets[hashVal]->Data;
+    hashVal = get_hash_value(this, key);
+
+    if(this->Buckets[hashVal] == NULL)
+    {
+        return NULL;
+    }
+
+    return this->Buckets[hashVal]->Data;
 }

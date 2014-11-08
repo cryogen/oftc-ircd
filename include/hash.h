@@ -27,6 +27,8 @@
 #ifndef __oftc_ircd__hash__
 #define __oftc_ircd__hash__
 
+#include <stddef.h>
+
 #define DEFAULT_HASH_SIZE 65535
 #define HASHSEED 0x6d4c2a10
 
@@ -36,7 +38,7 @@ typedef struct _HashItem HashItem;
 struct _Hash
 {
     const char *Name;
-    unsigned int Length;
+    size_t Length;
     HashItem **Buckets;
 };
 
@@ -47,8 +49,8 @@ struct _HashItem
 };
 
 void hash_init();
-Hash *hash_new(const char *name, unsigned int length);
-void hash_add_string(Hash *hash, const char *key, void *value);
-void *hash_find(Hash *hash, const char *key);
+Hash *hash_new(const char *name, size_t length);
+void hash_add_string(Hash *this, const char *key, void *value);
+void *hash_find(Hash *this, const char *key);
 
 #endif /* defined(__oftc_ircd__hash__) */

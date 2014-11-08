@@ -27,5 +27,7 @@ tests/hash_tests
 *.trs
 oftc_ircd_tests
 *.gcno
+*.gcda
 cov
 *.info
+.DS_Store

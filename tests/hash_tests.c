@@ -30,14 +30,14 @@
 #include "hash.h"
 #include "murmurhash3.h"
 
-static unsigned int
-get_hash_value(const char *key)
+static uint32_t
+get_hash_value(Hash *hash, const char *key)
 {
-    unsigned int hashVal;
+    uint32_t hashVal;
 
     MurmurHash3_x86_32(key, strlen(key), HASHSEED, &hashVal);
 
-    return hashVal;
+    return hashVal % hash->Length;
 }
 
 static void
@@ -64,9 +64,10 @@ END_TEST
 
 START_TEST(hash_new_WhenCalledWithNullNameAndLenReturnsHash)
 {
-    Hash *h = hash_new(NULL, DEFAULT_HASH_SIZE);
+    Hash *h = hash_new(NULL, 20);
 
     ck_assert(h != NULL);
+    ck_assert_int_eq(h->Length, 20);
 }
 END_TEST
 
@@ -79,16 +80,24 @@ START_TEST(hash_new_WhenCalledWithZeroLenReturnsHashWithDefaultLength)
 }
 END_TEST
 
+START_TEST(hash_add_string_WhenThisIsNullReturnsOk)
+{
+    HashItem *item = malloc(sizeof(HashItem));
+
+    hash_add_string(NULL, "Test", item);
+}
+END_TEST
+
 START_TEST(hash_add_string_WhenCalledPutsValueInHash)
 {
     HashItem *item = malloc(sizeof(HashItem));
     Hash *h = hash_new("Test", DEFAULT_HASH_SIZE);
-    unsigned int hashKey = get_hash_value("Test");
+    uint32_t hashKey = get_hash_value(h, "Test");
 
     hash_add_string(h, "Test", item);
 
-    ck_assert(h->Buckets[hashKey % DEFAULT_HASH_SIZE] != NULL);
-    ck_assert(h->Buckets[hashKey % DEFAULT_HASH_SIZE]->Data == item);
+    ck_assert(h->Buckets[hashKey] != NULL);
+    ck_assert(h->Buckets[hashKey]->Data == item);
 }
 END_TEST
 
@@ -97,7 +106,7 @@ START_TEST(hash_add_string_WhenCalledTwicePutsValueInHashBucket)
     HashItem *item = malloc(sizeof(HashItem));
     HashItem *item2 = malloc(sizeof(HashItem));
     Hash *h = hash_new("Test", DEFAULT_HASH_SIZE);
-    unsigned int hashKey = get_hash_value("Test") % DEFAULT_HASH_SIZE;
+    uint32_t hashKey = get_hash_value(h, "Test");
 
     hash_add_string(h, "Test", item);
     hash_add_string(h, "Test", item2);
@@ -106,6 +115,47 @@ START_TEST(hash_add_string_WhenCalledTwicePutsValueInHashBucket)
     ck_assert(h->Buckets[hashKey]->Data == item2);
     ck_assert(h->Buckets[hashKey]->Next != NULL);
     ck_assert(h->Buckets[hashKey]->Next->Data == item);
+}
+END_TEST
+
+START_TEST(hash_find_WhenCalledWithNullThisReturnsNull)
+{
+    HashItem *item = hash_find(NULL, "TEST");
+
+    ck_assert(item == NULL);
+}
+END_TEST
+
+START_TEST(hash_find_WhenCalledWithItemInHashReturnsItem)
+{
+    HashItem *item = malloc(sizeof(HashItem));
+    HashItem *item2 = malloc(sizeof(HashItem));
+    HashItem *ret;
+    Hash *h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_add_string(h, "Test", item);
+    hash_add_string(h, "Test2", item2);
+
+    ret = hash_find(h, "Test");
+
+    ck_assert(ret != NULL);
+    ck_assert(ret == item);
+}
+END_TEST
+
+START_TEST(hash_find_WhenCalledWithItemNotInHashReturnsNull)
+{
+    HashItem *item = malloc(sizeof(HashItem));
+    HashItem *item2 = malloc(sizeof(HashItem));
+    HashItem *ret;
+    Hash *h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_add_string(h, "Test", item);
+    hash_add_string(h, "Test2", item2);
+
+    ret = hash_find(h, "foo");
+
+    ck_assert(ret == NULL);
 }
 END_TEST
 
@@ -124,8 +174,12 @@ hash_suite()
     tcase_add_test(tcCore, hash_new_WhenCalledWithNameAndLenReturnsHash);
     tcase_add_test(tcCore, hash_new_WhenCalledWithNullNameAndLenReturnsHash);
     tcase_add_test(tcCore, hash_new_WhenCalledWithZeroLenReturnsHashWithDefaultLength);
+    tcase_add_test(tcCore, hash_add_string_WhenThisIsNullReturnsOk);
     tcase_add_test(tcCore, hash_add_string_WhenCalledPutsValueInHash);
     tcase_add_test(tcCore, hash_add_string_WhenCalledTwicePutsValueInHashBucket);
+    tcase_add_test(tcCore, hash_find_WhenCalledWithNullThisReturnsNull);
+    tcase_add_test(tcCore, hash_find_WhenCalledWithItemInHashReturnsItem);
+    tcase_add_test(tcCore, hash_find_WhenCalledWithItemNotInHashReturnsNull);
 
     suite_add_tcase(s, tcCore);
 
