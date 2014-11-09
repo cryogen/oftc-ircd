@@ -27,13 +27,24 @@
 #ifndef __oftc_ircd__listener__
 #define __oftc_ircd__listener__
 
+#include <stdint.h>
+#include <uv.h>
+
+#define LISTENER_DEFAULT_BACKLOG 128
+
 typedef struct _Listener Listener;
 
 struct _Listener
 {
     const char *Name;
+    const char *Host;
+    uint16_t Port;
+
+    // Private fields
+    uv_tcp_t handle;
 };
 
 void listener_init();
+void listener_start_listeners();
 
 #endif /* defined(__oftc_ircd__listener__) */

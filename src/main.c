@@ -24,7 +24,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <uv.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,9 +71,11 @@ int main(int argc, char *argv[])
 
     config_load();
 
+    listener_start_listeners();
+
     uv_loop = uv_default_loop();
     
-    uv_run(uv_loop, UV_RUN_ONCE);
+    uv_run(uv_loop, UV_RUN_DEFAULT);
     
     return 0;
 }

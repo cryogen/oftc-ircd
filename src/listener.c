@@ -25,6 +25,7 @@
  */
 
 #include <stdio.h>
+#include <uv.h>
 
 #include "listener.h"
 #include "config.h"
@@ -37,6 +38,18 @@ static void
 listener_set_name(Listener *listener, json_object *obj)
 {
     listener->Name = json_object_get_string(obj);
+}
+
+static void
+listener_set_host(Listener *listener, json_object *obj)
+{
+    listener->Host = json_object_get_string(obj);
+}
+
+static void
+listener_set_port(Listener *listener, json_object *obj)
+{
+    listener->Port = json_object_get_int(obj);
 }
 
 static Listener *
@@ -53,6 +66,12 @@ listener_add(Listener *listener)
     Free(listener);
 }
 
+static void
+listener_on_connection(uv_stream_t *handle, int status)
+{
+    printf("connection!\n");
+}
+
 void
 listener_init()
 {
@@ -63,6 +82,52 @@ listener_init()
 
     config_register_field(section, "name", json_type_string,
                           (ConfigFieldHandler)listener_set_name);
+    config_register_field(section, "host", json_type_string,
+                          (ConfigFieldHandler)listener_set_host);
+    config_register_field(section, "port", json_type_int,
+                          (ConfigFieldHandler)listener_set_port);
 
     listeners = vector_new(0, sizeof(Listener));
+}
+
+void
+listener_start_listeners()
+{
+    for(int i = 0; i < vector_length(listeners); i++)
+    {
+        Listener *listener = vector_get(listeners, i);
+
+        uv_tcp_init(uv_default_loop(), &listener->handle);
+
+        if(listener->Host == NULL || listener->Host)
+        {
+            struct sockaddr_in6 addr;
+            int ret;
+
+            ret = uv_ip6_addr("::", listener->Port, &addr);
+            if(ret < 0)
+            {
+                fprintf(stderr, "Error getting address from ip %s (%s)",
+                        "::", uv_strerror(ret));
+                continue;
+            }
+
+            ret = uv_tcp_bind(&listener->handle, (struct sockaddr *)&addr, 0);
+            if(ret < 0)
+            {
+                fprintf(stderr, "Error binding to listener socket (%s)",
+                        uv_strerror(ret));
+                continue;
+            }
+
+            ret = uv_listen((uv_stream_t *) &listener->handle,
+                            LISTENER_DEFAULT_BACKLOG, listener_on_connection);
+            if(ret < 0)
+            {
+                fprintf(stderr, "Error starting listener (%s)",
+                        uv_strerror(ret));
+                continue;
+            }
+        }
+    }
 }
