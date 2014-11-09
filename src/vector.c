@@ -30,15 +30,15 @@
 #include "memory.h"
 
 static void
-vector_check_size(Vector *this)
+vector_check_size(Vector *thisVector)
 {
-    if(this->Length < this->Capacity)
+    if(thisVector->Length < thisVector->Capacity)
     {
         return;
     }
 
-    this->Capacity *= 2;
-    this->Data = Realloc(this->Data, this->Capacity * this->ElementSize);
+    thisVector->Capacity *= 2;
+    thisVector->Data = Realloc(thisVector->Data, thisVector->Capacity * thisVector->ElementSize);
 }
 
 Vector *
@@ -58,7 +58,7 @@ vector_new(size_t capacity, size_t elementSize)
 
     newVector = Malloc(sizeof(Vector));
 
-    newVector->Data = Malloc(sizeof(elementSize * capacity));
+    newVector->Data = Malloc(elementSize * capacity);
     newVector->Capacity = capacity;
     newVector->ElementSize = elementSize;
 
@@ -66,44 +66,44 @@ vector_new(size_t capacity, size_t elementSize)
 }
 
 void
-vector_push_back(Vector *this, void *element)
+vector_push_back(Vector *thisVector, void *element)
 {
-    if(this == NULL || element == NULL)
+    if(thisVector == NULL || element == NULL)
     {
         return;
     }
     
-    vector_check_size(this);
+    vector_check_size(thisVector);
 
-    memcpy(this->Data + (this->Length * this->ElementSize), element,
-           this->ElementSize);
+    memcpy(thisVector->Data + (thisVector->Length * thisVector->ElementSize), element,
+           thisVector->ElementSize);
 
-    ++this->Length;
+    ++thisVector->Length;
 }
 
 inline size_t
-vector_length(Vector *this)
+vector_length(Vector *thisVector)
 {
-    if(this == NULL)
+    if(thisVector == NULL)
     {
         return 0;
     }
     
-    return this->Length;
+    return thisVector->Length;
 }
 
 inline void *
-vector_get(Vector *this, size_t index)
+vector_get(Vector *thisVector, size_t index)
 {
-    if(this == NULL)
+    if(thisVector == NULL)
     {
         return NULL;
     }
 
-    if(index >= this->Length)
+    if(index >= thisVector->Length)
     {
         return NULL;
     }
 
-    return this->Data + (index * this->ElementSize);
+    return thisVector->Data + (index * thisVector->ElementSize);
 }

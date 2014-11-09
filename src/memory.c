@@ -25,6 +25,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "memory.h"
 
@@ -42,6 +43,12 @@ Realloc(void *ptr, size_t size)
     void *newPtr = realloc(ptr, size);
 
     return newPtr;
+}
+
+inline char *
+StrDup(const char *ptr)
+{
+    return strdup(ptr);
 }
 
 inline void

@@ -37,8 +37,6 @@ static void
 listener_set_name(Listener *listener, json_object *obj)
 {
     listener->Name = json_object_get_string(obj);
-
-    printf("%s\n", listener->Name);
 }
 
 static Listener *
@@ -61,7 +59,7 @@ listener_init()
     ConfigSection *section = config_register_section("listeners", true);
 
     section->NewElement = (ConfigNewElementHandler)listener_new_listener;
-    section->ElementDone = (ConfigSectionDoneHandler)listener_add;
+    section->ElementDone = (ConfigElementDoneHandler)listener_add;
 
     config_register_field(section, "name", json_type_string,
                           (ConfigFieldHandler)listener_set_name);

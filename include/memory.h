@@ -31,6 +31,7 @@
 
 void *Malloc(size_t length);
 void *Realloc(void *ptr, size_t length);
+char *StrDup(const char *ptr);
 void Free(void *ptr);
 
 #endif /* defined(__oftc_ircd__memory__) */

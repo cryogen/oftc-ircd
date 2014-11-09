@@ -37,8 +37,9 @@ typedef struct _ConfigField ConfigField;
 
 typedef void (*ConfigFieldHandler)(void *, json_object *);
 typedef void *(*ConfigNewElementHandler)();
-typedef void (*ConfigSectionDoneHandler)(void *);
+typedef void (*ConfigElementDoneHandler)(void *);
 typedef void (*ConfigSetDefaultsHandler)();
+typedef bool (*ConfigVerifySectionHandler)();
 
 struct _ConfigSection
 {
@@ -47,7 +48,8 @@ struct _ConfigSection
     bool IsArray;
     ConfigSetDefaultsHandler SetDefaults;
     ConfigNewElementHandler NewElement;
-    ConfigSectionDoneHandler ElementDone;
+    ConfigElementDoneHandler ElementDone;
+    ConfigVerifySectionHandler VerifySection;
 };
 
 struct _ConfigField

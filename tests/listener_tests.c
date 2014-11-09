@@ -27,10 +27,14 @@
 #include <check.h>
 
 #include "listener.h"
+#include "hash.h"
+#include "config.h"
 
 static void
 setup()
 {
+    hash_init();
+    config_init();
     listener_init();
 }
 

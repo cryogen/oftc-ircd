@@ -28,12 +28,14 @@
 #include "memory.h"
 #include "config.h"
 #include "serverstate.h"
+#include "vector.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <json-c/json.h>
 
 static Hash *ConfigSections;
+static Vector *ConfigSectionList;
 
 static void
 process_object(ConfigSection *section, void *element, json_object *obj)
@@ -65,6 +67,7 @@ void
 config_init()
 {
     ConfigSections = hash_new("Configuration", DEFAULT_HASH_SIZE);
+    ConfigSectionList = vector_new(0, sizeof(ConfigSection));
 }
 
 bool
@@ -88,6 +91,16 @@ config_load()
     {
         fprintf(stderr, "Error opening config %s\n", serverstate_get_config_path());
         return false;
+    }
+
+    for(int i = 0; i < vector_length(ConfigSectionList); i++)
+    {
+        ConfigSection *section = vector_get(ConfigSectionList, i);
+
+        if(section->SetDefaults != NULL)
+        {
+            section->SetDefaults();
+        }
     }
 
     tokener = json_tokener_new();
@@ -188,15 +201,17 @@ config_load()
 ConfigSection *
 config_register_section(const char *sectionName, bool isArray)
 {
-    ConfigSection *newSection = Malloc(sizeof(ConfigSection));
+    ConfigSection *ret, newSection = { 0 };
 
-    newSection->Name = sectionName;
-    newSection->Fields = hash_new("Config Section", DEFAULT_HASH_SIZE);
-    newSection->IsArray = isArray;
+    newSection.Name = StrDup(sectionName);
+    newSection.Fields = hash_new("Config Section", DEFAULT_HASH_SIZE);
+    newSection.IsArray = isArray;
 
-    hash_add_string(ConfigSections, sectionName, newSection);
+    vector_push_back(ConfigSectionList, &newSection);
+    ret = vector_get(ConfigSectionList, vector_length(ConfigSectionList) - 1);
+    hash_add_string(ConfigSections, sectionName, ret);
 
-    return newSection;
+    return ret;
 }
 
 void
@@ -211,7 +226,7 @@ config_register_field(ConfigSection *section, const char *name, json_type type,
     }
 
     field = Malloc(sizeof(ConfigField));
-    field->Name = name;
+    field->Name = StrDup(name);
     field->Type = type;
     field->Handler = handler;
 

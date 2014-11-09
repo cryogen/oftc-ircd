@@ -70,40 +70,40 @@ hash_new(const char *name, size_t length)
 }
 
 void
-hash_add_string(Hash *this, const char *key, void *value)
+hash_add_string(Hash *thisHash, const char *key, void *value)
 {
     uint32_t hashVal;
     HashItem *newItem;
 
-    if(this == NULL)
+    if(thisHash == NULL)
     {
         return;
     }
 
-    hashVal = get_hash_value(this, key);
+    hashVal = get_hash_value(thisHash, key);
     newItem = Malloc(sizeof(HashItem));
 
-    newItem->Next = this->Buckets[hashVal];
+    newItem->Next = thisHash->Buckets[hashVal];
     newItem->Data = value;
-    this->Buckets[hashVal] = newItem;
+    thisHash->Buckets[hashVal] = newItem;
 }
 
 void *
-hash_find(Hash *this, const char *key)
+hash_find(Hash *thisHash, const char *key)
 {
     uint32_t hashVal;
 
-    if(this == NULL)
+    if(thisHash == NULL)
     {
         return NULL;
     }
 
-    hashVal = get_hash_value(this, key);
+    hashVal = get_hash_value(thisHash, key);
 
-    if(this->Buckets[hashVal] == NULL)
+    if(thisHash->Buckets[hashVal] == NULL)
     {
         return NULL;
     }
 
-    return this->Buckets[hashVal]->Data;
+    return thisHash->Buckets[hashVal]->Data;
 }

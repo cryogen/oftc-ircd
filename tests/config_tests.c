@@ -79,6 +79,30 @@ START_TEST(config_load_WhenPathIsNullReturnsFalse)
 }
 END_TEST
 
+static bool setDefaultsCalled = false;
+
+static void
+set_defaults_callback()
+{
+    setDefaultsCalled = true;
+}
+
+START_TEST(config_load_CallsSetDefaultsForSections)
+{
+    bool ret;
+
+    serverstate_set_config_path("test5.conf");
+
+    ConfigSection *section = config_register_section("Test", false);
+    section->SetDefaults = set_defaults_callback;
+
+    setDefaultsCalled = false;
+    ret = config_load();
+
+    ck_assert(setDefaultsCalled);
+}
+END_TEST
+
 START_TEST(config_load_WhenPathNotFoundReturnsFalse)
 {
     bool ret;
@@ -355,6 +379,7 @@ config_suite()
     tcase_add_test(tcCore, config_register_field_WhenCalledWithSectionSucceeds);
     tcase_add_test(tcCore, config_register_field_WhenCalledWithNullSectionDoesNotCrash);
     tcase_add_test(tcCore, config_load_WhenPathIsNullReturnsFalse);
+    tcase_add_test(tcCore, config_load_CallsSetDefaultsForSections);
     tcase_add_test(tcCore, config_load_WhenPathNotFoundReturnsFalse);
     tcase_add_test(tcCore, config_load_WhenFileInvalidJsonReturnsFalse);
     tcase_add_test(tcCore, config_load_WhenFileNoObjectRootReturnsFalse);
