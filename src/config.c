@@ -79,8 +79,17 @@ config_load()
     struct json_object *obj = NULL;
     struct json_tokener *tokener;
 
-    configPath = serverstate_get_config_path();
+    for(int i = 0; i < vector_length(ConfigSectionList); i++)
+    {
+        ConfigSection *section = vector_get(ConfigSectionList, i);
 
+        if(section->SetDefaults != NULL)
+        {
+            section->SetDefaults();
+        }
+    }
+
+    configPath = serverstate_get_config_path();
     if(configPath == NULL)
     {
         return false;
@@ -91,16 +100,6 @@ config_load()
     {
         fprintf(stderr, "Error opening config %s\n", serverstate_get_config_path());
         return false;
-    }
-
-    for(int i = 0; i < vector_length(ConfigSectionList); i++)
-    {
-        ConfigSection *section = vector_get(ConfigSectionList, i);
-
-        if(section->SetDefaults != NULL)
-        {
-            section->SetDefaults();
-        }
     }
 
     tokener = json_tokener_new();

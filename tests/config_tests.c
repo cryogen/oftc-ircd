@@ -89,15 +89,11 @@ set_defaults_callback()
 
 START_TEST(config_load_CallsSetDefaultsForSections)
 {
-    bool ret;
-
-    serverstate_set_config_path("test5.conf");
-
     ConfigSection *section = config_register_section("Test", false);
     section->SetDefaults = set_defaults_callback;
 
     setDefaultsCalled = false;
-    ret = config_load();
+    config_load();
 
     ck_assert(setDefaultsCalled);
 }
