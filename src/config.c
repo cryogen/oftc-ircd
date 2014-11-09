@@ -194,6 +194,21 @@ config_load()
 
     fclose(fptr);
 
+    for(int i = 0; i < vector_length(ConfigSectionList); i++)
+    {
+        ConfigSection *section = vector_get(ConfigSectionList, i);
+
+        if(section->VerifySection != NULL)
+        {
+            if(!section->VerifySection())
+            {
+                fprintf(stderr, "Section %s returned false from verify\n",
+                        section->Name);
+                return false;
+            }
+        }
+    }
+
     return true;
 }
 

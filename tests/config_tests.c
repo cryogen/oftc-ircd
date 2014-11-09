@@ -87,6 +87,38 @@ set_defaults_callback()
     setDefaultsCalled = true;
 }
 
+START_TEST(config_load_WhenSetDefaultsIsNullDoesNotCrash)
+{
+    ConfigSection *section = config_register_section("Test", false);
+
+    setDefaultsCalled = false;
+    config_load();
+
+    ck_assert(!setDefaultsCalled);
+}
+END_TEST
+
+static bool verifySectionCalled = false;
+
+static bool
+verify_section_callback()
+{
+    verifySectionCalled = true;
+
+    return true;
+}
+
+START_TEST(config_load_WhenVerifySectionIsNullDoesNotCrash)
+{
+    ConfigSection *section = config_register_section("Test", false);
+
+    verifySectionCalled = false;
+    config_load();
+
+    ck_assert(!verifySectionCalled);
+}
+END_TEST
+
 START_TEST(config_load_CallsSetDefaultsForSections)
 {
     ConfigSection *section = config_register_section("Test", false);
@@ -96,6 +128,20 @@ START_TEST(config_load_CallsSetDefaultsForSections)
     config_load();
 
     ck_assert(setDefaultsCalled);
+}
+END_TEST
+
+START_TEST(config_load_CallVerifySectionForSections)
+{
+    ConfigSection *section = config_register_section("Test", false);
+    section->VerifySection = verify_section_callback;
+
+    serverstate_set_config_path("test3.conf");
+
+    verifySectionCalled = false;
+    config_load();
+
+    ck_assert(verifySectionCalled);
 }
 END_TEST
 
@@ -375,7 +421,10 @@ config_suite()
     tcase_add_test(tcCore, config_register_field_WhenCalledWithSectionSucceeds);
     tcase_add_test(tcCore, config_register_field_WhenCalledWithNullSectionDoesNotCrash);
     tcase_add_test(tcCore, config_load_WhenPathIsNullReturnsFalse);
+    tcase_add_test(tcCore, config_load_WhenSetDefaultsIsNullDoesNotCrash);
     tcase_add_test(tcCore, config_load_CallsSetDefaultsForSections);
+    tcase_add_test(tcCore, config_load_CallVerifySectionForSections);
+    tcase_add_test(tcCore, config_load_WhenVerifySectionIsNullDoesNotCrash);
     tcase_add_test(tcCore, config_load_WhenPathNotFoundReturnsFalse);
     tcase_add_test(tcCore, config_load_WhenFileInvalidJsonReturnsFalse);
     tcase_add_test(tcCore, config_load_WhenFileNoObjectRootReturnsFalse);
