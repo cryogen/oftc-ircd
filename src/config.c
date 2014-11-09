@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <json-c/json.h>
+#include <uv.h>
 
 static Hash *ConfigSections;
 static Vector *ConfigSectionList;
@@ -73,11 +74,13 @@ config_init()
 bool
 config_load()
 {
-    FILE *fptr;
-    char fileBuffer[8192];
+    uv_fs_t fileReq, readReq, closeReq;
+    uv_buf_t buffer;
+    char fileBuffer[4096];
     const char *configPath;
     struct json_object *obj = NULL;
     struct json_tokener *tokener;
+    int ret;
 
     for(int i = 0; i < vector_length(ConfigSectionList); i++)
     {
@@ -95,18 +98,21 @@ config_load()
         return false;
     }
 
-    fptr = fopen(configPath, "r");
-    if(fptr == NULL)
+    buffer = uv_buf_init(fileBuffer, sizeof(fileBuffer));
+
+    ret = uv_fs_open(uv_default_loop(), &fileReq, configPath, O_RDONLY, 0, NULL);
+    if(ret < 0)
     {
-        fprintf(stderr, "Error opening config %s\n", serverstate_get_config_path());
+        fprintf(stderr, "Error opening config %s\n", configPath);
         return false;
     }
 
     tokener = json_tokener_new();
 
-    while(fgets(fileBuffer, sizeof(fileBuffer), fptr) != NULL)
+    while((ret = uv_fs_read(uv_default_loop(), &readReq, fileReq.result, &buffer,
+                           1, -1, NULL)) > 0)
     {
-        obj = json_tokener_parse_ex(tokener, fileBuffer, strlen(fileBuffer));
+        obj = json_tokener_parse_ex(tokener, fileBuffer, ret);
         enum json_tokener_error err = json_tokener_get_error(tokener);
 
         if(obj == NULL && err != json_tokener_continue)
@@ -187,12 +193,12 @@ config_load()
 
     json_tokener_free(tokener);
 
+    uv_fs_close(uv_default_loop(), &closeReq, fileReq.result, NULL);
+
     if(obj == NULL)
     {
         return false;
     }
-
-    fclose(fptr);
 
     for(int i = 0; i < vector_length(ConfigSectionList); i++)
     {
