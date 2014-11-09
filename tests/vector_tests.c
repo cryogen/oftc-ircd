@@ -71,19 +71,24 @@ START_TEST(vector_new_WhenCalledSetsCapactityAndElementSize)
 }
 END_TEST
 
-START_TEST(vector_push_back_WhenCalledWithNullThisReturnsOk)
+START_TEST(vector_push_back_WhenCalledWithNullThisReturnsNull)
 {
-    vector_push_back(NULL, NULL);
+    void  *ret = vector_push_back(NULL, NULL);
+
+    ck_assert(ret == NULL);
 }
 END_TEST
 
-START_TEST(vector_push_back_WhenCalledWithNullValueReturnsOk)
+START_TEST(vector_push_back_WhenCalledWithNullValueReturnsNull)
 {
     Vector *vector;
+    void *ptr;
 
     vector = vector_new(100, 4);
 
-    vector_push_back(vector, NULL);
+    ptr = vector_push_back(vector, NULL);
+
+    ck_assert(ptr == NULL);
 }
 END_TEST
 
@@ -114,12 +119,14 @@ END_TEST
 START_TEST(vector_push_back_WhenCalledPutsValueInData)
 {
     Vector *vector;
+    void *ret;
 
     vector = vector_new(100, 4);
 
-    vector_push_back(vector, "TEST");
+    ret = vector_push_back(vector, "TEST");
 
     ck_assert_str_eq(vector->Data, "TEST");
+    ck_assert_str_eq(ret, "TEST");
 }
 END_TEST
 
@@ -231,8 +238,8 @@ vector_suite()
     tcase_add_test(tcCore, vector_new_WhenCalledWithZeroElementSizeReturnsNull);
     tcase_add_test(tcCore, vector_new_WhenCalledWithZeroCapacitySetsDefaultCapacity);
     tcase_add_test(tcCore, vector_new_WhenCalledSetsCapactityAndElementSize);
-    tcase_add_test(tcCore, vector_push_back_WhenCalledWithNullThisReturnsOk);
-    tcase_add_test(tcCore, vector_push_back_WhenCalledWithNullValueReturnsOk);
+    tcase_add_test(tcCore, vector_push_back_WhenCalledWithNullThisReturnsNull);
+    tcase_add_test(tcCore, vector_push_back_WhenCalledWithNullValueReturnsNull);
     tcase_add_test(tcCore, vector_push_back_WhenCalledSetsLength);
     tcase_add_test(tcCore, vector_push_back_WhenCalledDoesNotIncreaseCapacity);
     tcase_add_test(tcCore, vector_push_back_WhenCalledPutsValueInData);

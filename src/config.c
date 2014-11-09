@@ -221,8 +221,7 @@ config_register_section(const char *sectionName, bool isArray)
     newSection.Fields = hash_new("Config Section", DEFAULT_HASH_SIZE);
     newSection.IsArray = isArray;
 
-    vector_push_back(ConfigSectionList, &newSection);
-    ret = vector_get(ConfigSectionList, vector_length(ConfigSectionList) - 1);
+    ret = vector_push_back(ConfigSectionList, &newSection);
     hash_add_string(ConfigSections, sectionName, ret);
 
     return ret;

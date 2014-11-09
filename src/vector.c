@@ -65,20 +65,24 @@ vector_new(size_t capacity, size_t elementSize)
     return newVector;
 }
 
-void
+void *
 vector_push_back(Vector *thisVector, void *element)
 {
+    void *ptr;
+
     if(thisVector == NULL || element == NULL)
     {
-        return;
+        return NULL;
     }
     
     vector_check_size(thisVector);
+    ptr = thisVector->Data + (thisVector->Length * thisVector->ElementSize);
 
-    memcpy(thisVector->Data + (thisVector->Length * thisVector->ElementSize), element,
-           thisVector->ElementSize);
+    memcpy(ptr, element, thisVector->ElementSize);
 
     ++thisVector->Length;
+
+    return ptr;
 }
 
 inline size_t

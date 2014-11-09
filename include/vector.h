@@ -42,7 +42,7 @@ struct _Vector
 };
 
 Vector *vector_new(size_t capacity, size_t elementSize);
-void vector_push_back(Vector *this, void *data);
+void *vector_push_back(Vector *this, void *data);
 void *vector_get(Vector *this, size_t index);
 size_t vector_length(Vector *this);
 
