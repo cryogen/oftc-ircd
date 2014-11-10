@@ -31,6 +31,8 @@
 #include "config.h"
 #include "memory.h"
 #include "vector.h"
+#include "lstring.h"
+#include "network.h"
 
 static Vector *listeners;
 
@@ -61,6 +63,17 @@ listener_new_listener()
 static void
 listener_add(Listener *listener)
 {
+    if(string_is_null_or_empty(listener->Host))
+    {
+        Listener *v4Listener = listener_new_listener();
+        v4Listener->Port = listener->Port;
+        v4Listener->Host = StrDup("0.0.0.0");
+
+        listener_add(v4Listener);
+
+        listener->Host = StrDup("::");
+    }
+
     vector_push_back(listeners, listener);
     
     Free(listener);
@@ -96,38 +109,36 @@ listener_start_listeners()
     for(int i = 0; i < vector_length(listeners); i++)
     {
         Listener *listener = vector_get(listeners, i);
+        struct addrinfo *addr;
+        unsigned int flags = 0;
+        int ret;
 
         uv_tcp_init(uv_default_loop(), &listener->handle);
 
-        if(listener->Host == NULL || listener->Host)
+        addr = get_addr_from_ip(listener->Host, listener->Port);
+        if(addr->ai_family == AF_INET6)
         {
-            struct sockaddr_in6 addr;
-            int ret;
-
-            ret = uv_ip6_addr("::", listener->Port, &addr);
-            if(ret < 0)
-            {
-                fprintf(stderr, "Error getting address from ip %s (%s)",
-                        "::", uv_strerror(ret));
-                continue;
-            }
-
-            ret = uv_tcp_bind(&listener->handle, (struct sockaddr *)&addr, 0);
-            if(ret < 0)
-            {
-                fprintf(stderr, "Error binding to listener socket (%s)",
-                        uv_strerror(ret));
-                continue;
-            }
-
-            ret = uv_listen((uv_stream_t *) &listener->handle,
-                            LISTENER_DEFAULT_BACKLOG, listener_on_connection);
-            if(ret < 0)
-            {
-                fprintf(stderr, "Error starting listener (%s)",
-                        uv_strerror(ret));
-                continue;
-            }
+            flags = UV_TCP_IPV6ONLY;
         }
+
+        ret = uv_tcp_bind(&listener->handle, addr->ai_addr, flags);
+        if(ret < 0)
+        {
+            freeaddrinfo(addr);
+            fprintf(stderr, "Error binding to listener socket (%s)",
+                    uv_strerror(ret));
+            continue;
+        }
+
+        ret = uv_listen((uv_stream_t *) &listener->handle,
+                        LISTENER_DEFAULT_BACKLOG, listener_on_connection);
+        if(ret < 0)
+        {
+            freeaddrinfo(addr);
+            fprintf(stderr, "Error starting listener (%s)",
+                    uv_strerror(ret));
+            continue;
+        }
+        freeaddrinfo(addr);
     }
 }

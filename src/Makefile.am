@@ -7,8 +7,10 @@ AM_LDFLAGS = --coverage
 libircd_la_SOURCES =    config.c        \
                         hash.c          \
                         listener.c      \
+                        lstring.c       \
                         memory.c        \
                         murmurhash3.c   \
+                        network.c       \
                         serverstate.c   \
                         vector.c
 
