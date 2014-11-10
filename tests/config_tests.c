@@ -415,7 +415,7 @@ config_suite()
 
     tcCore = tcase_create("Core");
 
-    tcase_add_unchecked_fixture(tcCore, setup, cleanup);
+    tcase_add_checked_fixture(tcCore, setup, cleanup);
 
     tcase_add_test(tcCore, config_register_section_WhenCalledWithNameReturnsSection);
     tcase_add_test(tcCore, config_register_field_WhenCalledWithSectionSucceeds);
