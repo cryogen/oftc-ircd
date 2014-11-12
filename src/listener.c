@@ -130,15 +130,13 @@ listener_start_listeners()
             continue;
         }
 
+        freeaddrinfo(addr);
         ret = uv_listen((uv_stream_t *) &listener->handle,
                         LISTENER_DEFAULT_BACKLOG, listener_on_connection);
         if(ret < 0)
         {
-            freeaddrinfo(addr);
-            fprintf(stderr, "Error starting listener (%s)",
-                    uv_strerror(ret));
+            fprintf(stderr, "Error starting listener (%s)", uv_strerror(ret));
             continue;
         }
-        freeaddrinfo(addr);
     }
 }

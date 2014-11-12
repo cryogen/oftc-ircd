@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014, Stuart Walsh
  * All rights reserved.
- * lstring.h local string helper functions
+ * lstring_tests Tests for lstring functions
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,11 +24,43 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __oftc_ircd__lstring__
-#define __oftc_ircd__lstring__
+#include <check.h>
 
-#include <stdbool.h>
+#include "lstring.h"
 
-bool string_is_null_or_empty(const char *);
+START_TEST(string_is_null_or_empty_WhenCalledWithNullReturnsTrue)
+{
+    ck_assert(string_is_null_or_empty(NULL));
+}
+END_TEST
 
-#endif /* defined(__oftc_ircd__lstring__) */
+START_TEST(string_is_null_or_empty_WhenCalledWithEmptyReturnsTrue)
+{
+    ck_assert(string_is_null_or_empty(""));
+}
+END_TEST
+
+START_TEST(string_is_null_or_empty_WhenCalledWithStringReturnsFalse)
+{
+    ck_assert(!string_is_null_or_empty("string"));
+}
+END_TEST
+
+Suite *
+lstring_suite()
+{
+    Suite *s;
+    TCase *tcCore;
+
+    s = suite_create("lstring");
+
+    tcCore = tcase_create("Core");
+
+    tcase_add_test(tcCore, string_is_null_or_empty_WhenCalledWithNullReturnsTrue);
+    tcase_add_test(tcCore, string_is_null_or_empty_WhenCalledWithEmptyReturnsTrue);
+    tcase_add_test(tcCore, string_is_null_or_empty_WhenCalledWithStringReturnsFalse);
+
+    suite_add_tcase(s, tcCore);
+    
+    return s;
+}

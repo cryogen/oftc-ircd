@@ -5,6 +5,7 @@ oftc_ircd_tests_SOURCES =   oftc_ircd_tests.c   \
                             hash_tests.c        \
                             config_tests.c      \
                             listener_tests.c    \
+                            lstring_tests.c     \
                             vector_tests.c
 
 AM_CPPFLAGS = -g -O0 @CHECK_CFLAGS@ -I$(top_builddir)/include -I$(top_builddir) \

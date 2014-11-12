@@ -31,6 +31,7 @@ Suite *hash_suite();
 Suite *config_suite();
 Suite *listener_suite();
 Suite *vector_suite();
+Suite *lstring_suite();
 
 int
 main()
@@ -42,6 +43,7 @@ main()
     srunner_add_suite(sr, config_suite());
     srunner_add_suite(sr, listener_suite());
     srunner_add_suite(sr, vector_suite());
+    srunner_add_suite(sr, lstring_suite());
 
     srunner_run_all(sr, CK_NORMAL);
 

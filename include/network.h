@@ -24,8 +24,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __oftc_ircd__network__
+#define __oftc_ircd__network__
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 
 struct addrinfo *get_addr_from_ip(const char *ip, uint16_t port);
+
+#endif /* defined(__oftc_ircd__network__) */

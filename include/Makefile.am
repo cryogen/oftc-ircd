@@ -1,4 +1,5 @@
-noinst_HEADERS= config.h        \
+noinst_HEADERS= client.h        \
+                config.h        \
                 hash.h          \
                 listener.h      \
                 lstring.h       \

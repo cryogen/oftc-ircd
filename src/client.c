@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014, Stuart Walsh
  * All rights reserved.
- * lstring.h local string helper functions
+ * client.c client related functions
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,11 +24,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __oftc_ircd__lstring__
-#define __oftc_ircd__lstring__
+#include "client.h"
 
-#include <stdbool.h>
-
-bool string_is_null_or_empty(const char *);
-
-#endif /* defined(__oftc_ircd__lstring__) */
+void
+client_init()
+{
+    
+}
