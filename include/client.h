@@ -27,13 +27,33 @@
 #ifndef __oftc_ircd__client__
 #define __oftc_ircd__client__
 
+#include <uv.h>
+#include <stdbool.h>
+
+#define HOSTLEN 128
+
 typedef struct _Client Client;
+typedef struct _ClientDnsRequest ClientDnsRequest;
 
 struct _Client
 {
-    
+    uv_tcp_t *Handle;
+    struct sockaddr Address;
+    int AddressLength;
+    char Host[HOSTLEN];
+};
+
+struct _ClientDnsRequest
+{
+    Client *Client;
+    char Host[HOSTLEN];
+    struct sockaddr Address;
+    int AddressLength;
 };
 
 void client_init();
+Client *client_new();
+bool client_accept(Client *client, uv_stream_t *handle);
+void client_free(Client *client);
 
 #endif /* defined(__oftc_ircd__client__) */

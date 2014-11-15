@@ -33,6 +33,7 @@
 #include "vector.h"
 #include "lstring.h"
 #include "network.h"
+#include "client.h"
 
 static Vector *listeners;
 
@@ -82,7 +83,20 @@ listener_add(Listener *listener)
 static void
 listener_on_connection(uv_stream_t *handle, int status)
 {
-    printf("connection!\n");
+    Client *client;
+
+    if(status < 0)
+    {
+        fprintf(stderr, "Error on listen");
+        return;
+    }
+
+    client = client_new();
+
+    if(!client_accept(client, handle))
+    {
+        client_free(client);
+    }
 }
 
 void
@@ -115,7 +129,7 @@ listener_start_listeners()
 
         uv_tcp_init(uv_default_loop(), &listener->handle);
 
-        addr = get_addr_from_ip(listener->Host, listener->Port);
+        addr = get_addr_from_ipstring(listener->Host, listener->Port);
         if(addr->ai_family == AF_INET6)
         {
             flags = UV_TCP_IPV6ONLY;

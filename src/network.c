@@ -30,7 +30,7 @@
 #include <stdio.h>
 
 struct addrinfo *
-get_addr_from_ip(const char *ip, uint16_t port)
+get_addr_from_ipstring(const char *ip, uint16_t port)
 {
     struct addrinfo hints = { 0 };
     struct addrinfo *res;

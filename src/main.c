@@ -31,7 +31,9 @@
 #include "serverstate.h"
 #include "hash.h"
 #include "config.h"
+#include "config.h"
 #include "listener.h"
+#include "client.h"
 
 static void
 process_commandline(char *const *args, int argCount)
@@ -66,6 +68,7 @@ int main(int argc, char *argv[])
     hash_init();
     config_init();
     listener_init();
+    client_init();
     
     process_commandline(argv, argc);
 
