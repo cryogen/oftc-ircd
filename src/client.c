@@ -146,9 +146,6 @@ client_accept(Client *client, uv_stream_t *handle)
         return false;
     }
 
-    // Clear out the port
-    memset(&dnsRequest->Address.sa_data, 0, sizeof(uint16_t));
-
     req = Malloc(sizeof(uv_getnameinfo_t));
     req->data = dnsRequest;
 
