@@ -1,11 +1,23 @@
-TESTS = oftc_ircd_tests
-check_PROGRAMS = oftc_ircd_tests
+TESTS = oftc_ircd_tests client_tests
+check_PROGRAMS = oftc_ircd_tests client_tests
 
-oftc_ircd_tests_SOURCES =   oftc_ircd_tests.c   \
+client_tests_SOURCES = client_tests.c
+
+AM_LDFLAGS = --coverage
+
+client_tests_LDADD =    memory_stub.o           \
+                        vector_stub.o           \
+                        hash_stub.o             \
+                        uv_stub.o               \
+                        opmock.o                \
+                        ../src/client.o         
+
+oftc_ircd_tests_SOURCES =   config_tests.c      \
                             hash_tests.c        \
-                            config_tests.c      \
                             listener_tests.c    \
                             lstring_tests.c     \
+                            oftc_ircd_tests.c   \
+                            opmock.c            \
                             vector_tests.c
 
 AM_CPPFLAGS = -g -O0 @CHECK_CFLAGS@ -I$(top_builddir)/include -I$(top_builddir) \

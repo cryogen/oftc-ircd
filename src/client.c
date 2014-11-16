@@ -49,13 +49,11 @@ client_on_addr_callback(uv_getaddrinfo_t *req, int status, struct addrinfo *res)
 
     if(res == NULL)
     {
-        printf("boo\n");
         // DNS Failed to match
     }
     else
     {
         // DNS Matched, good to go
-        printf("yay\n");
     }
 
     Free(req);
@@ -104,6 +102,7 @@ void client_free(Client *client)
     {
         uv_close((uv_handle_t *)client->Handle, NULL);
         Free(client->Handle);
+        client->Handle = NULL;
     }
 
     Free(client);
@@ -116,7 +115,7 @@ client_accept(Client *client, uv_stream_t *handle)
     uv_getnameinfo_t *req;
     int ret;
 
-    if(client == NULL)
+    if(client == NULL || handle == NULL)
     {
         return false;
     }
