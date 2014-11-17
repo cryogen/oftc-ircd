@@ -80,9 +80,11 @@ config_load()
     const char *configPath;
     struct json_object *obj = NULL;
     struct json_tokener *tokener;
-    int ret;
+    int ret, len;
 
-    for(int i = 0; i < vector_length(ConfigSectionList); i++)
+    len = vector_length(ConfigSectionList);
+
+    for(int i = 0; i < len; i++)
     {
         ConfigSection *section = vector_get(ConfigSectionList, i);
 
@@ -130,6 +132,7 @@ config_load()
         {
             fprintf(stderr, "Invalid config, could not find root object\n");
             json_tokener_free(tokener);
+            uv_fs_close(uv_default_loop(), &closeReq, fileReq.result, NULL);
             return false;
         }
 
@@ -156,8 +159,9 @@ config_load()
             if(section->IsArray)
             {
                 int index = 0;
+                int arrayLen = json_object_array_length(val);
 
-                for(index = 0; index < json_object_array_length(val); index++)
+                for(index = 0; index < arrayLen; index++)
                 {
                     json_object *item = json_object_array_get_idx(val, index);
                     void *element = NULL;
@@ -223,6 +227,11 @@ config_register_section(const char *sectionName, bool isArray)
 {
     ConfigSection *ret, newSection = { 0 };
 
+    if(sectionName == NULL)
+    {
+        return NULL;
+    }
+
     newSection.Name = StrDup(sectionName);
     newSection.Fields = hash_new("Config Section", DEFAULT_HASH_SIZE);
     newSection.IsArray = isArray;
@@ -239,7 +248,7 @@ config_register_field(ConfigSection *section, const char *name, json_type type,
 {
     ConfigField *field;
 
-    if(section == NULL)
+    if(section == NULL || name == NULL)
     {
         return;
     }
