@@ -24,43 +24,39 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <check.h>
+#include "opmock.h"
 
 #include "lstring.h"
 
-START_TEST(string_is_null_or_empty_WhenCalledWithNullReturnsTrue)
+void
+string_is_null_or_empty_when_called_with_null_returns_true()
 {
-    ck_assert(string_is_null_or_empty(NULL));
+    OP_ASSERT_TRUE(string_is_null_or_empty(NULL));
 }
-END_TEST
 
-START_TEST(string_is_null_or_empty_WhenCalledWithEmptyReturnsTrue)
+void string_is_null_or_empty_when_called_with_empty_returns_true()
 {
-    ck_assert(string_is_null_or_empty(""));
+    OP_ASSERT_TRUE(string_is_null_or_empty(""));
 }
-END_TEST
 
-START_TEST(string_is_null_or_empty_WhenCalledWithStringReturnsFalse)
+void string_is_null_or_empty_when_called_with_string_returns_false()
 {
-    ck_assert(!string_is_null_or_empty("string"));
+    OP_ASSERT_FALSE(string_is_null_or_empty("string"));
 }
-END_TEST
 
-Suite *
-lstring_suite()
+int
+main()
 {
-    Suite *s;
-    TCase *tcCore;
+    opmock_test_suite_reset();
 
-    s = suite_create("lstring");
+    opmock_register_test(string_is_null_or_empty_when_called_with_null_returns_true,
+                         "string_is_null_or_empty_when_called_with_null_returns_true");
+    opmock_register_test(string_is_null_or_empty_when_called_with_empty_returns_true,
+                         "string_is_null_or_empty_when_called_with_empty_returns_true");
+    opmock_register_test(string_is_null_or_empty_when_called_with_string_returns_false,
+                         "string_is_null_or_empty_when_called_with_string_returns_false");
 
-    tcCore = tcase_create("Core");
+    opmock_test_suite_run();
 
-    tcase_add_test(tcCore, string_is_null_or_empty_WhenCalledWithNullReturnsTrue);
-    tcase_add_test(tcCore, string_is_null_or_empty_WhenCalledWithEmptyReturnsTrue);
-    tcase_add_test(tcCore, string_is_null_or_empty_WhenCalledWithStringReturnsFalse);
-
-    suite_add_tcase(s, tcCore);
-    
-    return s;
+    return opmock_test_error > 0;
 }

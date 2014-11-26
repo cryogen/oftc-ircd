@@ -29,7 +29,6 @@
 
 Suite *listener_suite();
 Suite *vector_suite();
-Suite *lstring_suite();
 
 int
 main()
@@ -39,7 +38,6 @@ main()
 
     sr = srunner_create(listener_suite());
     srunner_add_suite(sr, vector_suite());
-    srunner_add_suite(sr, lstring_suite());
 
     srunner_run_all(sr, CK_NORMAL);
 

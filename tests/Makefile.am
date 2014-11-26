@@ -1,9 +1,10 @@
-TESTS = oftc_ircd_tests client_tests config_tests hash_tests
-check_PROGRAMS = oftc_ircd_tests client_tests config_tests hash_tests
+TESTS = oftc_ircd_tests client_tests config_tests hash_tests lstring_tests
+check_PROGRAMS = oftc_ircd_tests client_tests config_tests hash_tests lstring_tests
 
 client_tests_SOURCES = client_tests.c
 config_tests_SOURCES = config_tests.c
 hash_tests_SOURCES = hash_tests.c
+lstring_tests_SOURCES = lstring_tests.c
 
 AM_LDFLAGS = --coverage
 
@@ -29,8 +30,10 @@ hash_tests_LDADD =      opmock.o                \
                         murmurhash3_stub.o      \
                         ../src/hash.o
 
+lstring_tests_LDADD =   opmock.o                \
+                        ../src/lstring.o
+
 oftc_ircd_tests_SOURCES =   listener_tests.c    \
-                            lstring_tests.c     \
                             oftc_ircd_tests.c   \
                             opmock.c            \
                             vector_tests.c
