@@ -27,7 +27,6 @@
 #include <check.h>
 #include <stdlib.h>
 
-Suite *hash_suite();
 Suite *listener_suite();
 Suite *vector_suite();
 Suite *lstring_suite();
@@ -38,8 +37,7 @@ main()
     int numberFailed;
     SRunner *sr;
 
-    sr = srunner_create(hash_suite());
-    srunner_add_suite(sr, listener_suite());
+    sr = srunner_create(listener_suite());
     srunner_add_suite(sr, vector_suite());
     srunner_add_suite(sr, lstring_suite());
 

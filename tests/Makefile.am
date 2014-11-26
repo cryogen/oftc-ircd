@@ -1,8 +1,9 @@
-TESTS = oftc_ircd_tests client_tests config_tests
-check_PROGRAMS = oftc_ircd_tests client_tests config_tests
+TESTS = oftc_ircd_tests client_tests config_tests hash_tests
+check_PROGRAMS = oftc_ircd_tests client_tests config_tests hash_tests
 
 client_tests_SOURCES = client_tests.c
 config_tests_SOURCES = config_tests.c
+hash_tests_SOURCES = hash_tests.c
 
 AM_LDFLAGS = --coverage
 
@@ -21,10 +22,14 @@ config_tests_LDADD =    vector_stub.o           \
                         serverstate_stub.o      \
                         memory_stub.o           \
                         opmock.o                \
-                        ../src/config.o         
+                        ../src/config.o
 
-oftc_ircd_tests_SOURCES =   hash_tests.c        \
-                            listener_tests.c    \
+hash_tests_LDADD =      opmock.o                \
+                        memory_stub.o           \
+                        murmurhash3_stub.o      \
+                        ../src/hash.o
+
+oftc_ircd_tests_SOURCES =   listener_tests.c    \
                             lstring_tests.c     \
                             oftc_ircd_tests.c   \
                             opmock.c            \

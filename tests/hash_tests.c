@@ -24,164 +24,232 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <check.h>
-#include <stdlib.h>
-
+#include "opmock.h"
 #include "hash.h"
-#include "murmurhash3.h"
+#include "murmurhash3_stub.h"
+#include "memory_stub.h"
 
-static uint32_t
-get_hash_value(Hash *hash, const char *key)
+void
+hash_new_when_called_with_name_and_len_returns_hash()
 {
-    uint32_t hashVal;
+    Hash hash = { 0 };
+    Hash *h;
+    char ptr[512];
 
-    MurmurHash3_x86_32(key, strlen(key), HASHSEED, &hashVal);
+    Malloc_ExpectAndReturn(0, &hash, NULL);
+    Malloc_ExpectAndReturn(0, &ptr, NULL);
 
-    return hashVal % hash->Length;
+    h = hash_new("Test hash", DEFAULT_HASH_SIZE);
+
+    OP_ASSERT_TRUE(h != NULL);
+    OP_ASSERT_TRUE(h->Name != NULL);
+    OP_ASSERT_EQUAL_CSTRING("Test hash", h->Name);
+    OP_ASSERT_TRUE(h->Buckets != NULL);
+
+    OP_VERIFY();
 }
 
-static void
-setup()
+void
+hash_new_when_called_with_null_name_and_len_returns_hash()
 {
-    hash_init();
+    Hash hash = { 0 };
+    Hash *h;
+    char ptr[512];
+
+    Malloc_ExpectAndReturn(0, &hash, NULL);
+    Malloc_ExpectAndReturn(0, &ptr, NULL);
+
+    h = hash_new(NULL, 20);
+
+    OP_ASSERT_TRUE(h != NULL);
+    OP_ASSERT_EQUAL_LONG((size_t)20, h->Length);
+
+    OP_VERIFY();
 }
 
-static void
-cleanup()
+
+void
+hash_new_when_called_with_zero_len_returns_hash_with_default_length()
 {
+    Hash hash = { 0 };
+    Hash *h;
+    char ptr[512];
+
+    Malloc_ExpectAndReturn(0, &hash, NULL);
+    Malloc_ExpectAndReturn(0, &ptr, NULL);
+
+    h = hash_new("Test", 0);
+
+    OP_ASSERT_TRUE(h != NULL);
+    OP_ASSERT_EQUAL_LONG((size_t)DEFAULT_HASH_SIZE, h->Length);
+
+    OP_VERIFY();
 }
 
-START_TEST(hash_new_WhenCalledWithNameAndLenReturnsHash)
+void
+hash_add_string_when_this_is_null_returns_ok()
 {
-    Hash *h = hash_new("Test hash", DEFAULT_HASH_SIZE);
+    HashItem item;
 
-    ck_assert(h != NULL);
-    ck_assert(h->Name != NULL);
-    ck_assert_str_eq(h->Name, "Test hash");
-    ck_assert(h->Buckets != NULL);
+    hash_add_string(NULL, "Test", &item);
+
+    OP_VERIFY();
 }
-END_TEST
 
-START_TEST(hash_new_WhenCalledWithNullNameAndLenReturnsHash)
+void hash_callback(const void *key, int len, uint32_t seed, void *out, int calls)
 {
-    Hash *h = hash_new(NULL, 20);
-
-    ck_assert(h != NULL);
-    ck_assert_int_eq(h->Length, 20);
+    if(strcmp(key, "foo") == 0)
+    {
+        *((int*)out) = 1234;
+    }
+    else
+    {
+        *((int*)out) = 123;
+    }
 }
-END_TEST
 
-START_TEST(hash_new_WhenCalledWithZeroLenReturnsHashWithDefaultLength)
+void
+hash_add_string_when_called_puts_value_in_hash()
 {
-    Hash *h = hash_new("Test", 0);
+    Hash hash = { 0 };
+    Hash *h;
+    HashItem item = { 0 };
+    char ptr[512] = { 0 };
+    uint32_t hashVal = 123;
 
-    ck_assert(h != NULL);
-    ck_assert_int_eq(h->Length, DEFAULT_HASH_SIZE);
+    Malloc_ExpectAndReturn(0, &hash, NULL);
+    Malloc_ExpectAndReturn(0, &ptr, NULL);
+    MurmurHash3_x86_32_MockWithCallback(hash_callback);
+    Malloc_ExpectAndReturn(0, &item, NULL);
+
+    h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_add_string(h, "Test", &item);
+
+    OP_ASSERT_TRUE(h->Buckets[hashVal % h->Length] != NULL);
+    OP_ASSERT_TRUE(h->Buckets[hashVal % h->Length]->Data == &item);
+
+    OP_VERIFY();
 }
-END_TEST
 
-START_TEST(hash_add_string_WhenThisIsNullReturnsOk)
+void
+hash_add_string_when_called_twice_puts_value_in_hash_bucket()
 {
-    HashItem *item = malloc(sizeof(HashItem));
+    Hash hash = { 0 };
+    Hash *h;
+    HashItem item = { 0 };
+    HashItem item2 = { 0 };
+    char ptr[512] = { 0 };
+    uint32_t hashVal = 123;
 
-    hash_add_string(NULL, "Test", item);
+    Malloc_ExpectAndReturn(0, &hash, NULL);
+    Malloc_ExpectAndReturn(0, &ptr, NULL);
+    MurmurHash3_x86_32_MockWithCallback(hash_callback);
+    Malloc_ExpectAndReturn(0, &item, NULL);
+    MurmurHash3_x86_32_MockWithCallback(hash_callback);
+    Malloc_ExpectAndReturn(0, &item2, NULL);
+
+    h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_add_string(h, "Test", &item);
+    hash_add_string(h, "Test", &item2);
+
+    OP_ASSERT_TRUE(h->Buckets[hashVal] != NULL);
+    OP_ASSERT_TRUE(h->Buckets[hashVal]->Data == &item2);
+    OP_ASSERT_TRUE(h->Buckets[hashVal]->Next != NULL);
+    OP_ASSERT_TRUE(h->Buckets[hashVal]->Next->Data == &item);
+
+    OP_VERIFY();
 }
-END_TEST
 
-START_TEST(hash_add_string_WhenCalledPutsValueInHash)
-{
-    HashItem *item = malloc(sizeof(HashItem));
-    Hash *h = hash_new("Test", DEFAULT_HASH_SIZE);
-    uint32_t hashKey = get_hash_value(h, "Test");
 
-    hash_add_string(h, "Test", item);
-
-    ck_assert(h->Buckets[hashKey] != NULL);
-    ck_assert(h->Buckets[hashKey]->Data == item);
-}
-END_TEST
-
-START_TEST(hash_add_string_WhenCalledTwicePutsValueInHashBucket)
-{
-    HashItem *item = malloc(sizeof(HashItem));
-    HashItem *item2 = malloc(sizeof(HashItem));
-    Hash *h = hash_new("Test", DEFAULT_HASH_SIZE);
-    uint32_t hashKey = get_hash_value(h, "Test");
-
-    hash_add_string(h, "Test", item);
-    hash_add_string(h, "Test", item2);
-
-    ck_assert(h->Buckets[hashKey] != NULL);
-    ck_assert(h->Buckets[hashKey]->Data == item2);
-    ck_assert(h->Buckets[hashKey]->Next != NULL);
-    ck_assert(h->Buckets[hashKey]->Next->Data == item);
-}
-END_TEST
-
-START_TEST(hash_find_WhenCalledWithNullThisReturnsNull)
+void
+hash_find_when_called_with_null_this_returns_null()
 {
     HashItem *item = hash_find(NULL, "TEST");
 
-    ck_assert(item == NULL);
+    OP_ASSERT_TRUE(item == NULL);
+
+    OP_VERIFY();
 }
-END_TEST
 
-START_TEST(hash_find_WhenCalledWithItemInHashReturnsItem)
+void
+hash_find_when_called_with_item_in_hash_returns_item()
 {
-    HashItem *item = malloc(sizeof(HashItem));
-    HashItem *item2 = malloc(sizeof(HashItem));
+    Hash hash = { 0 };
+    Hash *h;
+    HashItem item = { 0 };
     HashItem *ret;
-    Hash *h = hash_new("Test", DEFAULT_HASH_SIZE);
+    char ptr[512] = { 0 };
+    uint32_t hashVal = 123;
 
-    hash_add_string(h, "Test", item);
-    hash_add_string(h, "Test2", item2);
+    Malloc_ExpectAndReturn(0, &hash, NULL);
+    Malloc_ExpectAndReturn(0, &ptr, NULL);
+    MurmurHash3_x86_32_MockWithCallback(hash_callback);
+    Malloc_ExpectAndReturn(0, &item, NULL);
+
+    h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_add_string(h, "Test", &item);
 
     ret = hash_find(h, "Test");
 
-    ck_assert(ret != NULL);
-    ck_assert(ret == item);
+    OP_ASSERT_TRUE(ret != NULL);
+    OP_ASSERT_TRUE(ret == &item);
+
+    OP_VERIFY();
 }
-END_TEST
 
-START_TEST(hash_find_WhenCalledWithItemNotInHashReturnsNull)
+void
+hash_find_when_called_with_item_not_in_hash_returns_null()
 {
-    HashItem *item = malloc(sizeof(HashItem));
-    HashItem *item2 = malloc(sizeof(HashItem));
+    Hash hash = { 0 };
+    Hash *h;
+    HashItem item = { 0 };
     HashItem *ret;
-    Hash *h = hash_new("Test", DEFAULT_HASH_SIZE);
+    char ptr[512] = { 0 };
+    uint32_t hashVal = 123;
 
-    hash_add_string(h, "Test", item);
-    hash_add_string(h, "Test2", item2);
+    Malloc_ExpectAndReturn(0, &hash, NULL);
+    Malloc_ExpectAndReturn(0, &ptr, NULL);
+    MurmurHash3_x86_32_MockWithCallback(hash_callback);
+    Malloc_ExpectAndReturn(0, &item, NULL);
+
+    h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_add_string(h, "Test", &item);
 
     ret = hash_find(h, "foo");
 
-    ck_assert(ret == NULL);
+    OP_ASSERT_TRUE(ret == NULL);
+    OP_VERIFY();
 }
-END_TEST
 
-Suite *
-hash_suite()
+int
+main()
 {
-    Suite *s;
-    TCase *tcCore;
+    opmock_test_suite_reset();
 
-    s = suite_create("Hash");
+    opmock_register_test(hash_new_when_called_with_name_and_len_returns_hash,
+                         "hash_new_when_called_with_name_and_len_returns_hash");
+    opmock_register_test(hash_new_when_called_with_null_name_and_len_returns_hash,
+                         "hash_new_when_called_with_null_name_and_len_returns_hash");
+    opmock_register_test(hash_new_when_called_with_zero_len_returns_hash_with_default_length,
+                         "hash_new_when_called_with_zero_len_returns_hash_with_default_length");
+    opmock_register_test(hash_add_string_when_this_is_null_returns_ok,
+                         "hash_add_string_when_this_is_null_returns_ok");
+    opmock_register_test(hash_add_string_when_called_puts_value_in_hash,
+                         "hash_add_string_when_called_puts_value_in_hash");
+    opmock_register_test(hash_add_string_when_called_twice_puts_value_in_hash_bucket,
+                         "hash_add_string_when_called_twice_puts_value_in_hash_bucket");
+    opmock_register_test(hash_find_when_called_with_null_this_returns_null,
+                         "hash_find_when_called_with_null_this_returns_null");
+    opmock_register_test(hash_find_when_called_with_item_in_hash_returns_item,
+                         "hash_find_when_called_with_item_in_hash_returns_item");
+    opmock_register_test(hash_find_when_called_with_item_not_in_hash_returns_null,
+                         "hash_find_when_called_with_item_not_in_hash_returns_null");
 
-    tcCore = tcase_create("Core");
+    opmock_test_suite_run();
 
-    tcase_add_unchecked_fixture(tcCore, setup, cleanup);
-
-    tcase_add_test(tcCore, hash_new_WhenCalledWithNameAndLenReturnsHash);
-    tcase_add_test(tcCore, hash_new_WhenCalledWithNullNameAndLenReturnsHash);
-    tcase_add_test(tcCore, hash_new_WhenCalledWithZeroLenReturnsHashWithDefaultLength);
-    tcase_add_test(tcCore, hash_add_string_WhenThisIsNullReturnsOk);
-    tcase_add_test(tcCore, hash_add_string_WhenCalledPutsValueInHash);
-    tcase_add_test(tcCore, hash_add_string_WhenCalledTwicePutsValueInHashBucket);
-    tcase_add_test(tcCore, hash_find_WhenCalledWithNullThisReturnsNull);
-    tcase_add_test(tcCore, hash_find_WhenCalledWithItemInHashReturnsItem);
-    tcase_add_test(tcCore, hash_find_WhenCalledWithItemNotInHashReturnsNull);
-
-    suite_add_tcase(s, tcCore);
-
-    return s;
+    return opmock_test_error > 0;
 }
