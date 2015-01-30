@@ -1,10 +1,11 @@
-TESTS = oftc_ircd_tests client_tests config_tests hash_tests lstring_tests
-check_PROGRAMS = oftc_ircd_tests client_tests config_tests hash_tests lstring_tests
+TESTS = client_tests config_tests hash_tests lstring_tests vector_tests
+check_PROGRAMS = client_tests config_tests hash_tests lstring_tests vector_tests
 
 client_tests_SOURCES = client_tests.c
 config_tests_SOURCES = config_tests.c
 hash_tests_SOURCES = hash_tests.c
 lstring_tests_SOURCES = lstring_tests.c
+vector_tests_SOURCES = vector_tests.c
 
 AM_LDFLAGS = --coverage
 
@@ -33,12 +34,8 @@ hash_tests_LDADD =      opmock.o                \
 lstring_tests_LDADD =   opmock.o                \
                         ../src/lstring.o
 
-oftc_ircd_tests_SOURCES =   listener_tests.c    \
-                            oftc_ircd_tests.c   \
-                            opmock.c            \
-                            vector_tests.c
+vector_tests_LDADD  =   opmock.o                \
+                        memory_stub.o           \
+                        ../src/vector.o
 
-AM_CPPFLAGS = -g -O0 @CHECK_CFLAGS@ -I$(top_builddir)/include -I$(top_builddir) \
-                -I$(top_builddir)/libuv/include -I$(top_builddir)/json-c
-oftc_ircd_tests_LDADD = $(top_builddir)/src/libircd.la @CHECK_LIBS@ \
-                $(top_builddir)/json-c/libjson-c.la $(top_builddir)/libuv/libuv.la
+AM_CPPFLAGS = -g -O0 -I../include -I../libuv/include -I.. -I../json-c
