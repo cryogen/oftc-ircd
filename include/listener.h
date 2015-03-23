@@ -39,6 +39,7 @@ struct _Listener
     const char *Name;
     const char *Host;
     uint16_t Port;
+    int AddressFamily;
 
     // Private fields
     uv_tcp_t handle;

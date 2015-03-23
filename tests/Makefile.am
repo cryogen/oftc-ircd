@@ -14,6 +14,7 @@ client_tests_LDADD =    memory_stub.o           \
                         hash_stub.o             \
                         uv_stub.o               \
                         opmock.o                \
+                        ../src/network.o        \
                         ../src/client.o
 
 config_tests_LDADD =    vector_stub.o           \

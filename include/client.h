@@ -35,11 +35,14 @@
 typedef struct _Client Client;
 typedef struct _ClientDnsRequest ClientDnsRequest;
 
+typedef void (*DnsCallback)(ClientDnsRequest *request, bool matched);
+
 struct _Client
 {
     uv_tcp_t *Handle;
     struct sockaddr Address;
     int AddressLength;
+    int AddressFamily;
     char Host[HOSTLEN];
 };
 
@@ -49,6 +52,7 @@ struct _ClientDnsRequest
     char Host[HOSTLEN];
     struct sockaddr Address;
     int AddressLength;
+    DnsCallback Callback;
 };
 
 void client_init();

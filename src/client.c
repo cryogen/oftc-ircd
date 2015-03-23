@@ -28,32 +28,49 @@
 #include "vector.h"
 #include "hash.h"
 #include "memory.h"
+#include "listener.h"
 
 static Vector *clientList;
 static Hash *clientHash;
+
+static void
+call_dns_callback(ClientDnsRequest *req, bool success)
+{
+    if(req == NULL || req->Callback == NULL)
+    {
+        return;
+    }
+
+    req->Callback(req, success);
+}
 
 static void
 client_on_addr_callback(uv_getaddrinfo_t *req, int status, struct addrinfo *res)
 {
     ClientDnsRequest *dnsRequest = req->data;
 
-    do
+    if(status == 0)
     {
-        if(memcmp(res->ai_addr, &dnsRequest->Address, dnsRequest->AddressLength) == 0)
+        do
         {
-            break;
+            if(memcmp(res->ai_addr, &dnsRequest->Address, dnsRequest->AddressLength) == 0)
+            {
+                break;
+            }
+
+            res = res->ai_next;
+        } while (res != NULL);
+
+        if(res == NULL)
+        {
+            uv_inet_ntop(dnsRequest->Client->AddressFamily, &dnsRequest->Address,
+                         dnsRequest->Host, HOSTLEN);
+            call_dns_callback(dnsRequest, false);
         }
-
-        res = res->ai_next;
-    } while (res != NULL);
-
-    if(res == NULL)
-    {
-        // DNS Failed to match
-    }
-    else
-    {
-        // DNS Matched, good to go
+        else
+        {
+            // DNS Matched, good to go
+        }
     }
 
     Free(req);
@@ -91,7 +108,8 @@ client_new()
     return Malloc(sizeof(Client));
 }
 
-void client_free(Client *client)
+void
+client_free(Client *client)
 {
     if(client == NULL)
     {
@@ -112,6 +130,7 @@ bool
 client_accept(Client *client, uv_stream_t *handle)
 {
     ClientDnsRequest *dnsRequest;
+    Listener *listener;
     uv_getnameinfo_t *req;
     int ret;
 
@@ -119,6 +138,8 @@ client_accept(Client *client, uv_stream_t *handle)
     {
         return false;
     }
+
+    listener = handle->data;
 
     client->Handle = Malloc(sizeof(uv_tcp_t));
 
@@ -138,6 +159,8 @@ client_accept(Client *client, uv_stream_t *handle)
     dnsRequest->AddressLength = sizeof(struct sockaddr);
     ret = uv_tcp_getsockname((uv_tcp_t *)client->Handle, &dnsRequest->Address,
                              &dnsRequest->AddressLength);
+
+    client->AddressFamily = listener->AddressFamily;
 
     if(ret != 0)
     {

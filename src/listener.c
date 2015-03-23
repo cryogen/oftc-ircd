@@ -129,22 +129,24 @@ listener_start_listeners()
 
         uv_tcp_init(uv_default_loop(), &listener->handle);
 
+        listener->handle.data = listener;
+
         addr = get_addr_from_ipstring(listener->Host, listener->Port);
+        listener->AddressFamily = addr->ai_family;
         if(addr->ai_family == AF_INET6)
         {
             flags = UV_TCP_IPV6ONLY;
         }
 
         ret = uv_tcp_bind(&listener->handle, addr->ai_addr, flags);
+        freeaddrinfo(addr);
         if(ret < 0)
         {
-            freeaddrinfo(addr);
             fprintf(stderr, "Error binding to listener socket (%s)",
                     uv_strerror(ret));
             continue;
         }
 
-        freeaddrinfo(addr);
         ret = uv_listen((uv_stream_t *) &listener->handle,
                         LISTENER_DEFAULT_BACKLOG, listener_on_connection);
         if(ret < 0)

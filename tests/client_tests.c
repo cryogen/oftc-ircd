@@ -30,6 +30,8 @@
 #include "vector_stub.h"
 #include "uv_stub.h"
 #include "client.h"
+#include "listener.h"
+#include "network.h"
 
 #include <stdlib.h>
 
@@ -147,10 +149,11 @@ client_accept_when_uv_accept_fails_returns_false()
 void
 client_accept_when_getsockname_fails_returns_false()
 {
-    Client client = {0};
+    Client client = { 0 };
     uv_stream_t handle;
     uv_tcp_t clientHandle;
     ClientDnsRequest dnsRequest;
+    Listener listener = { 0 };
 
     Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
     uv_default_loop_ExpectAndReturn(NULL);
@@ -162,6 +165,8 @@ client_accept_when_getsockname_fails_returns_false()
                                        NULL, NULL);
     Free_ExpectAndReturn(&dnsRequest, cmp_ptr);
 
+    handle.data = &listener;
+
     bool ret = client_accept(&client, &handle);
 
     OP_ASSERT_FALSE(ret);
@@ -170,6 +175,38 @@ client_accept_when_getsockname_fails_returns_false()
 
 void
 client_accept_when_getnameinfo_fails_returns_true()
+{
+    Client client = {0};
+    uv_stream_t handle;
+    uv_tcp_t clientHandle;
+    ClientDnsRequest dnsRequest;
+    uv_getnameinfo_t req;
+    Listener listener = { 0 };
+
+    Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_tcp_init_ExpectAndReturn(NULL, &clientHandle, 0, NULL, cmp_ptr);
+    uv_accept_ExpectAndReturn(&handle, (uv_stream_t *)&clientHandle, 0,
+                              cmp_ptr, cmp_ptr);
+    Malloc_ExpectAndReturn(sizeof(ClientDnsRequest), &dnsRequest, cmp_int);
+    uv_tcp_getsockname_ExpectAndReturn(&clientHandle, NULL, NULL, 0, cmp_ptr,
+                                       NULL, NULL);
+    Malloc_ExpectAndReturn(sizeof(uv_getnameinfo_t), &req, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_getnameinfo_ExpectAndReturn(NULL, &req, NULL, NULL, 0, -1, NULL, cmp_ptr,
+                                   NULL, NULL, NULL);
+    Free_ExpectAndReturn(&req, cmp_ptr);
+
+    handle.data = &listener;
+
+    bool ret = client_accept(&client, &handle);
+
+    OP_ASSERT_TRUE(ret);
+    OP_VERIFY();
+}
+
+void
+client_accept_when_getnameinfo_suceeds_returns_true()
 {
     Client client = {0};
     uv_stream_t handle;
@@ -187,13 +224,254 @@ client_accept_when_getnameinfo_fails_returns_true()
                                        NULL, NULL);
     Malloc_ExpectAndReturn(sizeof(uv_getnameinfo_t), &req, cmp_int);
     uv_default_loop_ExpectAndReturn(NULL);
-    uv_getnameinfo_ExpectAndReturn(NULL, &req, NULL, NULL, 0, -1, NULL, cmp_ptr,
+    uv_getnameinfo_ExpectAndReturn(NULL, &req, NULL, NULL, 0, 0, NULL, cmp_ptr,
                                    NULL, NULL, NULL);
+
+    bool ret = client_accept(&client, &handle);
+
+    OP_ASSERT_TRUE(ret);
+    OP_VERIFY();
+}
+
+int
+getnameinfo_badstatus(uv_loop_t* loop,
+                      uv_getnameinfo_t* req,
+                      uv_getnameinfo_cb getnameinfo_cb,
+                      const struct sockaddr* addr,
+                      int flags,
+                      int calls)
+{
+    getnameinfo_cb(req, 1, NULL, NULL);
+
+    return 0;
+}
+
+void
+client_accept_when_namecallback_returns_bad_status_frees_request()
+{
+    Client client = {0};
+    uv_stream_t handle;
+    uv_tcp_t clientHandle;
+    ClientDnsRequest dnsRequest;
+    uv_getnameinfo_t req;
+
+    Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_tcp_init_ExpectAndReturn(NULL, &clientHandle, 0, NULL, cmp_ptr);
+    uv_accept_ExpectAndReturn(&handle, (uv_stream_t *)&clientHandle, 0,
+                              cmp_ptr, cmp_ptr);
+    Malloc_ExpectAndReturn(sizeof(ClientDnsRequest), &dnsRequest, cmp_int);
+    uv_tcp_getsockname_ExpectAndReturn(&clientHandle, NULL, NULL, 0, cmp_ptr,
+                                       NULL, NULL);
+    Malloc_ExpectAndReturn(sizeof(uv_getnameinfo_t), &req, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_getnameinfo_MockWithCallback(&getnameinfo_badstatus);
     Free_ExpectAndReturn(&req, cmp_ptr);
 
     bool ret = client_accept(&client, &handle);
 
     OP_ASSERT_TRUE(ret);
+    OP_VERIFY();
+}
+
+int
+getnameinfo_goodstatus(uv_loop_t* loop,
+                      uv_getnameinfo_t* req,
+                      uv_getnameinfo_cb getnameinfo_cb,
+                      const struct sockaddr* addr,
+                      int flags,
+                      int calls)
+{
+    getnameinfo_cb(req, 0, "Test.Test", NULL);
+
+    return 0;
+}
+
+void
+client_accept_when_namecallback_returns_good_status_getsaddress()
+{
+    Client client = {0};
+    uv_stream_t handle;
+    uv_tcp_t clientHandle;
+    ClientDnsRequest dnsRequest;
+    uv_getnameinfo_t req;
+    uv_getaddrinfo_t addrReq;
+
+    Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_tcp_init_ExpectAndReturn(NULL, &clientHandle, 0, NULL, cmp_ptr);
+    uv_accept_ExpectAndReturn(&handle, (uv_stream_t *)&clientHandle, 0,
+                              cmp_ptr, cmp_ptr);
+    Malloc_ExpectAndReturn(sizeof(ClientDnsRequest), &dnsRequest, cmp_int);
+    uv_tcp_getsockname_ExpectAndReturn(&clientHandle, NULL, NULL, 0, cmp_ptr,
+                                       NULL, NULL);
+    Malloc_ExpectAndReturn(sizeof(uv_getnameinfo_t), &req, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_getnameinfo_MockWithCallback(&getnameinfo_goodstatus);
+
+    Malloc_ExpectAndReturn(sizeof(uv_getaddrinfo_t), &addrReq, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_getaddrinfo_ExpectAndReturn(NULL, &addrReq, NULL, NULL, NULL, NULL, 0,
+                                   NULL, cmp_ptr, NULL, NULL, NULL, NULL);
+
+    Free_ExpectAndReturn(&req, cmp_ptr);
+
+    bool ret = client_accept(&client, &handle);
+
+    OP_ASSERT_TRUE(ret);
+    OP_VERIFY();
+}
+
+int
+getaddrinfo_badstatus(uv_loop_t *loop,
+                      uv_getaddrinfo_t *req,
+                      uv_getaddrinfo_cb callback,
+                      const char *node,
+                      const char *service,
+                      const struct addrinfo *hints,
+                      int calls)
+{
+    callback(req, -1, NULL);
+
+    return 0;
+}
+
+void
+client_accept_when_addrcallback_returns_bad_status_frees_request()
+{
+    Client client = {0};
+    uv_stream_t handle;
+    uv_tcp_t clientHandle;
+    ClientDnsRequest dnsRequest;
+    uv_getnameinfo_t req;
+    uv_getaddrinfo_t addrReq;
+
+    Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_tcp_init_ExpectAndReturn(NULL, &clientHandle, 0, NULL, cmp_ptr);
+    uv_accept_ExpectAndReturn(&handle, (uv_stream_t *)&clientHandle, 0,
+                              cmp_ptr, cmp_ptr);
+    Malloc_ExpectAndReturn(sizeof(ClientDnsRequest), &dnsRequest, cmp_int);
+    uv_tcp_getsockname_ExpectAndReturn(&clientHandle, NULL, NULL, 0, cmp_ptr,
+                                       NULL, NULL);
+    Malloc_ExpectAndReturn(sizeof(uv_getnameinfo_t), &req, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_getnameinfo_MockWithCallback(&getnameinfo_goodstatus);
+
+    Malloc_ExpectAndReturn(sizeof(uv_getaddrinfo_t), &addrReq, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_getaddrinfo_MockWithCallback(getaddrinfo_badstatus);
+    Free_ExpectAndReturn(&addrReq, cmp_ptr);
+
+    Free_ExpectAndReturn(&req, cmp_ptr);
+
+    bool ret = client_accept(&client, &handle);
+
+    OP_ASSERT_TRUE(ret);
+    OP_VERIFY();
+}
+
+int
+getaddrinfo_nomatch(uv_loop_t *loop,
+                      uv_getaddrinfo_t *req,
+                      uv_getaddrinfo_cb callback,
+                      const char *node,
+                      const char *service,
+                      const struct addrinfo *hints,
+                      int calls)
+{
+    struct addrinfo addr = { 0 };
+    struct sockaddr_in addr4;
+
+    addr.ai_addrlen = sizeof(addr4);
+
+    addr4.sin_addr.s_addr = inet_addr("123.123.123.123");
+
+    addr.ai_addr = (struct sockaddr *)&addr4;
+
+    callback(req, 0, &addr);
+
+    return 0;
+}
+
+bool callbackCalled;
+
+void
+no_match_callback(ClientDnsRequest *req, bool match)
+{
+    callbackCalled = true;
+
+    OP_ASSERT_FALSE(match);
+    OP_ASSERT_EQUAL_CSTRING("123.123.123.123", req->Host);
+}
+
+static int
+inet_ntop_mock(int af, const void *src, char *dst, size_t len, int calls)
+{
+    return inet_ntop(af, &((struct sockaddr_in *)src)->sin_addr, dst, len) != NULL;
+}
+
+static int
+getsockname_mock(const uv_tcp_t *handle,
+                 struct sockaddr *addr,
+                 int *addrLen,
+                 int calls)
+{
+    struct addrinfo *addrInfo;
+
+    addrInfo = get_addr_from_ipstring("123.123.123.123", 0);
+
+    memcpy(addr, addrInfo->ai_addr, addrInfo->ai_addrlen);
+    *addrLen = addrInfo->ai_addrlen;
+
+    freeaddrinfo(addrInfo);
+
+    return 0;
+}
+
+void
+client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host()
+{
+    Client client = {0};
+    uv_stream_t handle;
+    uv_tcp_t clientHandle;
+    ClientDnsRequest dnsRequest = { 0 };
+    uv_getnameinfo_t req;
+    uv_getaddrinfo_t addrReq;
+    Listener listener = { 0 };
+
+    dnsRequest.Callback = no_match_callback;
+
+    Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_tcp_init_ExpectAndReturn(NULL, &clientHandle, 0, NULL, cmp_ptr);
+    uv_accept_ExpectAndReturn(&handle, (uv_stream_t *)&clientHandle, 0,
+                              cmp_ptr, cmp_ptr);
+    Malloc_ExpectAndReturn(sizeof(ClientDnsRequest), &dnsRequest, cmp_int);
+    uv_tcp_getsockname_MockWithCallback(getsockname_mock);
+    Malloc_ExpectAndReturn(sizeof(uv_getnameinfo_t), &req, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_getnameinfo_MockWithCallback(&getnameinfo_goodstatus);
+
+    Malloc_ExpectAndReturn(sizeof(uv_getaddrinfo_t), &addrReq, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_getaddrinfo_MockWithCallback(getaddrinfo_nomatch);
+
+    uv_inet_ntop_MockWithCallback(inet_ntop_mock);
+
+    Free_ExpectAndReturn(&addrReq, cmp_ptr);
+
+    Free_ExpectAndReturn(&req, cmp_ptr);
+
+    callbackCalled = false;
+
+    listener.AddressFamily = AF_INET;
+    handle.data = &listener;
+
+    bool ret = client_accept(&client, &handle);
+
+    OP_ASSERT_TRUE(ret);
+    OP_ASSERT_TRUE(callbackCalled);
     OP_VERIFY();
 }
 
@@ -221,6 +499,12 @@ int main()
                          "client_accept_when_getsockname_fails_returns_false");
     opmock_register_test(client_accept_when_getnameinfo_fails_returns_true,
                          "client_accept_when_getnameinfo_fails_returns_true");
+    opmock_register_test(client_accept_when_getnameinfo_suceeds_returns_true,
+                         "client_accept_when_getnameinfo_suceeds_returns_true");
+    opmock_register_test(client_accept_when_namecallback_returns_bad_status_frees_request, "client_accept_when_namecallback_returns_bad_status_frees_request");
+    opmock_register_test(client_accept_when_namecallback_returns_good_status_getsaddress, "client_accept_when_namecallback_returns_good_status_getsaddress");
+    opmock_register_test(client_accept_when_addrcallback_returns_bad_status_frees_request, "client_accept_when_addrcallback_returns_bad_status_frees_request");
+    opmock_register_test(client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host, "client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host");
 
     opmock_test_suite_run();
 
