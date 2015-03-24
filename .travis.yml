@@ -9,6 +9,4 @@ before_script:
   - autoreconf -i -f 
 
 script:
-  - ./configure
-  - make
-  - make check
+  - ./configure && make && make check
