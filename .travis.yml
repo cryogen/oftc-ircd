@@ -7,3 +7,8 @@ before_script:
   - cd json-c && ./autogen.sh && cd ..
   - cd libuv && ./autogen.sh && cd ..
   - autoreconf -i -f 
+
+script:
+  - ./configure
+  - make
+  - make check
