@@ -208,11 +208,12 @@ client_accept_when_getnameinfo_fails_returns_true()
 void
 client_accept_when_getnameinfo_suceeds_returns_true()
 {
-    Client client = {0};
+    Client client = { 0 };
     uv_stream_t handle;
     uv_tcp_t clientHandle;
     ClientDnsRequest dnsRequest;
     uv_getnameinfo_t req;
+    Listener *listener = { 0 };
 
     Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
     uv_default_loop_ExpectAndReturn(NULL);
@@ -226,6 +227,8 @@ client_accept_when_getnameinfo_suceeds_returns_true()
     uv_default_loop_ExpectAndReturn(NULL);
     uv_getnameinfo_ExpectAndReturn(NULL, &req, NULL, NULL, 0, 0, NULL, cmp_ptr,
                                    NULL, NULL, NULL);
+
+    handle.data = &listener;
 
     bool ret = client_accept(&client, &handle);
 
@@ -249,11 +252,12 @@ getnameinfo_badstatus(uv_loop_t* loop,
 void
 client_accept_when_namecallback_returns_bad_status_frees_request()
 {
-    Client client = {0};
+    Client client = { 0 };
     uv_stream_t handle;
     uv_tcp_t clientHandle;
     ClientDnsRequest dnsRequest;
     uv_getnameinfo_t req;
+    Listener *listener = { 0 };
 
     Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
     uv_default_loop_ExpectAndReturn(NULL);
@@ -267,6 +271,8 @@ client_accept_when_namecallback_returns_bad_status_frees_request()
     uv_default_loop_ExpectAndReturn(NULL);
     uv_getnameinfo_MockWithCallback(&getnameinfo_badstatus);
     Free_ExpectAndReturn(&req, cmp_ptr);
+
+    handle.data = &listener;
 
     bool ret = client_accept(&client, &handle);
 
@@ -290,12 +296,13 @@ getnameinfo_goodstatus(uv_loop_t* loop,
 void
 client_accept_when_namecallback_returns_good_status_getsaddress()
 {
-    Client client = {0};
+    Client client = { 0 };
     uv_stream_t handle;
     uv_tcp_t clientHandle;
     ClientDnsRequest dnsRequest;
     uv_getnameinfo_t req;
     uv_getaddrinfo_t addrReq;
+    Listener *listener = { 0 };
 
     Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
     uv_default_loop_ExpectAndReturn(NULL);
@@ -315,6 +322,8 @@ client_accept_when_namecallback_returns_good_status_getsaddress()
                                    NULL, cmp_ptr, NULL, NULL, NULL, NULL);
 
     Free_ExpectAndReturn(&req, cmp_ptr);
+
+    handle.data = &listener;
 
     bool ret = client_accept(&client, &handle);
 
@@ -339,12 +348,13 @@ getaddrinfo_badstatus(uv_loop_t *loop,
 void
 client_accept_when_addrcallback_returns_bad_status_frees_request()
 {
-    Client client = {0};
+    Client client = { 0 };
     uv_stream_t handle;
     uv_tcp_t clientHandle;
     ClientDnsRequest dnsRequest;
     uv_getnameinfo_t req;
     uv_getaddrinfo_t addrReq;
+    Listener listener = { 0 };
 
     Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
     uv_default_loop_ExpectAndReturn(NULL);
@@ -364,6 +374,8 @@ client_accept_when_addrcallback_returns_bad_status_frees_request()
     Free_ExpectAndReturn(&addrReq, cmp_ptr);
 
     Free_ExpectAndReturn(&req, cmp_ptr);
+
+    handle.data = &listener;
 
     bool ret = client_accept(&client, &handle);
 

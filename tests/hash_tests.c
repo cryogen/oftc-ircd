@@ -207,7 +207,7 @@ hash_find_when_called_with_item_not_in_hash_returns_null()
     Hash *h;
     HashItem item = { 0 };
     HashItem *ret;
-    char ptr[512] = { 0 };
+    char ptr[524280] = { 0 }; // 65535 * sizeof(HashItem *)
     uint32_t hashVal = 123;
 
     Malloc_ExpectAndReturn(0, &hash, NULL);
