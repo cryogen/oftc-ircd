@@ -13,8 +13,6 @@ AC_PROG_INSTALL
 AC_PROG_CC
 AC_PROG_CC_STDC
 
-PKG_CHECK_MODULES([CHECK], [check >= 0.9.6])
-
 AC_CONFIG_SUBDIRS([libuv json-c])
 AC_CONFIG_FILES([ Makefile      \
                   src/Makefile  \
