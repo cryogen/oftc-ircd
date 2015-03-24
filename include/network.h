@@ -31,6 +31,11 @@
 #include <sys/socket.h>
 #include <netdb.h>
 
+struct NetworkAddress
+{
+
+};
+
 struct addrinfo *get_addr_from_ipstring(const char *ip, uint16_t port);
 
 #endif /* defined(__oftc_ircd__network__) */
