@@ -1,4 +1,4 @@
-AC_PREREQ([2.69])
+dnl AC_PREREQ([2.69])
 AC_INIT([oftc-ircd], [0.0.1])
 AM_INIT_AUTOMAKE([foreign])
 
