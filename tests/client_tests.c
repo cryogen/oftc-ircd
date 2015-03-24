@@ -371,7 +371,7 @@ client_accept_when_addrcallback_returns_bad_status_frees_request()
     OP_VERIFY();
 }
 
-int
+static int
 getaddrinfo_nomatch(uv_loop_t *loop,
                       uv_getaddrinfo_t *req,
                       uv_getaddrinfo_cb callback,
@@ -396,7 +396,7 @@ getaddrinfo_nomatch(uv_loop_t *loop,
 
 bool callbackCalled;
 
-void
+static void
 no_match_callback(ClientDnsRequest *req, bool match)
 {
     callbackCalled = true;
@@ -429,6 +429,36 @@ getsockname_mock(const uv_tcp_t *handle,
     return 0;
 }
 
+static void
+match_callback(ClientDnsRequest *req, bool match)
+{
+    callbackCalled = true;
+
+    OP_ASSERT_TRUE(match);
+    OP_ASSERT_EQUAL_CSTRING("Test.Test", req->Host);
+}
+
+static int
+getaddrinfo_match(uv_loop_t *loop,
+                    uv_getaddrinfo_t *req,
+                    uv_getaddrinfo_cb callback,
+                    const char *node,
+                    const char *service,
+                    const struct addrinfo *hints,
+                    int calls)
+{
+    struct addrinfo *addr;
+
+    addr = get_addr_from_ipstring("123.123.123.123", 0);
+
+    callback(req, 0, addr);
+
+    freeaddrinfo(addr);
+
+    return 0;
+}
+
+
 void
 client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host()
 {
@@ -456,6 +486,52 @@ client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host()
     Malloc_ExpectAndReturn(sizeof(uv_getaddrinfo_t), &addrReq, cmp_int);
     uv_default_loop_ExpectAndReturn(NULL);
     uv_getaddrinfo_MockWithCallback(getaddrinfo_nomatch);
+
+    uv_inet_ntop_MockWithCallback(inet_ntop_mock);
+
+    Free_ExpectAndReturn(&addrReq, cmp_ptr);
+
+    Free_ExpectAndReturn(&req, cmp_ptr);
+
+    callbackCalled = false;
+
+    listener.AddressFamily = AF_INET;
+    handle.data = &listener;
+
+    bool ret = client_accept(&client, &handle);
+
+    OP_ASSERT_TRUE(ret);
+    OP_ASSERT_TRUE(callbackCalled);
+    OP_VERIFY();
+}
+
+void
+client_accept_when_addrcallback_and_host_match_sets_host()
+{
+    Client client = {0};
+    uv_stream_t handle;
+    uv_tcp_t clientHandle;
+    ClientDnsRequest dnsRequest = { 0 };
+    uv_getnameinfo_t req;
+    uv_getaddrinfo_t addrReq;
+    Listener listener = { 0 };
+
+    dnsRequest.Callback = match_callback;
+
+    Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_tcp_init_ExpectAndReturn(NULL, &clientHandle, 0, NULL, cmp_ptr);
+    uv_accept_ExpectAndReturn(&handle, (uv_stream_t *)&clientHandle, 0,
+                              cmp_ptr, cmp_ptr);
+    Malloc_ExpectAndReturn(sizeof(ClientDnsRequest), &dnsRequest, cmp_int);
+    uv_tcp_getsockname_MockWithCallback(getsockname_mock);
+    Malloc_ExpectAndReturn(sizeof(uv_getnameinfo_t), &req, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_getnameinfo_MockWithCallback(&getnameinfo_goodstatus);
+
+    Malloc_ExpectAndReturn(sizeof(uv_getaddrinfo_t), &addrReq, cmp_int);
+    uv_default_loop_ExpectAndReturn(NULL);
+    uv_getaddrinfo_MockWithCallback(getaddrinfo_match);
 
     uv_inet_ntop_MockWithCallback(inet_ntop_mock);
 
@@ -505,6 +581,8 @@ int main()
     opmock_register_test(client_accept_when_namecallback_returns_good_status_getsaddress, "client_accept_when_namecallback_returns_good_status_getsaddress");
     opmock_register_test(client_accept_when_addrcallback_returns_bad_status_frees_request, "client_accept_when_addrcallback_returns_bad_status_frees_request");
     opmock_register_test(client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host, "client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host");
+    opmock_register_test(client_accept_when_addrcallback_and_host_match_sets_host,
+                         "client_accept_when_addrcallback_and_host_match_sets_host");
 
     opmock_test_suite_run();
 

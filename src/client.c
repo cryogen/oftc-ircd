@@ -69,7 +69,7 @@ client_on_addr_callback(uv_getaddrinfo_t *req, int status, struct addrinfo *res)
         }
         else
         {
-            // DNS Matched, good to go
+            call_dns_callback(dnsRequest, true);
         }
     }
 
