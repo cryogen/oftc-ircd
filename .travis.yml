@@ -4,4 +4,6 @@ compiler:
   - gcc
 
 before_script:
-  - autoreconf -i -f && cd json-c && ./autogen.sh && cd ../libuv && ./autogen.sh && cd ..
+  - autoreconf -i -f 
+  - cd json-c && ./autogen.sh && cd ..
+  - cd libuv && ./autogen.sh && cd ..
