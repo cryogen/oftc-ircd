@@ -30,6 +30,8 @@
 #include <uv.h>
 #include <stdbool.h>
 
+#include "network.h"
+
 #define HOSTLEN 128
 
 typedef struct _Client Client;
@@ -40,9 +42,7 @@ typedef void (*DnsCallback)(ClientDnsRequest *request, bool matched);
 struct _Client
 {
     uv_tcp_t *Handle;
-    struct sockaddr Address;
-    int AddressLength;
-    int AddressFamily;
+    NetworkAddress Address;
     char Host[HOSTLEN];
 };
 
@@ -50,8 +50,7 @@ struct _ClientDnsRequest
 {
     Client *Client;
     char Host[HOSTLEN];
-    struct sockaddr Address;
-    int AddressLength;
+    NetworkAddress Address;
     DnsCallback Callback;
 };
 

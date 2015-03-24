@@ -30,6 +30,8 @@
 #include <stdint.h>
 #include <uv.h>
 
+#include "network.h"
+
 #define LISTENER_DEFAULT_BACKLOG 128
 
 typedef struct _Listener Listener;
@@ -39,7 +41,7 @@ struct _Listener
     const char *Name;
     const char *Host;
     uint16_t Port;
-    int AddressFamily;
+    NetworkAddress Address;
 
     // Private fields
     uv_tcp_t handle;

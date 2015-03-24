@@ -120,6 +120,111 @@ network_address_from_ipstring_when_colons_in_address_sets_v6()
     OP_VERIFY();
 }
 
+void
+network_ipstring_from_address_when_address_null_return_false()
+{
+    char host[256];
+    bool ret;
+
+    ret = network_ipstring_from_address(NULL, host, 256);
+
+    OP_ASSERT_FALSE(ret);
+    OP_VERIFY();
+}
+
+void
+network_ipstring_from_address_when_ipstr_null_return_false()
+{
+    NetworkAddress address;
+    bool ret;
+
+    ret = network_ipstring_from_address(&address, NULL, 256);
+
+    OP_ASSERT_FALSE(ret);
+    OP_VERIFY();
+}
+
+void
+network_ipstring_from_address_when_v4_and_fails_returns_false()
+{
+    NetworkAddress address;
+    char host[256];
+    bool ret;
+
+    address.AddressFamily = AF_INET;
+
+    uv_ip4_name_ExpectAndReturn(NULL, NULL, 0, -1, NULL, NULL, NULL);
+
+    ret = network_ipstring_from_address(&address, host, 256);
+
+    OP_ASSERT_FALSE(ret);
+    OP_VERIFY();
+}
+
+void
+network_ipstring_from_address_when_v6_and_fails_returns_false()
+{
+    NetworkAddress address;
+    char host[256];
+    bool ret;
+
+    address.AddressFamily = AF_INET6;
+
+    uv_ip6_name_ExpectAndReturn(NULL, NULL, 0, -1, NULL, NULL, NULL);
+
+    ret = network_ipstring_from_address(&address, host, 256);
+
+    OP_ASSERT_FALSE(ret);
+    OP_VERIFY();
+}
+
+void
+network_ipstring_from_address_when_unknown_family_returns_false()
+{
+    NetworkAddress address;
+    char host[256];
+    bool ret;
+
+    ret = network_ipstring_from_address(&address, host, 256);
+
+    OP_ASSERT_FALSE(ret);
+    OP_VERIFY();
+}
+
+void
+network_ipstring_from_address_when_v4ok_returns_true()
+{
+    NetworkAddress address;
+    char host[256];
+    bool ret;
+
+    address.AddressFamily = AF_INET;
+
+    uv_ip4_name_ExpectAndReturn(NULL, NULL, 0, 0, NULL, NULL, NULL);
+
+    ret = network_ipstring_from_address(&address, host, 256);
+
+    OP_ASSERT_TRUE(ret);
+    OP_VERIFY();
+}
+
+void
+network_ipstring_from_address_when_v6ok_returns_true()
+{
+    NetworkAddress address;
+    char host[256];
+    bool ret;
+
+    address.AddressFamily = AF_INET6;
+
+    uv_ip6_name_ExpectAndReturn(NULL, NULL, 0, 0, NULL, NULL, NULL);
+
+    ret = network_ipstring_from_address(&address, host, 256);
+
+    OP_ASSERT_TRUE(ret);
+    OP_VERIFY();
+}
+
 int
 main()
 {
@@ -127,14 +232,32 @@ main()
 
     opmock_register_test(network_address_from_ipstring_when_null_ip_returns_false,
                          "network_address_from_ipstring_when_null_ip_returns_false");
-    opmock_register_test(network_address_from_ipstring_when_null_address_returns_false, "network_address_from_ipstring_when_null_address_returns_false");
+    opmock_register_test(network_address_from_ipstring_when_null_address_returns_false,
+                         "network_address_from_ipstring_when_null_address_returns_false");
     opmock_register_test(network_address_from_ipstring_when_v4fails_returns_false,
                          "network_address_from_ipstring_when_v4fails_returns_false");
-    opmock_register_test(network_address_from_ipstring_when_dots_in_address_sets_v4, "network_address_from_ipstring_when_dots_in_address_sets_v4");
-    opmock_register_test(network_address_from_ipstring_when_v6fails_returns_false, "network_address_from_ipstring_when_v6fails_returns_false");
-    opmock_register_test(network_address_from_ipstring_when_invalid_address_returns_false, "network_address_from_ipstring_when_invalid_address_returns_false");
-    opmock_register_test(network_address_from_ipstring_when_colons_in_address_sets_v6, "network_address_from_ipstring_when_colons_in_address_sets_v6");
-
+    opmock_register_test(network_address_from_ipstring_when_dots_in_address_sets_v4,
+                         "network_address_from_ipstring_when_dots_in_address_sets_v4");
+    opmock_register_test(network_address_from_ipstring_when_v6fails_returns_false,
+                         "network_address_from_ipstring_when_v6fails_returns_false");
+    opmock_register_test(network_address_from_ipstring_when_invalid_address_returns_false,
+                         "network_address_from_ipstring_when_invalid_address_returns_false");
+    opmock_register_test(network_address_from_ipstring_when_colons_in_address_sets_v6,
+                         "network_address_from_ipstring_when_colons_in_address_sets_v6");
+    opmock_register_test(network_ipstring_from_address_when_address_null_return_false,
+                         "network_ipstring_from_address_when_address_null_return_false");
+    opmock_register_test(network_ipstring_from_address_when_ipstr_null_return_false,
+                         "network_ipstring_from_address_when_ipstr_null_return_false");
+    opmock_register_test(network_ipstring_from_address_when_v4_and_fails_returns_false,
+                         "network_ipstring_from_address_when_v4_and_fails_returns_false");
+    opmock_register_test(network_ipstring_from_address_when_v6_and_fails_returns_false,
+                         "network_ipstring_from_address_when_v6_and_fails_returns_false");
+    opmock_register_test(network_ipstring_from_address_when_unknown_family_returns_false,
+                         "network_ipstring_from_address_when_unknown_family_returns_false");
+    opmock_register_test(network_ipstring_from_address_when_v4ok_returns_true,
+                         "network_ipstring_from_address_when_v4ok_returns_true");
+    opmock_register_test(network_ipstring_from_address_when_v6ok_returns_true,
+                         "network_ipstring_from_address_when_v6ok_returns_true");
     opmock_test_suite_run();
 
     return opmock_test_error > 0;

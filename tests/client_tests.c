@@ -418,25 +418,17 @@ no_match_callback(ClientDnsRequest *req, bool match)
 }
 
 static int
-inet_ntop_mock(int af, const void *src, char *dst, size_t len, int calls)
-{
-    return inet_ntop(af, &((struct sockaddr_in *)src)->sin_addr, dst, len) != NULL;
-}
-
-static int
 getsockname_mock(const uv_tcp_t *handle,
                  struct sockaddr *addr,
                  int *addrLen,
                  int calls)
 {
-    struct addrinfo *addrInfo;
+    NetworkAddress address;
 
-    addrInfo = get_addr_from_ipstring("123.123.123.123", 0);
+    network_address_from_ipstring("123.123.123.123", &address);
 
-    memcpy(addr, addrInfo->ai_addr, addrInfo->ai_addrlen);
-    *addrLen = addrInfo->ai_addrlen;
-
-    freeaddrinfo(addrInfo);
+    memcpy(addr, &address.Address, address.AddressLength);
+    *addrLen = address.AddressLength;
 
     return 0;
 }
@@ -459,17 +451,42 @@ getaddrinfo_match(uv_loop_t *loop,
                     const struct addrinfo *hints,
                     int calls)
 {
-    struct addrinfo *addr;
+    struct addrinfo addr = { 0 };
+    NetworkAddress address;
 
-    addr = get_addr_from_ipstring("123.123.123.123", 0);
+    network_address_from_ipstring("123.123.123.123", &address);
 
-    callback(req, 0, addr);
+    addr.ai_addr = (struct sockaddr *)&address.Address;
 
-    freeaddrinfo(addr);
+    callback(req, 0, &addr);
 
     return 0;
 }
 
+int
+uv_ip4_addr_callback(const char *ip,
+                     int port,
+                     struct sockaddr_in *addr,
+                     int calls)
+{
+    memset(addr, 0, sizeof(struct sockaddr_in));
+
+    addr->sin_family = AF_INET;
+    inet_pton(AF_INET, ip, &addr->sin_addr);
+
+    return 0;
+}
+
+int
+uv_ip4_name_callback(const struct sockaddr_in *src,
+                     char *dst,
+                     size_t size,
+                     int calls)
+{
+    inet_ntop(AF_INET, &src->sin_addr, dst, size);
+
+    return 0;
+}
 
 void
 client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host()
@@ -491,6 +508,7 @@ client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host()
                               cmp_ptr, cmp_ptr);
     Malloc_ExpectAndReturn(sizeof(ClientDnsRequest), &dnsRequest, cmp_int);
     uv_tcp_getsockname_MockWithCallback(getsockname_mock);
+    uv_ip4_addr_MockWithCallback(uv_ip4_addr_callback);
     Malloc_ExpectAndReturn(sizeof(uv_getnameinfo_t), &req, cmp_int);
     uv_default_loop_ExpectAndReturn(NULL);
     uv_getnameinfo_MockWithCallback(&getnameinfo_goodstatus);
@@ -499,7 +517,7 @@ client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host()
     uv_default_loop_ExpectAndReturn(NULL);
     uv_getaddrinfo_MockWithCallback(getaddrinfo_nomatch);
 
-    uv_inet_ntop_MockWithCallback(inet_ntop_mock);
+    uv_ip4_name_MockWithCallback(uv_ip4_name_callback);
 
     Free_ExpectAndReturn(&addrReq, cmp_ptr);
 
@@ -507,7 +525,6 @@ client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host()
 
     callbackCalled = false;
 
-    listener.AddressFamily = AF_INET;
     handle.data = &listener;
 
     bool ret = client_accept(&client, &handle);
@@ -537,6 +554,7 @@ client_accept_when_addrcallback_and_host_match_sets_host()
                               cmp_ptr, cmp_ptr);
     Malloc_ExpectAndReturn(sizeof(ClientDnsRequest), &dnsRequest, cmp_int);
     uv_tcp_getsockname_MockWithCallback(getsockname_mock);
+    uv_ip4_addr_MockWithCallback(uv_ip4_addr_callback);
     Malloc_ExpectAndReturn(sizeof(uv_getnameinfo_t), &req, cmp_int);
     uv_default_loop_ExpectAndReturn(NULL);
     uv_getnameinfo_MockWithCallback(&getnameinfo_goodstatus);
@@ -545,7 +563,7 @@ client_accept_when_addrcallback_and_host_match_sets_host()
     uv_default_loop_ExpectAndReturn(NULL);
     uv_getaddrinfo_MockWithCallback(getaddrinfo_match);
 
-    uv_inet_ntop_MockWithCallback(inet_ntop_mock);
+    uv_ip4_name_MockWithCallback(uv_ip4_name_callback);
 
     Free_ExpectAndReturn(&addrReq, cmp_ptr);
 
@@ -553,7 +571,6 @@ client_accept_when_addrcallback_and_host_match_sets_host()
 
     callbackCalled = false;
 
-    listener.AddressFamily = AF_INET;
     handle.data = &listener;
 
     bool ret = client_accept(&client, &handle);

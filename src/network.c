@@ -30,32 +30,16 @@
 #include <stdio.h>
 #include <string.h>
 
-struct addrinfo *
-get_addr_from_ipstring(const char *ip, uint16_t port)
+bool
+network_address_from_ipstring(const char *ip, NetworkAddress *address)
 {
-    struct addrinfo hints = { 0 };
-    struct addrinfo *res;
-    char buffer[6];
-    int ret;
-
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST;
-
-    snprintf(buffer, sizeof(buffer), "%d", port);
-
-    ret = getaddrinfo(ip, buffer, &hints, &res);
-
-    if(ret < 0)
-    {
-        return NULL;
-    }
-
-    return res;
+    return network_address_from_ipstring_and_port(ip, 0, address);
 }
 
 bool
-network_address_from_ipstring(const char *ip, NetworkAddress *address)
+network_address_from_ipstring_and_port(const char *ip,
+                                       unsigned short port,
+                                       NetworkAddress *address)
 {
     if(ip == NULL || address == NULL)
     {
@@ -81,6 +65,38 @@ network_address_from_ipstring(const char *ip, NetworkAddress *address)
 
         address->AddressFamily = AF_INET6;
         address->AddressLength = sizeof(struct sockaddr_in6);
+    }
+    else
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool
+network_ipstring_from_address(NetworkAddress *address,
+                              char *ip,
+                              size_t ipLen)
+{
+    if(address == NULL || ip == NULL)
+    {
+        return false;
+    }
+
+    if(address->AddressFamily == AF_INET)
+    {
+        if(uv_ip4_name(&address->Address.Addr4, ip, ipLen) != 0)
+        {
+            return false;
+        }
+    }
+    else if(address->AddressFamily == AF_INET6)
+    {
+        if(uv_ip6_name(&address->Address.Addr6, ip, ipLen) != 0)
+        {
+            return false;
+        }
     }
     else
     {

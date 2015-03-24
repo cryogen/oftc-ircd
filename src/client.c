@@ -53,7 +53,8 @@ client_on_addr_callback(uv_getaddrinfo_t *req, int status, struct addrinfo *res)
     {
         do
         {
-            if(memcmp(res->ai_addr, &dnsRequest->Address, dnsRequest->AddressLength) == 0)
+            if(memcmp(res->ai_addr, &dnsRequest->Address.Address,
+                      dnsRequest->Address.AddressLength) == 0)
             {
                 break;
             }
@@ -63,8 +64,8 @@ client_on_addr_callback(uv_getaddrinfo_t *req, int status, struct addrinfo *res)
 
         if(res == NULL)
         {
-            uv_inet_ntop(dnsRequest->Client->AddressFamily, &dnsRequest->Address,
-                         dnsRequest->Host, HOSTLEN);
+            network_ipstring_from_address(&dnsRequest->Address,
+                                          dnsRequest->Host, HOSTLEN);
             call_dns_callback(dnsRequest, false);
         }
         else
@@ -156,11 +157,10 @@ client_accept(Client *client, uv_stream_t *handle)
     dnsRequest = Malloc(sizeof(ClientDnsRequest));
     dnsRequest->Client = client;
 
-    dnsRequest->AddressLength = sizeof(struct sockaddr);
-    ret = uv_tcp_getsockname((uv_tcp_t *)client->Handle, &dnsRequest->Address,
-                             &dnsRequest->AddressLength);
-
-    client->AddressFamily = listener->AddressFamily;
+    ret = uv_tcp_getsockname((uv_tcp_t *)client->Handle,
+                             (struct sockaddr *)&dnsRequest->Address,
+                             &dnsRequest->Address.AddressLength);
+    dnsRequest->Address.AddressFamily = dnsRequest->Address.Address.Addr4.sin_family;
 
     if(ret != 0)
     {
@@ -172,7 +172,7 @@ client_accept(Client *client, uv_stream_t *handle)
     req->data = dnsRequest;
 
     ret = uv_getnameinfo(uv_default_loop(), req, client_on_name_callback,
-                         &dnsRequest->Address, 0);
+                         (struct sockaddr *)&dnsRequest->Address, 0);
 
     if(ret != 0)
     {

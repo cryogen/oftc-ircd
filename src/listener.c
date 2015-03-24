@@ -131,14 +131,20 @@ listener_start_listeners()
 
         listener->handle.data = listener;
 
-        addr = get_addr_from_ipstring(listener->Host, listener->Port);
-        listener->AddressFamily = addr->ai_family;
-        if(addr->ai_family == AF_INET6)
+        if(!network_address_from_ipstring_and_port(listener->Host,
+                                                   listener->Port,
+                                                   &listener->Address))
+        {
+            fprintf(stderr, "Error getting address from host");
+            continue;
+        }
+
+        if(listener->Address.AddressFamily == AF_INET6)
         {
             flags = UV_TCP_IPV6ONLY;
         }
 
-        ret = uv_tcp_bind(&listener->handle, addr->ai_addr, flags);
+        ret = uv_tcp_bind(&listener->handle, (struct sockaddr *)&listener->Address, flags);
         freeaddrinfo(addr);
         if(ret < 0)
         {

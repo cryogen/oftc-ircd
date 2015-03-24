@@ -43,11 +43,11 @@ struct _NetworkAddress
     } Address;
 
     int AddressFamily;
-    size_t AddressLength;
+    int AddressLength;
 };
 
-struct addrinfo *get_addr_from_ipstring(const char *ip, uint16_t port);
 bool network_address_from_ipstring(const char *ip, NetworkAddress *address);
+bool network_address_from_ipstring_and_port(const char *ip, unsigned short port, NetworkAddress *address);
 bool network_ipstring_from_address(NetworkAddress *address, char *ip, size_t ipLen);
 
 #endif /* defined(__oftc_ircd__network__) */
