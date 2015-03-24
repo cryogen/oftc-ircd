@@ -28,6 +28,7 @@
 
 #include <uv.h>
 #include <stdio.h>
+#include <string.h>
 
 struct addrinfo *
 get_addr_from_ipstring(const char *ip, uint16_t port)
@@ -51,4 +52,40 @@ get_addr_from_ipstring(const char *ip, uint16_t port)
     }
 
     return res;
+}
+
+bool
+network_address_from_ipstring(const char *ip, NetworkAddress *address)
+{
+    if(ip == NULL || address == NULL)
+    {
+        return false;
+    }
+
+    if(strstr(ip, ".") != NULL)
+    {
+        if(uv_ip4_addr(ip, 0, &address->Address.Addr4) != 0)
+        {
+            return false;
+        }
+
+        address->AddressFamily = AF_INET;
+        address->AddressLength = sizeof(struct sockaddr_in);
+    }
+    else if(strstr(ip, ":") != NULL)
+    {
+        if(uv_ip6_addr(ip, 0, &address->Address.Addr6) != 0)
+        {
+            return false;
+        }
+
+        address->AddressFamily = AF_INET6;
+        address->AddressLength = sizeof(struct sockaddr_in6);
+    }
+    else
+    {
+        return false;
+    }
+
+    return true;
 }
