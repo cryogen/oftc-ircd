@@ -42,15 +42,14 @@ typedef void (*DnsCallback)(ClientDnsRequest *request, bool matched);
 struct _Client
 {
     uv_tcp_t *Handle;
-    NetworkAddress Address;
     char Host[HOSTLEN];
+    NetworkAddress Address;
 };
 
 struct _ClientDnsRequest
 {
     Client *Client;
     char Host[HOSTLEN];
-    NetworkAddress Address;
     DnsCallback Callback;
 };
 
