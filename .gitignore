@@ -31,5 +31,5 @@ oftc_ircd_tests
 cov
 *.info
 .DS_Store
-client_tests
+*_tests
 TEST-test.xml
