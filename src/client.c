@@ -24,6 +24,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <assert.h>
+
 #include "client.h"
 #include "vector.h"
 #include "hash.h"
@@ -49,29 +51,30 @@ client_on_addr_callback(uv_getaddrinfo_t *req, int status, struct addrinfo *res)
 {
     ClientDnsRequest *dnsRequest = req->data;
 
-    if(status == 0)
+    if(status != 0)
     {
-        do
-        {
-            if(memcmp(res->ai_addr, &dnsRequest->Client->Address.Address,
-                      dnsRequest->Client->Address.AddressLength) == 0)
-            {
-                break;
-            }
+        call_dns_callback(dnsRequest, false);
+        Free(req);
 
-            res = res->ai_next;
-        } while (res != NULL);
+        return;
+    }
+    
+    do
+    {
+        if(memcmp(res->ai_addr, &dnsRequest->Client->Address.Address,
+                  dnsRequest->Client->Address.AddressLength) == 0)
+        {
+            break;
+        }
 
-        if(res == NULL)
-        {
-            network_ipstring_from_address(&dnsRequest->Client->Address,
-                                          dnsRequest->Host, HOSTLEN);
-            call_dns_callback(dnsRequest, false);
-        }
-        else
-        {
-            call_dns_callback(dnsRequest, true);
-        }
+        res = res->ai_next;
+    } while (res != NULL);
+
+    if(res == NULL)
+    {
+        network_ipstring_from_address(&dnsRequest->Client->Address,
+                                      dnsRequest->Host, HOSTLEN);
+        call_dns_callback(dnsRequest, false);
     }
     else
     {
@@ -103,6 +106,23 @@ client_on_name_callback(uv_getnameinfo_t* req, int status, const char *hostname,
     }
     
     Free(req);
+}
+
+static bool
+client_accept_socket(Client *client, uv_stream_t *handle)
+{
+    assert(client != NULL);
+
+    client->Handle = Malloc(sizeof(uv_tcp_t));
+    uv_tcp_init(uv_default_loop(), client->Handle);
+    if(uv_accept(handle, (uv_stream_t *)client->Handle) != 0)
+    {
+        return false;
+    }
+
+    client->Handle->data = client;
+
+    return true;
 }
 
 void
@@ -151,16 +171,10 @@ client_accept(Client *client, uv_stream_t *handle)
 
     listener = handle->data;
 
-    client->Handle = Malloc(sizeof(uv_tcp_t));
-    uv_tcp_init(uv_default_loop(), client->Handle);
-    ret = uv_accept(handle, (uv_stream_t *)client->Handle);
-
-    if(ret < 0)
+    if(!client_accept_socket(client, handle))
     {
         return false;
     }
-
-    client->Handle->data = client;
 
     ret = uv_tcp_getsockname((uv_tcp_t *)client->Handle,
                              (struct sockaddr *)&client->Address,
