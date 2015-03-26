@@ -440,7 +440,7 @@ config_load_when_field_handler_provided_calls_handler()
 void
 config_load_when_sections_registered_and_verify_null_works_ok()
 {
-    ConfigField field = { 0 };
+    ConfigSection section = { 0 };
 
     init_buf();
     init_read();
@@ -451,7 +451,7 @@ config_load_when_sections_registered_and_verify_null_works_ok()
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 1, NULL);
-    vector_get_ExpectAndReturn(NULL, 0, &field, NULL, NULL);
+    vector_get_ExpectAndReturn(NULL, 0, &section, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 0, NULL);
 
     verifyCalled = false;
