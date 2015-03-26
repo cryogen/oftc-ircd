@@ -36,6 +36,8 @@ hash_new_when_called_with_name_and_len_returns_hash()
     Hash *h;
     char ptr[512];
 
+    hash_init();
+
     Malloc_ExpectAndReturn(0, &hash, NULL);
     Malloc_ExpectAndReturn(0, &ptr, NULL);
 

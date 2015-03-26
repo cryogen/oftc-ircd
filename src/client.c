@@ -109,6 +109,29 @@ client_on_name_callback(uv_getnameinfo_t* req, int status, const char *hostname,
     Free(req);
 }
 
+static void
+client_allocate_buffer_callback(uv_handle_t *handle,
+                                size_t suggestedSize,
+                                uv_buf_t *buf)
+{
+    buf->base = Malloc(suggestedSize);
+    buf->len = suggestedSize;
+}
+
+static void
+client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
+{
+    if(nRead == UV_EOF)
+    {
+        // TODO: exit client due to connection closed, probably get consolidated
+        // with below
+    }
+    else if(nRead < 0)
+    {
+        // TODO: exit client due to read error
+    }
+}
+
 static bool
 client_accept_socket(Client *client, uv_stream_t *handle)
 {
@@ -129,7 +152,15 @@ client_accept_socket(Client *client, uv_stream_t *handle)
 static void
 client_dns_complete_callback(ClientDnsRequest *request, bool match)
 {
+    Client *client = request->Client;
 
+    if(uv_read_start((uv_stream_t *)client->Handle, client_allocate_buffer_callback,
+                     client_on_read_callback) < 0)
+    {
+        // TODO: Exit client
+
+        return;
+    }
 }
 
 void

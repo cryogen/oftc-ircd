@@ -196,6 +196,50 @@ uv_ip4_name_callback(const struct sockaddr_in *src,
 }
 
 static void
+verify_alloc_test(uv_buf_t *buf)
+{
+    OP_ASSERT_EQUAL_INT(1024, (int)buf->len);
+    OP_ASSERT_TRUE(buf->base != NULL);
+}
+
+static int
+uv_read_start_alloc_callback(uv_stream_t *stream,
+                             uv_alloc_cb allocCallback,
+                             uv_read_cb readCallback,
+                             int calls)
+{
+    uv_buf_t buf = { 0 };
+
+    allocCallback((uv_handle_t *)stream, 1024, &buf);
+
+    verify_alloc_test(&buf);
+
+    return 0;
+}
+
+static int
+uv_read_start_read_fail_callback(uv_stream_t *stream,
+                                 uv_alloc_cb allocCallback,
+                                 uv_read_cb readCallback,
+                                 int calls)
+{
+    readCallback(stream, -1, NULL);
+
+    return 0;
+}
+
+static int
+uv_read_start_read_closed_callback(uv_stream_t *stream,
+                                   uv_alloc_cb allocCallback,
+                                   uv_read_cb readCallback,
+                                   int calls)
+{
+    readCallback(stream, UV_EOF, NULL);
+
+    return 0;
+}
+
+static void
 setup_stream(int acceptRet)
 {
     memset(&client, 0, sizeof(client));
@@ -348,7 +392,9 @@ client_accept_when_getnameinfo_fails_returns_true()
 
     uv_getnameinfo_ExpectAndReturn(NULL, &req, NULL, NULL, 0, -1, NULL, cmp_ptr,
                                    NULL, NULL, NULL);
+
     Free_ExpectAndReturn(&req, cmp_ptr);
+    uv_read_start_ExpectAndReturn(NULL, NULL, NULL, -1, NULL, NULL, NULL);
 
     bool ret = client_accept(&client, &handle);
 
@@ -378,6 +424,8 @@ client_accept_when_namecallback_returns_bad_status_frees_request()
     setup_sockname();
 
     uv_getnameinfo_MockWithCallback(&getnameinfo_badstatus);
+
+    uv_read_start_ExpectAndReturn(NULL, NULL, NULL, -1, NULL, NULL, NULL);
     Free_ExpectAndReturn(&req, cmp_ptr);
 
     bool ret = client_accept(&client, &handle);
@@ -417,6 +465,7 @@ client_accept_when_addrcallback_returns_bad_status_frees_request()
     Malloc_ExpectAndReturn(sizeof(uv_getaddrinfo_t), &addrReq, cmp_int);
     uv_getaddrinfo_MockWithCallback(getaddrinfo_badstatus);
 
+    uv_read_start_ExpectAndReturn(NULL, NULL, NULL, -1, NULL, NULL, NULL);
     Free_ExpectAndReturn(&addrReq, cmp_ptr);
     Free_ExpectAndReturn(&req, cmp_ptr);
 
@@ -467,13 +516,54 @@ client_accept_when_addrcallback_and_host_match_sets_host()
     Free_ExpectAndReturn(&addrReq, cmp_ptr);
     Free_ExpectAndReturn(&req, cmp_ptr);
 
-    callbackCalled = false;
 
     bool ret = client_accept(&client, &handle);
 
     OP_ASSERT_TRUE(ret);
     OP_ASSERT_TRUE(callbackCalled);
     OP_VERIFY();
+}
+
+void
+client_on_buffer_alloc_cb_allocates_buffer()
+{
+    setup_stream(0);
+    setup_sockname();
+
+    uv_getnameinfo_MockWithCallback(&getnameinfo_badstatus);
+
+    uv_read_start_MockWithCallback(uv_read_start_alloc_callback);
+    Free_ExpectAndReturn(&req, cmp_ptr);
+
+    client_accept(&client, &handle);
+}
+
+void
+client_on_read_when_error_closes_connection()
+{
+    setup_stream(0);
+    setup_sockname();
+
+    uv_getnameinfo_MockWithCallback(&getnameinfo_badstatus);
+
+    uv_read_start_MockWithCallback(uv_read_start_read_fail_callback);
+    Free_ExpectAndReturn(&req, cmp_ptr);
+
+    client_accept(&client, &handle);
+}
+
+void
+client_on_read_when_connection_closed_closes_connection()
+{
+    setup_stream(0);
+    setup_sockname();
+
+    uv_getnameinfo_MockWithCallback(&getnameinfo_badstatus);
+
+    uv_read_start_MockWithCallback(uv_read_start_read_closed_callback);
+    Free_ExpectAndReturn(&req, cmp_ptr);
+
+    client_accept(&client, &handle);
 }
 
 int main()
@@ -508,6 +598,12 @@ int main()
     opmock_register_test(client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host, "client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host");
     opmock_register_test(client_accept_when_addrcallback_and_host_match_sets_host,
                          "client_accept_when_addrcallback_and_host_match_sets_host");
+    opmock_register_test(client_on_buffer_alloc_cb_allocates_buffer,
+                         "client_on_buffer_alloc_cb_allocates_buffer");
+    opmock_register_test(client_on_read_when_error_closes_connection,
+                         "client_on_read_when_error_closes_connection");
+    opmock_register_test(client_on_read_when_connection_closed_closes_connection,
+                         "client_on_read_when_connection_closed_closes_connection");
 
     opmock_test_suite_run();
 
