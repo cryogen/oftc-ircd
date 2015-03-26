@@ -44,6 +44,24 @@ uv_getnameinfo_t req;
 uv_getaddrinfo_t addrReq;
 bool callbackCalled;
 
+static void
+no_match_callback(ClientDnsRequest *req, bool match)
+{
+    callbackCalled = true;
+
+    OP_ASSERT_FALSE(match);
+    OP_ASSERT_EQUAL_CSTRING("123.123.123.123", req->Host);
+}
+
+static void
+match_callback(ClientDnsRequest *req, bool match)
+{
+    callbackCalled = true;
+
+    OP_ASSERT_TRUE(match);
+    OP_ASSERT_EQUAL_CSTRING("Test.Test", req->Host);
+}
+
 static int
 getsockname_mock(const uv_tcp_t *handle,
                  struct sockaddr *addr,
@@ -112,6 +130,10 @@ getaddrinfo_nomatch(uv_loop_t *loop,
     struct addrinfo addr = { 0 };
     struct sockaddr_in addr4;
 
+    ClientDnsRequest *dnsRequest = req->data;
+
+    dnsRequest->Callback = no_match_callback;
+
     addr.ai_addrlen = sizeof(addr4);
 
     addr4.sin_addr.s_addr = inet_addr("123.123.123.123");
@@ -121,24 +143,6 @@ getaddrinfo_nomatch(uv_loop_t *loop,
     callback(req, 0, &addr);
 
     return 0;
-}
-
-static void
-no_match_callback(ClientDnsRequest *req, bool match)
-{
-    callbackCalled = true;
-
-    OP_ASSERT_FALSE(match);
-    OP_ASSERT_EQUAL_CSTRING("123.123.123.123", req->Host);
-}
-
-static void
-match_callback(ClientDnsRequest *req, bool match)
-{
-    callbackCalled = true;
-
-    OP_ASSERT_TRUE(match);
-    OP_ASSERT_EQUAL_CSTRING("Test.Test", req->Host);
 }
 
 static int
@@ -152,6 +156,10 @@ getaddrinfo_match(uv_loop_t *loop,
 {
     struct addrinfo addr = { 0 };
     NetworkAddress address;
+
+    ClientDnsRequest *dnsRequest = req->data;
+
+    dnsRequest->Callback = match_callback;
 
     network_address_from_ipstring("123.123.123.123", &address);
 
@@ -434,7 +442,6 @@ client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host()
     Free_ExpectAndReturn(&addrReq, cmp_ptr);
     Free_ExpectAndReturn(&req, cmp_ptr);
 
-    dnsRequest.Callback = no_match_callback;
     callbackCalled = false;
 
     bool ret = client_accept(&client, &handle);
@@ -460,7 +467,6 @@ client_accept_when_addrcallback_and_host_match_sets_host()
     Free_ExpectAndReturn(&addrReq, cmp_ptr);
     Free_ExpectAndReturn(&req, cmp_ptr);
 
-    dnsRequest.Callback = match_callback;
     callbackCalled = false;
 
     bool ret = client_accept(&client, &handle);

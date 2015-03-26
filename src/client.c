@@ -126,6 +126,12 @@ client_accept_socket(Client *client, uv_stream_t *handle)
     return true;
 }
 
+static void
+client_dns_complete_callback(ClientDnsRequest *request, bool match)
+{
+
+}
+
 void
 client_init()
 {
@@ -189,6 +195,7 @@ client_accept(Client *client, uv_stream_t *handle)
 
     dnsRequest = Malloc(sizeof(ClientDnsRequest));
     dnsRequest->Client = client;
+    dnsRequest->Callback = client_dns_complete_callback;
 
     req = Malloc(sizeof(uv_getnameinfo_t));
     req->data = dnsRequest;
