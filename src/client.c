@@ -31,6 +31,7 @@
 #include "hash.h"
 #include "memory.h"
 #include "listener.h"
+#include "serverstate.h"
 
 static Vector *clientList;
 static Hash *clientHash;
@@ -58,7 +59,7 @@ client_on_addr_callback(uv_getaddrinfo_t *req, int status, struct addrinfo *res)
 
         return;
     }
-    
+
     do
     {
         if(memcmp(res->ai_addr, &dnsRequest->Client->Address.Address,
@@ -97,8 +98,8 @@ client_on_name_callback(uv_getnameinfo_t* req, int status, const char *hostname,
         strncpy(dnsRequest->Host, hostname, sizeof(dnsRequest->Host) - 1);
         addrReq->data = dnsRequest;
 
-        uv_getaddrinfo(uv_default_loop(), addrReq, client_on_addr_callback,
-                       dnsRequest->Host, service, NULL);
+        uv_getaddrinfo(serverstate_get_event_loop(), addrReq,
+                       client_on_addr_callback, dnsRequest->Host, service, NULL);
     }
     else
     {
@@ -114,7 +115,7 @@ client_accept_socket(Client *client, uv_stream_t *handle)
     assert(client != NULL);
 
     client->Handle = Malloc(sizeof(uv_tcp_t));
-    uv_tcp_init(uv_default_loop(), client->Handle);
+    uv_tcp_init(serverstate_get_event_loop(), client->Handle);
     if(uv_accept(handle, (uv_stream_t *)client->Handle) != 0)
     {
         return false;
@@ -192,7 +193,7 @@ client_accept(Client *client, uv_stream_t *handle)
     req = Malloc(sizeof(uv_getnameinfo_t));
     req->data = dnsRequest;
 
-    ret = uv_getnameinfo(uv_default_loop(), req, client_on_name_callback,
+    ret = uv_getnameinfo(serverstate_get_event_loop(), req, client_on_name_callback,
                          (struct sockaddr *)&client->Address, 0);
 
     if(ret != 0)

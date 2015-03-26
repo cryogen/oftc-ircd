@@ -196,7 +196,6 @@ setup_stream(int acceptRet)
     memset(&listener, 0, sizeof(listener));
 
     Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_tcp_init_ExpectAndReturn(NULL, &clientHandle, 0, NULL, cmp_ptr);
     uv_accept_ExpectAndReturn(&handle, (uv_stream_t *)&clientHandle, acceptRet,
                               cmp_ptr, cmp_ptr);
@@ -214,7 +213,6 @@ setup_sockname()
     uv_tcp_getsockname_MockWithCallback(getsockname_mock);
     uv_ip4_addr_MockWithCallback(uv_ip4_addr_callback);
     Malloc_ExpectAndReturn(sizeof(uv_getnameinfo_t), &req, cmp_int);
-    uv_default_loop_ExpectAndReturn(NULL);
 }
 
 void
@@ -389,7 +387,6 @@ client_accept_when_namecallback_returns_good_status_getsaddress()
     uv_getnameinfo_MockWithCallback(&getnameinfo_goodstatus);
 
     Malloc_ExpectAndReturn(sizeof(uv_getaddrinfo_t), &addrReq, cmp_int);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_getaddrinfo_ExpectAndReturn(NULL, &addrReq, NULL, NULL, NULL, NULL, 0,
                                    NULL, cmp_ptr, NULL, NULL, NULL, NULL);
 
@@ -410,7 +407,6 @@ client_accept_when_addrcallback_returns_bad_status_frees_request()
     uv_getnameinfo_MockWithCallback(&getnameinfo_goodstatus);
 
     Malloc_ExpectAndReturn(sizeof(uv_getaddrinfo_t), &addrReq, cmp_int);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_getaddrinfo_MockWithCallback(getaddrinfo_badstatus);
 
     Free_ExpectAndReturn(&addrReq, cmp_ptr);
@@ -431,7 +427,6 @@ client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host()
     uv_getnameinfo_MockWithCallback(&getnameinfo_goodstatus);
 
     Malloc_ExpectAndReturn(sizeof(uv_getaddrinfo_t), &addrReq, cmp_int);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_getaddrinfo_MockWithCallback(getaddrinfo_nomatch);
 
     uv_ip4_name_MockWithCallback(uv_ip4_name_callback);
@@ -458,7 +453,6 @@ client_accept_when_addrcallback_and_host_match_sets_host()
     uv_getnameinfo_MockWithCallback(&getnameinfo_goodstatus);
 
     Malloc_ExpectAndReturn(sizeof(uv_getaddrinfo_t), &addrReq, cmp_int);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_getaddrinfo_MockWithCallback(getaddrinfo_match);
 
     uv_ip4_name_MockWithCallback(uv_ip4_name_callback);

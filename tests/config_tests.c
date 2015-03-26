@@ -34,6 +34,93 @@
 #include "json_tokener_stub.h"
 #include "memory_stub.h"
 
+static bool setDefaultsCalled = false;
+static bool handlerCalled = false;
+static bool verifyCalled = false;
+static bool newElementCalled = false;
+static bool elementDoneCalled = false;
+static uv_buf_t buf;
+static json_tokener tok;
+static json_object obj;
+static struct lh_table table;
+static struct lh_entry head;
+
+static void
+set_defaults_callback()
+{
+    setDefaultsCalled = true;
+}
+
+static void
+field_handler(void *element, json_object *obj)
+{
+    handlerCalled = true;
+}
+
+static bool
+verify_section_callback()
+{
+    verifyCalled = true;
+
+    return true;
+}
+
+static bool
+verify_section_fail_callback()
+{
+    verifyCalled = true;
+
+    return false;
+}
+
+static void *
+new_element_callback()
+{
+    newElementCalled = true;
+
+    return (void *)0x12345678;
+}
+
+static void
+element_done_callback()
+{
+    elementDoneCalled = true;
+}
+
+static void
+init_buf()
+{
+    memset(&buf, 0, sizeof(buf));
+    memset(&tok, 0, sizeof(tok));
+    memset(&obj, 0, sizeof(obj));
+
+    vector_length_ExpectAndReturn(NULL, 0, NULL);
+    serverstate_get_config_path_ExpectAndReturn("test.conf");
+    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
+    serverstate_get_event_loop_ExpectAndReturn(NULL);
+    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
+                               NULL, NULL, NULL, NULL);
+    json_tokener_new_ExpectAndReturn(&tok);
+}
+
+static void
+init_read()
+{
+    memset(&head, 0, sizeof(head));
+    memset(&table, 0, sizeof(table));
+
+    obj.o_type = json_type_object;
+    table.head = &head;
+
+    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
+                               NULL, NULL, NULL, NULL, NULL);
+    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
+                                          NULL, NULL);
+    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
+    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
+    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
+}
+
 void
 config_init_when_called_sets_up_hash_and_vector()
 {
@@ -72,14 +159,6 @@ config_load_when_sections_registered_and_set_defaults_is_null_works_ok()
     OP_VERIFY();
 }
 
-static bool setDefaultsCalled = false;
-
-static void
-set_defaults_callback()
-{
-    setDefaultsCalled = true;
-}
-
 void
 config_load_when_sections_registered_set_defaults_called()
 {
@@ -101,12 +180,10 @@ config_load_when_sections_registered_set_defaults_called()
 void
 config_load_when_fs_open_fails_returns_false()
 {
-    uv_buf_t buf;
-
     vector_length_ExpectAndReturn(NULL, 0, NULL);
     serverstate_get_config_path_ExpectAndReturn("test.conf");
     uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
+    serverstate_get_event_loop_ExpectAndReturn(NULL);
     uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, -1, NULL, NULL,
                                NULL, NULL, NULL, NULL);
 
@@ -119,21 +196,11 @@ config_load_when_fs_open_fails_returns_false()
 void
 config_load_when_fs_read_fails_returns_false()
 {
-    uv_buf_t buf;
-    json_tokener tok;
+    init_buf();
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, -1, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
 
     bool ret = config_load();
@@ -145,17 +212,8 @@ config_load_when_fs_read_fails_returns_false()
 void
 config_load_when_invalid_json_returns_false()
 {
-    uv_buf_t buf;
-    json_tokener tok;
+    init_buf();
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, NULL, cmp_ptr,
@@ -164,7 +222,6 @@ config_load_when_invalid_json_returns_false()
                                            cmp_ptr);
     json_tokener_error_desc_ExpectAndReturn(0, "Test error", NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
 
     bool ret = config_load();
@@ -176,24 +233,14 @@ config_load_when_invalid_json_returns_false()
 void
 config_load_when_invalid_json_second_time_returns_false()
 {
-    uv_buf_t buf;
-    json_tokener tok;
+    init_buf();
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, NULL, cmp_ptr,
                                           NULL, NULL);
     json_tokener_get_error_ExpectAndReturn(&tok, json_tokener_continue,
                                            cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
 
@@ -203,7 +250,6 @@ config_load_when_invalid_json_second_time_returns_false()
                                            cmp_ptr);
     json_tokener_error_desc_ExpectAndReturn(0, "Test error", NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
 
     bool ret = config_load();
@@ -215,18 +261,8 @@ config_load_when_invalid_json_second_time_returns_false()
 void
 config_load_when_no_root_object_returns_false()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj;
+    init_buf();
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
@@ -234,7 +270,6 @@ config_load_when_no_root_object_returns_false()
     json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
     json_object_get_type_ExpectAndReturn(&obj, json_type_boolean, cmp_ptr);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
 
     bool ret = config_load();
@@ -246,36 +281,13 @@ config_load_when_no_root_object_returns_false()
 void
 config_load_when_section_not_found_works_ok()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
-    struct lh_entry head = { 0 };
+    init_buf();
+    init_read();
 
-    obj.o_type = json_type_object;
-    table.head = &head;
-
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
     hash_find_ExpectAndReturn(NULL, NULL, NULL, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 0, NULL);
 
@@ -288,38 +300,16 @@ config_load_when_section_not_found_works_ok()
 void
 config_load_when_section_found_and_wrong_type_works_ok()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
-    struct lh_entry head = { 0 };
     ConfigSection section = { 0 };
 
-    obj.o_type = json_type_object;
-    table.head = &head;
+    init_buf();
+    init_read();
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
     hash_find_ExpectAndReturn(NULL, NULL, &section, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_string, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 0, NULL);
 
@@ -332,40 +322,18 @@ config_load_when_section_found_and_wrong_type_works_ok()
 void
 config_load_when_field_not_found_returns_ok()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
-    struct lh_entry head = { 0 };
     ConfigSection section = { 0 };
 
-    obj.o_type = json_type_object;
-    table.head = &head;
+    init_buf();
+    init_read();
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
     hash_find_ExpectAndReturn(NULL, NULL, &section, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_object, NULL);
     json_object_get_object_ExpectAndReturn(&obj, &table, NULL);
     hash_find_ExpectAndReturn(NULL, NULL, NULL, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 0, NULL);
 
@@ -375,54 +343,25 @@ config_load_when_field_not_found_returns_ok()
     OP_VERIFY();
 }
 
-static bool handlerCalled = false;
-
-static void
-field_handler(void *element, json_object *obj)
-{
-    handlerCalled = true;
-}
-
 void
 config_load_when_field_wrong_type_returns_ok()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
-    struct lh_entry head = { 0 };
     ConfigSection section = { 0 };
     ConfigField field = { 0 };
 
-    obj.o_type = json_type_object;
-    table.head = &head;
     field.Handler = field_handler;
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
+    init_buf();
+    init_read();
+
     hash_find_ExpectAndReturn(NULL, NULL, &section, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_object, NULL);
     json_object_get_object_ExpectAndReturn(&obj, &table, NULL);
     hash_find_ExpectAndReturn(NULL, NULL, &field, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_string, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 0, NULL);
 
@@ -438,43 +377,22 @@ config_load_when_field_wrong_type_returns_ok()
 void
 config_load_when_field_handler_null_returns_ok()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
-    struct lh_entry head = { 0 };
     ConfigSection section = { 0 };
     ConfigField field = { 0 };
 
-    obj.o_type = json_type_object;
-    table.head = &head;
     field.Handler = field_handler;
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
+    init_buf();
+    init_read();
+
     hash_find_ExpectAndReturn(NULL, NULL, &section, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_object, NULL);
     json_object_get_object_ExpectAndReturn(&obj, &table, NULL);
     hash_find_ExpectAndReturn(NULL, NULL, &field, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_string, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 0, NULL);
 
@@ -490,44 +408,23 @@ config_load_when_field_handler_null_returns_ok()
 void
 config_load_when_field_handler_provided_calls_handler()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
-    struct lh_entry head = { 0 };
     ConfigSection section = { 0 };
     ConfigField field = { 0 };
 
-    obj.o_type = json_type_object;
-    table.head = &head;
     field.Handler = field_handler;
     field.Type = json_type_string;
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
+    init_buf();
+    init_read();
+
     hash_find_ExpectAndReturn(NULL, NULL, &section, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_object, NULL);
     json_object_get_object_ExpectAndReturn(&obj, &table, NULL);
     hash_find_ExpectAndReturn(NULL, NULL, &field, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_string, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 0, NULL);
 
@@ -540,50 +437,18 @@ config_load_when_field_handler_provided_calls_handler()
     OP_VERIFY();
 }
 
-static bool verifyCalled = false;
-
-static bool
-verify_section_callback()
-{
-    verifyCalled = true;
-
-    return true;
-}
-
 void
 config_load_when_sections_registered_and_verify_null_works_ok()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
-    struct lh_entry head = { 0 };
     ConfigField field = { 0 };
 
-    obj.o_type = json_type_object;
-    table.head = &head;
+    init_buf();
+    init_read();
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
     hash_find_ExpectAndReturn(NULL, NULL, NULL, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 1, NULL);
     vector_get_ExpectAndReturn(NULL, 0, &field, NULL, NULL);
@@ -601,39 +466,17 @@ config_load_when_sections_registered_and_verify_null_works_ok()
 void
 config_load_when_sections_registered_verify_called()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
-    struct lh_entry head = { 0 };
     ConfigSection section = { 0 };
-
-    obj.o_type = json_type_object;
-    table.head = &head;
 
     section.VerifySection = verify_section_callback;
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
+    init_buf();
+    init_read();
+
     hash_find_ExpectAndReturn(NULL, NULL, NULL, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 1, NULL);
     vector_get_ExpectAndReturn(NULL, 0, &section, NULL, NULL);
@@ -648,50 +491,20 @@ config_load_when_sections_registered_verify_called()
     OP_VERIFY();
 }
 
-static bool
-verify_section_fail_callback()
-{
-    verifyCalled = true;
-
-    return false;
-}
-
 void
 config_load_when_sections_registered_verify_fail_returns_false()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
-    struct lh_entry head = { 0 };
     ConfigSection section = { 0 };
-
-    obj.o_type = json_type_object;
-    table.head = &head;
 
     section.VerifySection = verify_section_fail_callback;
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
+    init_buf();
+    init_read();
+
     hash_find_ExpectAndReturn(NULL, NULL, NULL, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 1, NULL);
     vector_get_ExpectAndReturn(NULL, 0, &section, NULL, NULL);
@@ -708,43 +521,21 @@ config_load_when_sections_registered_verify_fail_returns_false()
 void
 config_load_when_array_and_new_element_null_returns_ok()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
-    struct lh_entry head = { 0 };
     ConfigSection section = { 0 };
-
-    obj.o_type = json_type_object;
-    table.head = &head;
 
     section.IsArray = true;
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
+    init_buf();
+    init_read();
+
     hash_find_ExpectAndReturn(NULL, NULL, &section, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_array, NULL);
     json_object_array_length_ExpectAndReturn(NULL, 1, NULL);
     json_object_array_get_idx_ExpectAndReturn(NULL, 0, NULL, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_array, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 0, NULL);
 
@@ -754,57 +545,25 @@ config_load_when_array_and_new_element_null_returns_ok()
     OP_VERIFY();
 }
 
-static bool newElementCalled = false;
-
-static void *
-new_element_callback()
-{
-    newElementCalled = true;
-
-    return (void *)0x12345678;
-}
-
 void
 config_load_when_array_calls_new_element()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
-    struct lh_entry head = { 0 };
     ConfigSection section = { 0 };
-
-    obj.o_type = json_type_object;
-    table.head = &head;
 
     section.IsArray = true;
     section.NewElement = new_element_callback;
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
+    init_buf();
+    init_read();
+
     hash_find_ExpectAndReturn(NULL, NULL, &section, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_array, NULL);
     json_object_array_length_ExpectAndReturn(NULL, 1, NULL);
     json_object_array_get_idx_ExpectAndReturn(NULL, 0, NULL, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_array, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 0, NULL);
 
@@ -817,45 +576,23 @@ config_load_when_array_calls_new_element()
 void
 config_load_when_array_processes_object()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
     struct lh_table table2 = { 0 };
-    struct lh_entry head = { 0 };
     ConfigSection section = { 0 };
-
-    obj.o_type = json_type_object;
-    table.head = &head;
 
     section.IsArray = true;
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
+    init_buf();
+    init_read();
+
     hash_find_ExpectAndReturn(NULL, NULL, &section, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_array, NULL);
     json_object_array_length_ExpectAndReturn(NULL, 1, NULL);
     json_object_array_get_idx_ExpectAndReturn(NULL, 0, NULL, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_object, NULL);
     json_object_get_object_ExpectAndReturn(NULL, &table2, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 0, NULL);
 
@@ -865,57 +602,27 @@ config_load_when_array_processes_object()
     OP_VERIFY();
 }
 
-static bool elementDoneCalled = false;
-
-static void
-element_done_callback()
-{
-    elementDoneCalled = true;
-}
-
 void
 config_load_when_array_calls_element_done()
 {
-    uv_buf_t buf;
-    json_tokener tok;
-    json_object obj = { 0 };
-    struct lh_table table = { 0 };
     struct lh_table table2 = { 0 };
-    struct lh_entry head = { 0 };
     ConfigSection section = { 0 };
-
-    obj.o_type = json_type_object;
-    table.head = &head;
 
     section.IsArray = true;
     section.ElementDone = element_done_callback;
 
-    vector_length_ExpectAndReturn(NULL, 0, NULL);
-    serverstate_get_config_path_ExpectAndReturn("test.conf");
-    uv_buf_init_ExpectAndReturn(NULL, 0, buf, NULL, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_open_ExpectAndReturn(NULL, NULL, NULL, 0, 0, NULL, 0, NULL, NULL,
-                               NULL, NULL, NULL, NULL);
-    json_tokener_new_ExpectAndReturn(&tok);
-    uv_default_loop_ExpectAndReturn(NULL);
-    uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 1, NULL, NULL,
-                               NULL, NULL, NULL, NULL, NULL);
-    json_tokener_parse_ex_ExpectAndReturn(&tok, NULL, 0, &obj, cmp_ptr,
-                                          NULL, NULL);
-    json_tokener_get_error_ExpectAndReturn(&tok, 0, cmp_ptr);
-    json_object_get_type_ExpectAndReturn(&obj, json_type_object, cmp_ptr);
-    json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
+    init_buf();
+    init_read();
+    
     hash_find_ExpectAndReturn(NULL, NULL, &section, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_array, NULL);
     json_object_array_length_ExpectAndReturn(NULL, 1, NULL);
     json_object_array_get_idx_ExpectAndReturn(NULL, 0, NULL, NULL, NULL);
     json_object_get_type_ExpectAndReturn(NULL, json_type_object, NULL);
     json_object_get_object_ExpectAndReturn(NULL, &table2, NULL);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_read_ExpectAndReturn(NULL, NULL, 0, 0, 0, 0, NULL, 0, NULL, NULL,
                                NULL, NULL, NULL, NULL, NULL);
     json_tokener_free_ExpectAndReturn(&tok, cmp_ptr);
-    uv_default_loop_ExpectAndReturn(NULL);
     uv_fs_close_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
     vector_length_ExpectAndReturn(NULL, 0, NULL);
 

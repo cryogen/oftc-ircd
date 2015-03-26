@@ -31,15 +31,27 @@
 
 static ServerState CurrentServerState = { 0 };
 
-const char *
+inline const char *
 serverstate_get_config_path()
 {
     return CurrentServerState.ConfigPath;
 }
 
-void
+inline uv_loop_t *
+serverstate_get_event_loop()
+{
+    return CurrentServerState.EventLoop;
+}
+
+inline void
 serverstate_set_config_path(const char *path)
 {
     free((void *)CurrentServerState.ConfigPath);
     CurrentServerState.ConfigPath = strdup(path);
+}
+
+inline void
+serverstate_set_event_loop(uv_loop_t *loop)
+{
+    CurrentServerState.EventLoop = loop;
 }

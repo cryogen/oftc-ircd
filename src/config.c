@@ -76,6 +76,7 @@ config_load()
 {
     uv_fs_t fileReq, readReq, closeReq;
     uv_buf_t buffer;
+    uv_loop_t *loop;
     char fileBuffer[4096];
     const char *configPath;
     struct json_object *obj = NULL;
@@ -102,7 +103,9 @@ config_load()
 
     buffer = uv_buf_init(fileBuffer, sizeof(fileBuffer));
 
-    ret = uv_fs_open(uv_default_loop(), &fileReq, configPath, O_RDONLY, 0, NULL);
+    loop = serverstate_get_event_loop();
+
+    ret = uv_fs_open(loop, &fileReq, configPath, O_RDONLY, 0, NULL);
     if(ret < 0)
     {
         fprintf(stderr, "Error opening config %s\n", configPath);
@@ -111,8 +114,8 @@ config_load()
 
     tokener = json_tokener_new();
 
-    while((ret = uv_fs_read(uv_default_loop(), &readReq, fileReq.result, &buffer,
-                           1, -1, NULL)) > 0)
+    while((ret = uv_fs_read(loop, &readReq, fileReq.result, &buffer, 1, -1,
+                            NULL)) > 0)
     {
         obj = json_tokener_parse_ex(tokener, fileBuffer, ret);
         enum json_tokener_error err = json_tokener_get_error(tokener);
@@ -132,7 +135,7 @@ config_load()
         {
             fprintf(stderr, "Invalid config, could not find root object\n");
             json_tokener_free(tokener);
-            uv_fs_close(uv_default_loop(), &closeReq, fileReq.result, NULL);
+            uv_fs_close(loop, &closeReq, fileReq.result, NULL);
             return false;
         }
 
@@ -197,7 +200,7 @@ config_load()
 
     json_tokener_free(tokener);
 
-    uv_fs_close(uv_default_loop(), &closeReq, fileReq.result, NULL);
+    uv_fs_close(loop, &closeReq, fileReq.result, NULL);
 
     if(obj == NULL)
     {

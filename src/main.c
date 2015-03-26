@@ -63,7 +63,7 @@ process_commandline(char *const *args, int argCount)
 
 int main(int argc, char *argv[])
 {
-    uv_loop_t *uv_loop;
+    serverstate_set_event_loop(uv_default_loop());
 
     hash_init();
     config_init();
@@ -76,9 +76,7 @@ int main(int argc, char *argv[])
 
     listener_start_listeners();
 
-    uv_loop = uv_default_loop();
-    
-    uv_run(uv_loop, UV_RUN_DEFAULT);
+    uv_run(serverstate_get_event_loop(), UV_RUN_DEFAULT);
     
     return 0;
 }

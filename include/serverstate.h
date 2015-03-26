@@ -27,14 +27,20 @@
 #ifndef __oftc_ircd__serverstate__
 #define __oftc_ircd__serverstate__
 
+#include <uv.h>
+
 typedef struct _ServerState ServerState;
 
 struct _ServerState
 {
+    uv_loop_t *EventLoop;
     const char *ConfigPath;
 };
 
-void serverstate_set_config_path(const char *);
 const char *serverstate_get_config_path();
+uv_loop_t *serverstate_get_event_loop();
+
+void serverstate_set_config_path(const char *);
+void serverstate_set_event_loop(uv_loop_t *);
 
 #endif /* defined(__oftc_ircd__serverstate__) */

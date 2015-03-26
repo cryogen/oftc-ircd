@@ -34,6 +34,7 @@
 #include "lstring.h"
 #include "network.h"
 #include "client.h"
+#include "serverstate.h"
 
 static Vector *listeners;
 
@@ -127,7 +128,7 @@ listener_start_listeners()
         unsigned int flags = 0;
         int ret;
 
-        uv_tcp_init(uv_default_loop(), &listener->handle);
+        uv_tcp_init(serverstate_get_event_loop(), &listener->handle);
 
         listener->handle.data = listener;
 
