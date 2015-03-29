@@ -181,7 +181,7 @@ network_ipstring_from_address_when_v6_and_fails_returns_false()
 void
 network_ipstring_from_address_when_unknown_family_returns_false()
 {
-    NetworkAddress address;
+    NetworkAddress address = { 0 };
     char host[256];
     bool ret;
 
