@@ -14,9 +14,10 @@ AC_PROG_CC
 AC_PROG_CC_STDC
 
 AC_CONFIG_SUBDIRS([libuv json-c])
-AC_CONFIG_FILES([ Makefile      \
-                  src/Makefile  \
-                  include/Makefile
+AC_CONFIG_FILES([ Makefile          \
+                  src/Makefile      \
+                  modules/Makefile  \
+                  include/Makefile  \
                   tests/Makefile])
 
 AC_OUTPUT

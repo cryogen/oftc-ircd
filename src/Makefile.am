@@ -6,6 +6,7 @@ AM_LDFLAGS = --coverage
 
 libircd_la_SOURCES =    client.c        \
                         config.c        \
+                        command.c       \
                         hash.c          \
                         listener.c      \
                         lstring.c       \

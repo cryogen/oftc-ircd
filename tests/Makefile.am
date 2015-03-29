@@ -1,4 +1,5 @@
 TESTS = client_tests    \
+        command_tests   \
         config_tests    \
         hash_tests      \
         lstring_tests   \
@@ -7,20 +8,13 @@ TESTS = client_tests    \
         module_tests
 
 check_PROGRAMS =    client_tests    \
+                    command_tests   \
                     config_tests    \
                     hash_tests      \
                     lstring_tests   \
                     vector_tests    \
                     network_tests   \
                     module_tests
-
-client_tests_SOURCES = client_tests.c
-config_tests_SOURCES = config_tests.c
-hash_tests_SOURCES = hash_tests.c
-lstring_tests_SOURCES = lstring_tests.c
-vector_tests_SOURCES = vector_tests.c
-network_tests_SOURCES = network_tests.c
-module_tests_SOURCES = module_tests.c
 
 AM_LDFLAGS = --coverage
 
@@ -67,5 +61,10 @@ module_tests_LDADD  =   opmock.o                \
                         uv_stub.o               \
                         json_object_stub.o      \
                         ../src/module.o
+
+command_tests_LDADD =   opmock.o                \
+                        memory_stub.o           \
+                        hash_stub.o             \
+                        ../src/command.o
 
 AM_CPPFLAGS = -g -O0 -I../include -I../libuv/include -I.. -I../json-c
