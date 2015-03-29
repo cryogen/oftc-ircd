@@ -4,6 +4,7 @@ noinst_HEADERS= client.h        \
                 listener.h      \
                 lstring.h       \
                 memory.h        \
+                module.h        \
                 murmurhash3.h   \
                 network.h       \
                 serverstate.h   \

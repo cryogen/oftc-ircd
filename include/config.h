@@ -27,7 +27,6 @@
 #ifndef __oftc_ircd__config__
 #define __oftc_ircd__config__
 
-#include <json-c/json.h>
 #include <stdbool.h>
 
 #include "hash.h"

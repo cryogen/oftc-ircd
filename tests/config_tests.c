@@ -25,13 +25,13 @@
  */
 
 #include "opmock.h"
+#include "json_object_stub.h"
+#include "json_tokener_stub.h"
 #include "config.h"
 #include "hash_stub.h"
 #include "vector_stub.h"
 #include "serverstate_stub.h"
 #include "uv_stub.h"
-#include "json_object_stub.h"
-#include "json_tokener_stub.h"
 #include "memory_stub.h"
 
 static bool setDefaultsCalled = false;

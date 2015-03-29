@@ -24,16 +24,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdio.h>
+#include <string.h>
+#include <json-c/json.h>
+#include <uv.h>
+
 #include "hash.h"
 #include "memory.h"
 #include "config.h"
 #include "serverstate.h"
 #include "vector.h"
-
-#include <stdio.h>
-#include <string.h>
-#include <json-c/json.h>
-#include <uv.h>
 
 static Hash *ConfigSections;
 static Vector *ConfigSectionList;

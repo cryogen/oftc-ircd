@@ -10,6 +10,7 @@ libircd_la_SOURCES =    client.c        \
                         listener.c      \
                         lstring.c       \
                         memory.c        \
+                        module.c        \
                         murmurhash3.c   \
                         network.c       \
                         serverstate.c   \

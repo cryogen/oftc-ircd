@@ -158,8 +158,6 @@ client_dns_complete_callback(ClientDnsRequest *request, bool match)
                      client_on_read_callback) < 0)
     {
         // TODO: Exit client
-
-        return;
     }
 }
 

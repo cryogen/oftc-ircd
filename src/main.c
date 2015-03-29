@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <json-c/json.h>
 
 #include "serverstate.h"
 #include "hash.h"
@@ -34,6 +35,7 @@
 #include "config.h"
 #include "listener.h"
 #include "client.h"
+#include "module.h"
 
 static void
 process_commandline(char *const *args, int argCount)
@@ -69,12 +71,13 @@ int main(int argc, char *argv[])
     config_init();
     listener_init();
     client_init();
+    module_init();
     
     process_commandline(argv, argc);
 
     config_load();
-
     listener_start_listeners();
+    module_load_all_modules();
 
     uv_run(serverstate_get_event_loop(), UV_RUN_DEFAULT);
     

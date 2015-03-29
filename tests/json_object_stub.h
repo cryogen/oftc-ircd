@@ -4,6 +4,7 @@
 
 #include <json_object.h>
 #include <json_object_private.h>
+#include <linkhash.h>
 #include "opmock.h"
 
 #ifdef __cplusplus

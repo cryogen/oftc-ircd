@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <uv.h>
+#include <json-c/json.h>
 
 #include "listener.h"
 #include "config.h"
