@@ -39,12 +39,14 @@
 static Client client;
 static Client server;
 static uv_stream_t handle;
-static uv_tcp_t clientHandle;
+static uv_tcp_t clienthandle;
 static ClientDnsRequest dnsRequest;
 static Listener listener = { 0 };
 static uv_getnameinfo_t req;
 static uv_getaddrinfo_t addrReq;
 static bool callbackCalled;
+static uv_write_t writeReq;
+static char *buffer;
 
 static void
 no_match_callback(ClientDnsRequest *request, bool match)
@@ -241,17 +243,32 @@ uv_read_start_read_closed_callback(uv_stream_t *stream,
     return 0;
 }
 
+static int
+write_callback(uv_write_t *w,
+               uv_stream_t *stream,
+               const uv_buf_t *buf,
+               unsigned int numBuf,
+               uv_write_cb callback,
+               int calls)
+{
+    buffer = strdup(buf[0].base);
+
+    callback(w, 0);
+
+    return 0;
+}
+
 static void
 setup_stream(int acceptRet)
 {
     memset(&client, 0, sizeof(client));
     memset(&handle, 0, sizeof(handle));
-    memset(&clientHandle, 0, sizeof(clientHandle));
+    memset(&clienthandle, 0, sizeof(clienthandle));
     memset(&listener, 0, sizeof(listener));
 
-    Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clientHandle, cmp_int);
-    uv_tcp_init_ExpectAndReturn(NULL, &clientHandle, 0, NULL, cmp_ptr);
-    uv_accept_ExpectAndReturn(&handle, (uv_stream_t *)&clientHandle, acceptRet,
+    Malloc_ExpectAndReturn(sizeof(uv_tcp_t), &clienthandle, cmp_int);
+    uv_tcp_init_ExpectAndReturn(NULL, &clienthandle, 0, NULL, cmp_ptr);
+    uv_accept_ExpectAndReturn(&handle, (uv_stream_t *)&clienthandle, acceptRet,
                               cmp_ptr, cmp_ptr);
 
     handle.data = &listener;
@@ -267,6 +284,8 @@ setup_sockname()
     strncpy(server.Name, "test.server", sizeof(server.Name) - 1);
 
     server_get_this_server_ExpectAndReturn(&server);
+    Malloc_ExpectAndReturn(sizeof(uv_write_t), &writeReq, cmp_int);
+    uv_write_ExpectAndReturn(NULL, NULL, 0, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 
     Malloc_ExpectAndReturn(sizeof(ClientDnsRequest), &dnsRequest, cmp_int);
     uv_tcp_getsockname_MockWithCallback(getsockname_mock);
@@ -330,7 +349,7 @@ client_free_when_called_with_handle_close_handle()
 {
     Client *testClient = calloc(1, sizeof(Client));
 
-    testClient->Handle = calloc(1, sizeof(uv_handle_t));
+    testClient->handle = calloc(1, sizeof(uv_handle_t));
 
     uv_close_ExpectAndReturn(NULL, NULL, NULL, NULL);
     Free_ExpectAndReturn(NULL, NULL);
@@ -340,7 +359,7 @@ client_free_when_called_with_handle_close_handle()
 
     OP_VERIFY();
 
-    free(testClient->Handle);
+    free(testClient->handle);
     free(testClient);
 }
 
@@ -380,7 +399,7 @@ client_accept_when_getsockname_fails_returns_false()
 {
     setup_stream(0);
 
-    uv_tcp_getsockname_ExpectAndReturn(&clientHandle, NULL, NULL, -1, cmp_ptr,
+    uv_tcp_getsockname_ExpectAndReturn(&clienthandle, NULL, NULL, -1, cmp_ptr,
                                        NULL, NULL);
 
     bool ret = client_accept(&client, &handle);
@@ -428,6 +447,10 @@ client_accept_when_namecallback_returns_bad_status_frees_request()
 
     uv_getnameinfo_MockWithCallback(&getnameinfo_badstatus);
 
+    server_get_this_server_ExpectAndReturn(&server);
+    Malloc_ExpectAndReturn(sizeof(uv_write_t), &writeReq, cmp_int);
+    uv_write_ExpectAndReturn(NULL, NULL, 0, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+
     uv_read_start_ExpectAndReturn(NULL, NULL, NULL, -1, NULL, NULL, NULL);
     Free_ExpectAndReturn(&req, cmp_ptr);
 
@@ -467,6 +490,10 @@ client_accept_when_addrcallback_returns_bad_status_frees_request()
 
     Malloc_ExpectAndReturn(sizeof(uv_getaddrinfo_t), &addrReq, cmp_int);
     uv_getaddrinfo_MockWithCallback(getaddrinfo_badstatus);
+
+    server_get_this_server_ExpectAndReturn(&server);
+    Malloc_ExpectAndReturn(sizeof(uv_write_t), &writeReq, cmp_int);
+    uv_write_ExpectAndReturn(NULL, NULL, 0, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
 
     uv_read_start_ExpectAndReturn(NULL, NULL, NULL, -1, NULL, NULL, NULL);
     Free_ExpectAndReturn(&addrReq, cmp_ptr);
@@ -569,6 +596,82 @@ client_on_read_when_connection_closed_closes_connection()
     client_accept(&client, &handle);
 }
 
+static void
+client_send_when_no_source_sends_message()
+{
+    uv_write_MockWithCallback(write_callback);
+
+    client_send(NULL, &client, "%s", "Test");
+
+    OP_ASSERT_EQUAL_CSTRING("Test\r\n", buffer);
+
+    free(buffer);
+}
+
+static void
+client_send_when_source_sends_message_with_source()
+{
+    Client testServer = { 0 };
+
+    strcpy(testServer.Name, "Test.Server");
+
+    uv_write_MockWithCallback(write_callback);
+
+    client_send(&testServer, &client, "%s", "Test");
+
+    OP_ASSERT_EQUAL_CSTRING(":Test.Server Test\r\n", buffer);
+
+    free(buffer);
+}
+
+static void
+client_send_when_too_long_is_truncated()
+{
+    uv_write_MockWithCallback(write_callback);
+
+    client_send(NULL, &client, "%s",
+"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+"123456789012bunnies");
+
+    OP_ASSERT_EQUAL_CSTRING(
+"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+"1234567890\r\n", buffer);
+
+    free(buffer);
+}
+
+static void
+client_send_when_511_long_is_truncated()
+{
+    uv_write_MockWithCallback(write_callback);
+
+    client_send(NULL, &client, "%s",
+    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    "12345678901");
+
+    OP_ASSERT_EQUAL_CSTRING(
+    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    "1234567890\r\n", buffer);
+    
+    free(buffer);
+}
+
 int main()
 {
     opmock_test_suite_reset();
@@ -611,6 +714,14 @@ int main()
                          "client_on_read_when_error_closes_connection");
     opmock_register_test(client_on_read_when_connection_closed_closes_connection,
                          "client_on_read_when_connection_closed_closes_connection");
+    opmock_register_test(client_send_when_no_source_sends_message,
+                         "client_send_when_no_source_sends_message");
+    opmock_register_test(client_send_when_source_sends_message_with_source,
+                         "client_send_when_source_sends_message_with_source");
+    opmock_register_test(client_send_when_too_long_is_truncated,
+                         "client_send_when_too_long_is_truncated");
+    opmock_register_test(client_send_when_511_long_is_truncated,
+                         "client_send_when_511_long_is_truncated");
 
     opmock_test_suite_run();
 

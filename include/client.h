@@ -48,10 +48,12 @@ typedef enum _DnsNotice
 
 struct _Client
 {
-    uv_tcp_t *Handle;
     char Name[HOSTLEN];
     char Host[HOSTLEN];
     NetworkAddress Address;
+
+    // private
+    uv_tcp_t *handle;
 };
 
 struct _ClientDnsRequest

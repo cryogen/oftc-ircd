@@ -156,14 +156,14 @@ client_accept_socket(Client *client, uv_stream_t *handle)
 {
     assert(client != NULL);
 
-    client->Handle = Malloc(sizeof(uv_tcp_t));
-    uv_tcp_init(serverstate_get_event_loop(), client->Handle);
-    if(uv_accept(handle, (uv_stream_t *)client->Handle) != 0)
+    client->handle = Malloc(sizeof(uv_tcp_t));
+    uv_tcp_init(serverstate_get_event_loop(), client->handle);
+    if(uv_accept(handle, (uv_stream_t *)client->handle) != 0)
     {
         return false;
     }
 
-    client->Handle->data = client;
+    client->handle->data = client;
 
     return true;
 }
@@ -173,11 +173,45 @@ client_dns_complete_callback(ClientDnsRequest *request, bool match)
 {
     Client *client = request->Client;
 
-    if(uv_read_start((uv_stream_t *)client->Handle, client_allocate_buffer_callback,
+    client_send(server_get_this_server(), client, "NOTICE * :%s",
+                DnsNotices[match ? Found : NotFound]);
+
+    if(uv_read_start((uv_stream_t *)client->handle, client_allocate_buffer_callback,
                      client_on_read_callback) < 0)
     {
         // TODO: Exit client
     }
+}
+
+static void
+client_write_callback(uv_write_t *req, int status)
+{
+    Free(req);
+}
+
+static void
+client_internal_send(Client *client, char *buffer)
+{
+    uv_write_t *req;
+    uv_buf_t buf;
+    size_t len;
+
+    len = strlen(buffer);
+    if(len > IRC_MAXLEN - 2)
+    {
+        len = IRC_MAXLEN - 2;
+    }
+
+    buffer[len++] = '\r';
+    buffer[len++] = '\n';
+    buffer[len] = '\0';
+
+    buf.base = buffer;
+    buf.len = len;
+
+    req = Malloc(sizeof(uv_write_t));
+
+    uv_write(req, (uv_stream_t *)client->handle, &buf, 1, client_write_callback);
 }
 
 static void
@@ -227,11 +261,11 @@ client_free(Client *client)
         return;
     }
 
-    if(client->Handle != NULL)
+    if(client->handle != NULL)
     {
-        uv_close((uv_handle_t *)client->Handle, NULL);
-        Free(client->Handle);
-        client->Handle = NULL;
+        uv_close((uv_handle_t *)client->handle, NULL);
+        Free(client->handle);
+        client->handle = NULL;
     }
 
     Free(client);
@@ -250,7 +284,8 @@ client_accept(Client *client, uv_stream_t *handle)
         return false;
     }
 
-    if(uv_tcp_getsockname((uv_tcp_t *)client->Handle,
+    client->Address.AddressLength = sizeof(client->Address);
+    if(uv_tcp_getsockname((uv_tcp_t *)client->handle,
                              (struct sockaddr *)&client->Address,
                              (int *)&client->Address.AddressLength) != 0)
     {
@@ -272,11 +307,23 @@ void
 client_send(Client *source, Client *client, const char *format, ...)
 {
     va_list args;
-    char buffer[IRC_MAXLEN];
+    char buffer[IRC_MAXLEN + 1];
+    char actualBuffer[IRC_MAXLEN + 1];
 
     va_start(args, format);
 
     vsnprintf(buffer, sizeof(buffer), format, args);
+    if(source != NULL)
+    {
+        snprintf(actualBuffer, sizeof(actualBuffer), ":%s %s", source->Name,
+                 buffer);
+    }
+    else
+    {
+        snprintf(actualBuffer, sizeof(actualBuffer), "%s", buffer);
+    }
+
+    client_internal_send(client, actualBuffer);
 
     va_end(args);
 }
