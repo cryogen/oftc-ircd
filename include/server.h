@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2014, Stuart Walsh
+ * Copyright (c) 2015, Stuart Walsh
  * All rights reserved.
- * main.c main startup functions
+ * server.c server related functions
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,65 +24,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <json-c/json.h>
+#ifndef oftc_ircd_server_h
+#define oftc_ircd_server_h
 
-#include "serverstate.h"
-#include "hash.h"
-#include "config.h"
-#include "config.h"
-#include "listener.h"
 #include "client.h"
-#include "module.h"
-#include "server.h"
 
-static void
-process_commandline(char *const *args, int argCount)
-{
-    int opt;
+void server_init();
+Client *server_get_this_server();
 
-    while((opt = getopt(argCount, args, "c:")) != -1)
-    {
-        switch(opt)
-        {
-            case 'c':
-                serverstate_set_config_path(optarg);
-                break;
-
-            default:
-                fprintf(stderr, "Usage: some stuff");
-                exit(EXIT_FAILURE);
-                break;
-        }
-    }
-
-    if(serverstate_get_config_path() == NULL)
-    {
-        serverstate_set_config_path("ircd.conf");
-    }
-}
-
-int
-main(int argc, char *argv[])
-{
-    serverstate_set_event_loop(uv_default_loop());
-
-    hash_init();
-    config_init();
-    listener_init();
-    client_init();
-    module_init();
-    server_init();
-    
-    process_commandline(argv, argc);
-
-    config_load();
-    listener_start_listeners();
-    module_load_all_modules();
-
-    uv_run(serverstate_get_event_loop(), UV_RUN_DEFAULT);
-    
-    return 0;
-}
+#endif

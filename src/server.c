@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2014, Stuart Walsh
+ * Copyright (c) 2015, Stuart Walsh
  * All rights reserved.
- * main.c main startup functions
+ * server.c server related functions
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,65 +24,45 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <json-c/json.h>
 
-#include "serverstate.h"
-#include "hash.h"
-#include "config.h"
-#include "config.h"
-#include "listener.h"
 #include "client.h"
-#include "module.h"
 #include "server.h"
+#include "config.h"
+
+static Client *ThisServer = NULL;
 
 static void
-process_commandline(char *const *args, int argCount)
+server_set_name(void *element, json_object *object)
 {
-    int opt;
-
-    while((opt = getopt(argCount, args, "c:")) != -1)
-    {
-        switch(opt)
-        {
-            case 'c':
-                serverstate_set_config_path(optarg);
-                break;
-
-            default:
-                fprintf(stderr, "Usage: some stuff");
-                exit(EXIT_FAILURE);
-                break;
-        }
-    }
-
-    if(serverstate_get_config_path() == NULL)
-    {
-        serverstate_set_config_path("ircd.conf");
-    }
+    strncpy(ThisServer->Name, json_object_get_string(object), HOSTLEN - 1);
 }
 
-int
-main(int argc, char *argv[])
+static void
+server_set_defaults()
 {
-    serverstate_set_event_loop(uv_default_loop());
+    if(ThisServer != NULL)
+    {
+        client_free(ThisServer);
+    }
 
-    hash_init();
-    config_init();
-    listener_init();
-    client_init();
-    module_init();
-    server_init();
-    
-    process_commandline(argv, argc);
+    ThisServer = client_new();
+}
 
-    config_load();
-    listener_start_listeners();
-    module_load_all_modules();
+void
+server_init()
+{
+    ConfigSection *serverSection;
 
-    uv_run(serverstate_get_event_loop(), UV_RUN_DEFAULT);
-    
-    return 0;
+    serverSection = config_register_section("server", false);
+    serverSection->SetDefaults = server_set_defaults;
+
+    config_register_field(serverSection, "name", json_type_string,
+                          server_set_name);
+}
+
+inline Client *
+server_get_this_server()
+{
+    return ThisServer;
 }

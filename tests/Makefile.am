@@ -5,7 +5,8 @@ TESTS = client_tests    \
         lstring_tests   \
         vector_tests    \
         network_tests   \
-        module_tests
+        module_tests    \
+        server_tests
 
 check_PROGRAMS =    client_tests    \
                     command_tests   \
@@ -14,7 +15,8 @@ check_PROGRAMS =    client_tests    \
                     lstring_tests   \
                     vector_tests    \
                     network_tests   \
-                    module_tests
+                    module_tests    \
+                    server_tests
 
 AM_LDFLAGS = --coverage
 
@@ -66,5 +68,11 @@ command_tests_LDADD =   opmock.o                \
                         memory_stub.o           \
                         hash_stub.o             \
                         ../src/command.o
+
+server_tests_LDADD =    opmock.o                \
+                        client_stub.o           \
+                        config_stub.o           \
+                        json_object_stub.o      \
+                        ../src/server.o
 
 AM_CPPFLAGS = -g -O0 -I../include -I../libuv/include -I.. -I../json-c

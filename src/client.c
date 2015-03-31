@@ -25,6 +25,8 @@
  */
 
 #include <assert.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 #include "client.h"
 #include "vector.h"
@@ -32,6 +34,7 @@
 #include "memory.h"
 #include "listener.h"
 #include "serverstate.h"
+#include "irc.h"
 
 static Vector *clientList;
 static Hash *clientHash;
@@ -161,6 +164,32 @@ client_dns_complete_callback(ClientDnsRequest *request, bool match)
     }
 }
 
+static void
+client_lookup_dns(Client *client)
+{
+    ClientDnsRequest *dnsRequest;
+    uv_getnameinfo_t *req;
+
+    if(client == NULL)
+    {
+        return;
+    }
+
+    dnsRequest = Malloc(sizeof(ClientDnsRequest));
+    dnsRequest->Client = client;
+    dnsRequest->Callback = client_dns_complete_callback;
+
+    req = Malloc(sizeof(uv_getnameinfo_t));
+    req->data = dnsRequest;
+
+    if(uv_getnameinfo(serverstate_get_event_loop(), req, client_on_name_callback,
+                      (struct sockaddr *)&client->Address, 0) != 0)
+    {
+        Free(req);
+        call_dns_callback(dnsRequest, false);
+    }
+}
+
 void
 client_init()
 {
@@ -195,10 +224,7 @@ client_free(Client *client)
 bool
 client_accept(Client *client, uv_stream_t *handle)
 {
-    ClientDnsRequest *dnsRequest;
     Listener *listener;
-    uv_getnameinfo_t *req;
-    int ret;
 
     if(client == NULL || handle == NULL)
     {
@@ -212,32 +238,29 @@ client_accept(Client *client, uv_stream_t *handle)
         return false;
     }
 
-    ret = uv_tcp_getsockname((uv_tcp_t *)client->Handle,
+    if(uv_tcp_getsockname((uv_tcp_t *)client->Handle,
                              (struct sockaddr *)&client->Address,
-                             &client->Address.AddressLength);
-    client->Address.AddressFamily = client->Address.Address.Addr4.sin_family;
-
-    if(ret != 0)
+                             &client->Address.AddressLength) != 0)
     {
         return false;
     }
 
-    dnsRequest = Malloc(sizeof(ClientDnsRequest));
-    dnsRequest->Client = client;
-    dnsRequest->Callback = client_dns_complete_callback;
+    client->Address.AddressFamily = client->Address.Address.Addr4.sin_family;
 
-    req = Malloc(sizeof(uv_getnameinfo_t));
-    req->data = dnsRequest;
-
-    ret = uv_getnameinfo(serverstate_get_event_loop(), req, client_on_name_callback,
-                         (struct sockaddr *)&client->Address, 0);
-
-    if(ret != 0)
-    {
-        Free(req);
-        call_dns_callback(dnsRequest, false);
-        return true;
-    }
+    client_lookup_dns(client);
 
     return true;
+}
+
+void
+client_send(Client *client, const char *format, ...)
+{
+    va_list args;
+    char buffer[IRC_MAXLEN];
+
+    va_start(args, format);
+
+    vsnprintf(buffer, sizeof(buffer), format, args);
+
+    va_end(args);
 }

@@ -42,6 +42,7 @@ typedef void (*DnsCallback)(ClientDnsRequest *request, bool matched);
 struct _Client
 {
     uv_tcp_t *Handle;
+    char Name[HOSTLEN];
     char Host[HOSTLEN];
     NetworkAddress Address;
 };
@@ -55,7 +56,8 @@ struct _ClientDnsRequest
 
 void client_init();
 Client *client_new();
-bool client_accept(Client *client, uv_stream_t *handle);
 void client_free(Client *client);
+bool client_accept(Client *client, uv_stream_t *handle);
+void client_send(Client *client, const char *pattern, ...);
 
 #endif /* defined(__oftc_ircd__client__) */

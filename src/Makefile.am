@@ -14,6 +14,7 @@ libircd_la_SOURCES =    client.c        \
                         module.c        \
                         murmurhash3.c   \
                         network.c       \
+                        server.c        \
                         serverstate.c   \
                         vector.c
 
