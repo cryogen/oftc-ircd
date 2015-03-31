@@ -1,4 +1,8 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 #include "config_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -480,4 +484,6 @@ void config_register_field_ExpectAndReturn (ConfigSection * arg1, const char * a
     config_register_field_struct_inst.calls[config_register_field_struct_inst.expectedCalls].check_params = 1;
     config_register_field_struct_inst.expectedCalls++;
 }
+
+#pragma GCC diagnostic pop
 

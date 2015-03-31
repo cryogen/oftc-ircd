@@ -30,7 +30,7 @@
 #include "hash_stub.h"
 #include "memory_stub.h"
 
-void
+static void
 command_init_when_called_sets_up_commands()
 {
     hash_new_ExpectAndReturn(NULL, 0, NULL, NULL, NULL);
@@ -40,7 +40,7 @@ command_init_when_called_sets_up_commands()
     OP_VERIFY();
 }
 
-void
+static void
 command_free_when_called_with_null_does_nothing()
 {
     command_free(NULL);
@@ -48,7 +48,7 @@ command_free_when_called_with_null_does_nothing()
     OP_VERIFY();
 }
 
-void
+static void
 command_free_when_called_with_command_frees()
 {
     Command command;
@@ -60,7 +60,7 @@ command_free_when_called_with_command_frees()
     OP_VERIFY();
 }
 
-void
+static void
 command_register_when_called_registers_command()
 {
     Command command;

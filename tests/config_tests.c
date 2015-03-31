@@ -24,6 +24,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <stdlib.h>
+
 #include "opmock.h"
 #include "json_object_stub.h"
 #include "json_tokener_stub.h"
@@ -52,7 +54,7 @@ set_defaults_callback()
 }
 
 static void
-field_handler(void *element, json_object *obj)
+field_handler(void *element, json_object *object)
 {
     handlerCalled = true;
 }
@@ -121,7 +123,7 @@ init_read()
     json_object_get_object_ExpectAndReturn(&obj, &table, cmp_ptr);
 }
 
-void
+static void
 config_init_when_called_sets_up_hash_and_vector()
 {
     hash_new_ExpectAndReturn(NULL, 0, NULL, NULL, NULL);
@@ -132,7 +134,7 @@ config_init_when_called_sets_up_hash_and_vector()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_path_is_null_returns_false()
 {
     vector_length_ExpectAndReturn(NULL, 0, NULL);
@@ -144,7 +146,7 @@ config_load_when_path_is_null_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_sections_registered_and_set_defaults_is_null_works_ok()
 {
     ConfigSection section = { 0 };
@@ -159,7 +161,7 @@ config_load_when_sections_registered_and_set_defaults_is_null_works_ok()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_sections_registered_set_defaults_called()
 {
     ConfigSection section = { 0 };
@@ -177,7 +179,7 @@ config_load_when_sections_registered_set_defaults_called()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_fs_open_fails_returns_false()
 {
     vector_length_ExpectAndReturn(NULL, 0, NULL);
@@ -193,7 +195,7 @@ config_load_when_fs_open_fails_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_fs_read_fails_returns_false()
 {
     init_buf();
@@ -209,7 +211,7 @@ config_load_when_fs_read_fails_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_invalid_json_returns_false()
 {
     init_buf();
@@ -230,7 +232,7 @@ config_load_when_invalid_json_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_invalid_json_second_time_returns_false()
 {
     init_buf();
@@ -258,7 +260,7 @@ config_load_when_invalid_json_second_time_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_no_root_object_returns_false()
 {
     init_buf();
@@ -278,7 +280,7 @@ config_load_when_no_root_object_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_section_not_found_works_ok()
 {
     init_buf();
@@ -297,7 +299,7 @@ config_load_when_section_not_found_works_ok()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_section_found_and_wrong_type_works_ok()
 {
     ConfigSection section = { 0 };
@@ -319,7 +321,7 @@ config_load_when_section_found_and_wrong_type_works_ok()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_field_not_found_returns_ok()
 {
     ConfigSection section = { 0 };
@@ -343,7 +345,7 @@ config_load_when_field_not_found_returns_ok()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_field_wrong_type_returns_ok()
 {
     ConfigSection section = { 0 };
@@ -374,7 +376,7 @@ config_load_when_field_wrong_type_returns_ok()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_field_handler_null_returns_ok()
 {
     ConfigSection section = { 0 };
@@ -405,7 +407,7 @@ config_load_when_field_handler_null_returns_ok()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_field_handler_provided_calls_handler()
 {
     ConfigSection section = { 0 };
@@ -437,7 +439,7 @@ config_load_when_field_handler_provided_calls_handler()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_sections_registered_and_verify_null_works_ok()
 {
     ConfigSection section = { 0 };
@@ -463,7 +465,7 @@ config_load_when_sections_registered_and_verify_null_works_ok()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_sections_registered_verify_called()
 {
     ConfigSection section = { 0 };
@@ -491,7 +493,7 @@ config_load_when_sections_registered_verify_called()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_sections_registered_verify_fail_returns_false()
 {
     ConfigSection section = { 0 };
@@ -518,7 +520,7 @@ config_load_when_sections_registered_verify_fail_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_array_and_new_element_null_returns_ok()
 {
     ConfigSection section = { 0 };
@@ -545,7 +547,7 @@ config_load_when_array_and_new_element_null_returns_ok()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_array_calls_new_element()
 {
     ConfigSection section = { 0 };
@@ -573,7 +575,7 @@ config_load_when_array_calls_new_element()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_array_processes_object()
 {
     struct lh_table table2 = { 0 };
@@ -602,7 +604,7 @@ config_load_when_array_processes_object()
     OP_VERIFY();
 }
 
-void
+static void
 config_load_when_array_calls_element_done()
 {
     struct lh_table table2 = { 0 };
@@ -632,7 +634,7 @@ config_load_when_array_calls_element_done()
     OP_VERIFY();
 }
 
-void
+static void
 config_register_section_when_called_with_null_name_returns_null()
 {
     ConfigSection *section = config_register_section(NULL, false);
@@ -641,7 +643,7 @@ config_register_section_when_called_with_null_name_returns_null()
     OP_VERIFY();
 }
 
-void
+static void
 config_register_section_when_called_registers_section()
 {
     StrDup_ExpectAndReturn(NULL, NULL, NULL);
@@ -655,7 +657,7 @@ config_register_section_when_called_registers_section()
     OP_VERIFY();
 }
 
-void
+static void
 config_register_field_when_section_null_returns_ok()
 {
     config_register_field(NULL, NULL, json_type_string, NULL);
@@ -663,7 +665,7 @@ config_register_field_when_section_null_returns_ok()
     OP_VERIFY();
 }
 
-void
+static void
 config_register_field_when_name_null_returns_ok()
 {
     ConfigSection section = { 0 };
@@ -673,7 +675,7 @@ config_register_field_when_name_null_returns_ok()
     OP_VERIFY();
 }
 
-void
+static void
 config_register_field_registers_field()
 {
     ConfigSection section = { 0 };

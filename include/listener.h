@@ -47,7 +47,7 @@ struct _Listener
     uv_tcp_t handle;
 };
 
-void listener_init();
-void listener_start_listeners();
+void listener_init(void);
+void listener_start_listeners(void);
 
 #endif /* defined(__oftc_ircd__listener__) */

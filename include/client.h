@@ -39,6 +39,13 @@ typedef struct _ClientDnsRequest ClientDnsRequest;
 
 typedef void (*DnsCallback)(ClientDnsRequest *request, bool matched);
 
+typedef enum _DnsNotice
+{
+    LookingUp,
+    Found,
+    NotFound
+} DnsNotice;
+
 struct _Client
 {
     uv_tcp_t *Handle;
@@ -54,10 +61,10 @@ struct _ClientDnsRequest
     DnsCallback Callback;
 };
 
-void client_init();
-Client *client_new();
+void client_init(void);
+Client *client_new(void);
 void client_free(Client *client);
 bool client_accept(Client *client, uv_stream_t *handle);
-void client_send(Client *client, const char *pattern, ...);
+void client_send(Client *source, Client *client, const char *pattern, ...);
 
 #endif /* defined(__oftc_ircd__client__) */

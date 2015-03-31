@@ -27,16 +27,15 @@
 #ifndef __oftc_ircd__command__
 #define __oftc_ircd__command__
 
-typedef enum _CommandAccess CommandAccess;
 typedef void (*CommandHandler)();
 typedef struct _Command Command;
 
-enum _CommandAccess
+typedef enum _CommandAccess
 {
     Unregistered,
     Standard,
     Oper
-};
+} CommandAccess;
 
 struct _Command
 {
@@ -45,8 +44,8 @@ struct _Command
     CommandHandler Handler;
 };
 
-void command_init();
-Command *command_new();
+void command_init(void);
+Command *command_new(void);
 void command_free(Command *);
 void command_register(const char *, CommandAccess, CommandHandler);
 

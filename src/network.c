@@ -48,7 +48,7 @@ network_address_from_ipstring_and_port(const char *ip,
 
     if(strstr(ip, ".") != NULL)
     {
-        if(uv_ip4_addr(ip, 0, &address->Address.Addr4) != 0)
+        if(uv_ip4_addr(ip, port, &address->Address.Addr4) != 0)
         {
             return false;
         }
@@ -58,7 +58,7 @@ network_address_from_ipstring_and_port(const char *ip,
     }
     else if(strstr(ip, ":") != NULL)
     {
-        if(uv_ip6_addr(ip, 0, &address->Address.Addr6) != 0)
+        if(uv_ip6_addr(ip, port, &address->Address.Addr6) != 0)
         {
             return false;
         }

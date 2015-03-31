@@ -54,7 +54,6 @@ process_commandline(char *const *args, int argCount)
             default:
                 fprintf(stderr, "Usage: some stuff");
                 exit(EXIT_FAILURE);
-                break;
         }
     }
 
@@ -69,7 +68,6 @@ main(int argc, char *argv[])
 {
     serverstate_set_event_loop(uv_default_loop());
 
-    hash_init();
     config_init();
     listener_init();
     client_init();

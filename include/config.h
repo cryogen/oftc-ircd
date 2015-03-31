@@ -58,8 +58,8 @@ struct _ConfigField
     ConfigFieldHandler Handler;
 };
 
-void config_init();
-bool config_load();
+void config_init(void);
+bool config_load(void);
 ConfigSection *config_register_section(const char *sectionName, bool isArray);
 void config_register_field(ConfigSection *, const char *, json_type, ConfigFieldHandler);
 

@@ -35,9 +35,16 @@
 #include "listener.h"
 #include "serverstate.h"
 #include "irc.h"
+#include "server.h"
 
 static Vector *clientList;
 static Hash *clientHash;
+static char *DnsNotices[] =
+{
+    "Looking up your hostname",
+    "Found your hostname",
+    "Could not resolve or match your hostname"
+};
 
 static void
 call_dns_callback(ClientDnsRequest *req, bool success)
@@ -117,6 +124,10 @@ client_allocate_buffer_callback(uv_handle_t *handle,
                                 size_t suggestedSize,
                                 uv_buf_t *buf)
 {
+    Client *client = handle->data;
+
+    assert(client != NULL);
+
     buf->base = Malloc(suggestedSize);
     buf->len = suggestedSize;
 }
@@ -124,6 +135,10 @@ client_allocate_buffer_callback(uv_handle_t *handle,
 static void
 client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
 {
+    Client *client = stream->data;
+
+    assert(client != NULL);
+
     if(nRead == UV_EOF)
     {
         // TODO: exit client due to connection closed, probably get consolidated
@@ -240,20 +255,24 @@ client_accept(Client *client, uv_stream_t *handle)
 
     if(uv_tcp_getsockname((uv_tcp_t *)client->Handle,
                              (struct sockaddr *)&client->Address,
-                             &client->Address.AddressLength) != 0)
+                             (int *)&client->Address.AddressLength) != 0)
     {
         return false;
     }
 
     client->Address.AddressFamily = client->Address.Address.Addr4.sin_family;
 
+    client_send(server_get_this_server(), client, "NOTICE * :%s",
+                DnsNotices[LookingUp]);
+    
     client_lookup_dns(client);
 
     return true;
 }
 
+__attribute__((__format__ (__printf__, 3, 0)))
 void
-client_send(Client *client, const char *format, ...)
+client_send(Client *source, Client *client, const char *format, ...)
 {
     va_list args;
     char buffer[IRC_MAXLEN];

@@ -29,6 +29,10 @@
 
 #else   // defined(_MSC_VER)
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
 #define FORCE_INLINE inline __attribute__((always_inline))
 
 static inline uint32_t rotl32 ( uint32_t x, int8_t r )
@@ -332,3 +336,7 @@ void MurmurHash3_x64_128 ( const void * key, const int len,
 }
 
 //-----------------------------------------------------------------------------
+
+#ifndef MSC_VER
+#pragma GCC diagnostic pop
+#endif

@@ -28,18 +28,18 @@
 
 #include "lstring.h"
 
-void
+static void
 string_is_null_or_empty_when_called_with_null_returns_true()
 {
     OP_ASSERT_TRUE(string_is_null_or_empty(NULL));
 }
 
-void string_is_null_or_empty_when_called_with_empty_returns_true()
+static void string_is_null_or_empty_when_called_with_empty_returns_true()
 {
     OP_ASSERT_TRUE(string_is_null_or_empty(""));
 }
 
-void string_is_null_or_empty_when_called_with_string_returns_false()
+static void string_is_null_or_empty_when_called_with_string_returns_false()
 {
     OP_ASSERT_FALSE(string_is_null_or_empty("string"));
 }

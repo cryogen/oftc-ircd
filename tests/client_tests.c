@@ -29,41 +29,43 @@
 #include "hash_stub.h"
 #include "vector_stub.h"
 #include "uv_stub.h"
+#include "server_stub.h"
 #include "client.h"
 #include "listener.h"
 #include "network.h"
 
 #include <stdlib.h>
 
-Client client;
-uv_stream_t handle;
-uv_tcp_t clientHandle;
-ClientDnsRequest dnsRequest;
-Listener listener = { 0 };
-uv_getnameinfo_t req;
-uv_getaddrinfo_t addrReq;
-bool callbackCalled;
+static Client client;
+static Client server;
+static uv_stream_t handle;
+static uv_tcp_t clientHandle;
+static ClientDnsRequest dnsRequest;
+static Listener listener = { 0 };
+static uv_getnameinfo_t req;
+static uv_getaddrinfo_t addrReq;
+static bool callbackCalled;
 
 static void
-no_match_callback(ClientDnsRequest *req, bool match)
+no_match_callback(ClientDnsRequest *request, bool match)
 {
     callbackCalled = true;
 
     OP_ASSERT_FALSE(match);
-    OP_ASSERT_EQUAL_CSTRING("123.123.123.123", req->Host);
+    OP_ASSERT_EQUAL_CSTRING("123.123.123.123", request->Host);
 }
 
 static void
-match_callback(ClientDnsRequest *req, bool match)
+match_callback(ClientDnsRequest *request, bool match)
 {
     callbackCalled = true;
 
     OP_ASSERT_TRUE(match);
-    OP_ASSERT_EQUAL_CSTRING("Test.Test", req->Host);
+    OP_ASSERT_EQUAL_CSTRING("Test.Test", request->Host);
 }
 
 static int
-getsockname_mock(const uv_tcp_t *handle,
+getsockname_mock(const uv_tcp_t *tcp,
                  struct sockaddr *addr,
                  int *addrLen,
                  int calls)
@@ -73,54 +75,54 @@ getsockname_mock(const uv_tcp_t *handle,
     network_address_from_ipstring("123.123.123.123", &address);
 
     memcpy(addr, &address.Address, address.AddressLength);
-    *addrLen = address.AddressLength;
+    *addrLen = (int)address.AddressLength;
 
     return 0;
 }
 
 static int
 getnameinfo_goodstatus(uv_loop_t* loop,
-                       uv_getnameinfo_t* req,
+                       uv_getnameinfo_t* request,
                        uv_getnameinfo_cb getnameinfo_cb,
                        const struct sockaddr* addr,
                        int flags,
                        int calls)
 {
-    getnameinfo_cb(req, 0, "Test.Test", NULL);
+    getnameinfo_cb(request, 0, "Test.Test", NULL);
 
     return 0;
 }
 
 static int
 getnameinfo_badstatus(uv_loop_t* loop,
-                      uv_getnameinfo_t* req,
+                      uv_getnameinfo_t* request,
                       uv_getnameinfo_cb getnameinfo_cb,
                       const struct sockaddr* addr,
                       int flags,
                       int calls)
 {
-    getnameinfo_cb(req, 1, NULL, NULL);
+    getnameinfo_cb(request, 1, NULL, NULL);
 
     return 0;
 }
 
 static int
 getaddrinfo_badstatus(uv_loop_t *loop,
-                      uv_getaddrinfo_t *req,
+                      uv_getaddrinfo_t *request,
                       uv_getaddrinfo_cb callback,
                       const char *node,
                       const char *service,
                       const struct addrinfo *hints,
                       int calls)
 {
-    callback(req, -1, NULL);
+    callback(request, -1, NULL);
 
     return 0;
 }
 
 static int
 getaddrinfo_nomatch(uv_loop_t *loop,
-                    uv_getaddrinfo_t *req,
+                    uv_getaddrinfo_t *request,
                     uv_getaddrinfo_cb callback,
                     const char *node,
                     const char *service,
@@ -130,9 +132,9 @@ getaddrinfo_nomatch(uv_loop_t *loop,
     struct addrinfo addr = { 0 };
     struct sockaddr_in addr4;
 
-    ClientDnsRequest *dnsRequest = req->data;
+    ClientDnsRequest *dns = request->data;
 
-    dnsRequest->Callback = no_match_callback;
+    dns->Callback = no_match_callback;
 
     addr.ai_addrlen = sizeof(addr4);
 
@@ -140,14 +142,14 @@ getaddrinfo_nomatch(uv_loop_t *loop,
 
     addr.ai_addr = (struct sockaddr *)&addr4;
 
-    callback(req, 0, &addr);
+    callback(request, 0, &addr);
 
     return 0;
 }
 
 static int
 getaddrinfo_match(uv_loop_t *loop,
-                  uv_getaddrinfo_t *req,
+                  uv_getaddrinfo_t *request,
                   uv_getaddrinfo_cb callback,
                   const char *node,
                   const char *service,
@@ -157,15 +159,15 @@ getaddrinfo_match(uv_loop_t *loop,
     struct addrinfo addr = { 0 };
     NetworkAddress address;
 
-    ClientDnsRequest *dnsRequest = req->data;
+    ClientDnsRequest *dns = request->data;
 
-    dnsRequest->Callback = match_callback;
+    dns->Callback = match_callback;
 
     network_address_from_ipstring("123.123.123.123", &address);
 
     addr.ai_addr = (struct sockaddr *)&address.Address;
 
-    callback(req, 0, &addr);
+    callback(request, 0, &addr);
 
     return 0;
 }
@@ -190,7 +192,7 @@ uv_ip4_name_callback(const struct sockaddr_in *src,
                      size_t size,
                      int calls)
 {
-    inet_ntop(AF_INET, &src->sin_addr, dst, size);
+    inet_ntop(AF_INET, &src->sin_addr, dst, (socklen_t)size);
     
     return 0;
 }
@@ -260,6 +262,11 @@ setup_sockname()
 {
     memset(&req, 0, sizeof(req));
     memset(&dnsRequest, 0, sizeof(dnsRequest));
+    memset(&server, 0, sizeof(server));
+
+    strncpy(server.Name, "test.server", sizeof(server.Name) - 1);
+
+    server_get_this_server_ExpectAndReturn(&server);
 
     Malloc_ExpectAndReturn(sizeof(ClientDnsRequest), &dnsRequest, cmp_int);
     uv_tcp_getsockname_MockWithCallback(getsockname_mock);
@@ -267,7 +274,7 @@ setup_sockname()
     Malloc_ExpectAndReturn(sizeof(uv_getnameinfo_t), &req, cmp_int);
 }
 
-void
+static void
 client_init_when_called_init_sets_up_hash_and_vector()
 {
     Vector test;
@@ -281,7 +288,7 @@ client_init_when_called_init_sets_up_hash_and_vector()
     OP_VERIFY();
 }
 
-void
+static void
 client_new_when_called_allocates_memory()
 {
     Client *ptr;
@@ -296,7 +303,7 @@ client_new_when_called_allocates_memory()
     free(ptr);
 }
 
-void
+static void
 client_free_when_called_with_null_returns()
 {
     client_free(NULL);
@@ -304,40 +311,40 @@ client_free_when_called_with_null_returns()
     OP_VERIFY();
 }
 
-void
+static void
 client_free_when_called_with_null_handle_frees_client()
 {
-    Client *client = calloc(1, sizeof(Client));
+    Client *testClient = calloc(1, sizeof(Client));
 
-    Free_ExpectAndReturn(client, cmp_ptr);
+    Free_ExpectAndReturn(testClient, cmp_ptr);
 
-    client_free(client);
+    client_free(testClient);
 
     OP_VERIFY();
 
-    free(client);
+    free(testClient);
 }
 
-void
+static void
 client_free_when_called_with_handle_close_handle()
 {
-    Client *client = calloc(1, sizeof(Client));
+    Client *testClient = calloc(1, sizeof(Client));
 
-    client->Handle = calloc(1, sizeof(uv_handle_t));
+    testClient->Handle = calloc(1, sizeof(uv_handle_t));
 
     uv_close_ExpectAndReturn(NULL, NULL, NULL, NULL);
     Free_ExpectAndReturn(NULL, NULL);
-    Free_ExpectAndReturn(client, cmp_ptr);
+    Free_ExpectAndReturn(testClient, cmp_ptr);
 
-    client_free(client);
+    client_free(testClient);
 
     OP_VERIFY();
 
-    free(client->Handle);
-    free(client);
+    free(testClient->Handle);
+    free(testClient);
 }
 
-void
+static void
 client_accept_when_called_with_null_client_returns_false()
 {
     bool ret = client_accept(NULL, NULL);
@@ -347,11 +354,9 @@ client_accept_when_called_with_null_client_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 client_accept_when_called_with_null_handle_returns_false()
 {
-    Client client = { 0 };
-
     bool ret = client_accept(&client, NULL);
 
     OP_ASSERT_FALSE(ret);
@@ -359,7 +364,7 @@ client_accept_when_called_with_null_handle_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 client_accept_when_uv_accept_fails_returns_false()
 {
     setup_stream(-1);
@@ -370,7 +375,7 @@ client_accept_when_uv_accept_fails_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 client_accept_when_getsockname_fails_returns_false()
 {
     setup_stream(0);
@@ -384,7 +389,7 @@ client_accept_when_getsockname_fails_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 client_accept_when_getnameinfo_fails_returns_true()
 {
     setup_stream(0);
@@ -399,10 +404,9 @@ client_accept_when_getnameinfo_fails_returns_true()
     bool ret = client_accept(&client, &handle);
 
     OP_ASSERT_TRUE(ret);
-    OP_VERIFY();
 }
 
-void
+static void
 client_accept_when_getnameinfo_suceeds_returns_true()
 {
     setup_stream(0);
@@ -414,10 +418,9 @@ client_accept_when_getnameinfo_suceeds_returns_true()
     bool ret = client_accept(&client, &handle);
 
     OP_ASSERT_TRUE(ret);
-    OP_VERIFY();
 }
 
-void
+static void
 client_accept_when_namecallback_returns_bad_status_frees_request()
 {
     setup_stream(0);
@@ -434,7 +437,7 @@ client_accept_when_namecallback_returns_bad_status_frees_request()
     OP_VERIFY();
 }
 
-void
+static void
 client_accept_when_namecallback_returns_good_status_getsaddress()
 {
     setup_stream(0);
@@ -454,7 +457,7 @@ client_accept_when_namecallback_returns_good_status_getsaddress()
     OP_VERIFY();
 }
 
-void
+static void
 client_accept_when_addrcallback_returns_bad_status_frees_request()
 {
     setup_stream(0);
@@ -475,7 +478,7 @@ client_accept_when_addrcallback_returns_bad_status_frees_request()
     OP_VERIFY();
 }
 
-void
+static void
 client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host()
 {
     setup_stream(0);
@@ -500,7 +503,7 @@ client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host()
     OP_VERIFY();
 }
 
-void
+static void
 client_accept_when_addrcallback_and_host_match_sets_host()
 {
     setup_stream(0);
@@ -524,7 +527,7 @@ client_accept_when_addrcallback_and_host_match_sets_host()
     OP_VERIFY();
 }
 
-void
+static void
 client_on_buffer_alloc_cb_allocates_buffer()
 {
     setup_stream(0);
@@ -538,7 +541,7 @@ client_on_buffer_alloc_cb_allocates_buffer()
     client_accept(&client, &handle);
 }
 
-void
+static void
 client_on_read_when_error_closes_connection()
 {
     setup_stream(0);
@@ -552,7 +555,7 @@ client_on_read_when_error_closes_connection()
     client_accept(&client, &handle);
 }
 
-void
+static void
 client_on_read_when_connection_closed_closes_connection()
 {
     setup_stream(0);
@@ -592,10 +595,14 @@ int main()
                          "client_accept_when_getnameinfo_fails_returns_true");
     opmock_register_test(client_accept_when_getnameinfo_suceeds_returns_true,
                          "client_accept_when_getnameinfo_suceeds_returns_true");
-    opmock_register_test(client_accept_when_namecallback_returns_bad_status_frees_request, "client_accept_when_namecallback_returns_bad_status_frees_request");
-    opmock_register_test(client_accept_when_namecallback_returns_good_status_getsaddress, "client_accept_when_namecallback_returns_good_status_getsaddress");
-    opmock_register_test(client_accept_when_addrcallback_returns_bad_status_frees_request, "client_accept_when_addrcallback_returns_bad_status_frees_request");
-    opmock_register_test(client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host, "client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host");
+    opmock_register_test(client_accept_when_namecallback_returns_bad_status_frees_request,
+                         "client_accept_when_namecallback_returns_bad_status_frees_request");
+    opmock_register_test(client_accept_when_namecallback_returns_good_status_getsaddress,
+                         "client_accept_when_namecallback_returns_good_status_getsaddress");
+    opmock_register_test(client_accept_when_addrcallback_returns_bad_status_frees_request,
+                         "client_accept_when_addrcallback_returns_bad_status_frees_request");
+    opmock_register_test(client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host,
+                         "client_accept_when_addrcallback_and_no_host_match_sets_ip_as_host");
     opmock_register_test(client_accept_when_addrcallback_and_host_match_sets_host,
                          "client_accept_when_addrcallback_and_host_match_sets_host");
     opmock_register_test(client_on_buffer_alloc_cb_allocates_buffer,

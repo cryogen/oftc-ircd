@@ -13,6 +13,18 @@ AC_PROG_INSTALL
 AC_PROG_CC
 AC_PROG_CC_STDC
 
+AC_DEFUN([AX_ARG_ENABLE_DEBUGGING],[
+  AC_ARG_ENABLE([debugging],[AC_HELP_STRING([--enable-debugging],[Enable debugging.])],[debugging="$enableval"],[debugging="no"])
+  if test "$debugging" = "yes" ; then
+    AC_DEFINE([DEBUG],[1],[Define to 1 to enable debugging.])
+    CFLAGS="$CFLAGS -Wall -Werror -Weverything -Wno-missing-braces -Wno-padded -Wno-unused-parameter -Wno-documentation -Wno-gnu -Wno-used-but-marked-unused -Wno-missing-field-initializers -Wno-static-in-inline -g -O0"
+  else
+    AC_DEFINE([NDEBUG],[1],[Define to 1 to disable debugging.])
+  fi
+])
+
+AX_ARG_ENABLE_DEBUGGING
+
 AC_CONFIG_SUBDIRS([libuv json-c])
 AC_CONFIG_FILES([ Makefile          \
                   src/Makefile      \

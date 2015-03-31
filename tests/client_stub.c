@@ -1,4 +1,8 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 #include "client_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -438,4 +442,6 @@ void client_accept_ExpectAndReturn (Client * client, uv_stream_t * handle, _Bool
     client_accept_struct_inst.calls[client_accept_struct_inst.expectedCalls].check_params = 1;
     client_accept_struct_inst.expectedCalls++;
 }
+
+#pragma GCC diagnostic pop
 

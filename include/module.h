@@ -49,8 +49,10 @@ struct _ModuleInfo
     UnloadFunction UnLoad;
 };
 
-void module_init();
-void module_load_all_modules();
-bool module_load();
+void module_init(void);
+Module *module_new(void);
+void module_free(Module *);
+void module_load_all_modules(void);
+bool module_load(const char *);
 
 #endif

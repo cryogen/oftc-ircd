@@ -92,12 +92,12 @@ module_free(Module *module)
 void
 module_load_all_modules()
 {
-    int len;
+    size_t len;
     uv_fs_t *req;
 
     len = vector_length(ModulePaths);
 
-    for(int i = 0; i < len; i++)
+    for(size_t i = 0; i < len; i++)
     {
         const char *path = vector_get(ModulePaths, i);
 

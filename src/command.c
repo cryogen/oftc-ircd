@@ -28,7 +28,7 @@
 #include "hash.h"
 #include "memory.h"
 
-Hash *CommandHash;
+static Hash *CommandHash;
 
 void
 command_init()

@@ -29,14 +29,12 @@
 #include "murmurhash3_stub.h"
 #include "memory_stub.h"
 
-void
+static void
 hash_new_when_called_with_name_and_len_returns_hash()
 {
     Hash hash = { 0 };
     Hash *h;
     char ptr[512];
-
-    hash_init();
 
     Malloc_ExpectAndReturn(0, &hash, NULL);
     Malloc_ExpectAndReturn(0, &ptr, NULL);
@@ -51,7 +49,7 @@ hash_new_when_called_with_name_and_len_returns_hash()
     OP_VERIFY();
 }
 
-void
+static void
 hash_new_when_called_with_null_name_and_len_returns_hash()
 {
     Hash hash = { 0 };
@@ -70,7 +68,7 @@ hash_new_when_called_with_null_name_and_len_returns_hash()
 }
 
 
-void
+static void
 hash_new_when_called_with_zero_len_returns_hash_with_default_length()
 {
     Hash hash = { 0 };
@@ -88,7 +86,7 @@ hash_new_when_called_with_zero_len_returns_hash_with_default_length()
     OP_VERIFY();
 }
 
-void
+static void
 hash_add_string_when_this_is_null_returns_ok()
 {
     HashItem item;
@@ -98,7 +96,7 @@ hash_add_string_when_this_is_null_returns_ok()
     OP_VERIFY();
 }
 
-void hash_callback(const void *key, int len, uint32_t seed, void *out, int calls)
+static void hash_callback(const void *key, int len, uint32_t seed, void *out, int calls)
 {
     if(strcmp(key, "foo") == 0)
     {
@@ -110,7 +108,7 @@ void hash_callback(const void *key, int len, uint32_t seed, void *out, int calls
     }
 }
 
-void
+static void
 hash_add_string_when_called_puts_value_in_hash()
 {
     Hash hash = { 0 };
@@ -134,7 +132,7 @@ hash_add_string_when_called_puts_value_in_hash()
     OP_VERIFY();
 }
 
-void
+static void
 hash_add_string_when_called_twice_puts_value_in_hash_bucket()
 {
     Hash hash = { 0 };
@@ -165,7 +163,7 @@ hash_add_string_when_called_twice_puts_value_in_hash_bucket()
 }
 
 
-void
+static void
 hash_find_when_called_with_null_this_returns_null()
 {
     HashItem *item = hash_find(NULL, "TEST");
@@ -175,7 +173,7 @@ hash_find_when_called_with_null_this_returns_null()
     OP_VERIFY();
 }
 
-void
+static void
 hash_find_when_called_with_item_in_hash_returns_item()
 {
     Hash hash = { 0 };
@@ -183,7 +181,6 @@ hash_find_when_called_with_item_in_hash_returns_item()
     HashItem item = { 0 };
     HashItem *ret;
     char ptr[512] = { 0 };
-    uint32_t hashVal = 123;
 
     Malloc_ExpectAndReturn(0, &hash, NULL);
     Malloc_ExpectAndReturn(0, &ptr, NULL);
@@ -202,7 +199,7 @@ hash_find_when_called_with_item_in_hash_returns_item()
     OP_VERIFY();
 }
 
-void
+static void
 hash_find_when_called_with_item_not_in_hash_returns_null()
 {
     Hash hash = { 0 };
@@ -210,7 +207,6 @@ hash_find_when_called_with_item_not_in_hash_returns_null()
     HashItem item = { 0 };
     HashItem *ret;
     char ptr[524280] = { 0 }; // 65535 * sizeof(HashItem *)
-    uint32_t hashVal = 123;
 
     Malloc_ExpectAndReturn(0, &hash, NULL);
     Malloc_ExpectAndReturn(0, &ptr, NULL);

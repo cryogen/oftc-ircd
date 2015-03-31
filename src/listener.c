@@ -54,7 +54,7 @@ listener_set_host(Listener *listener, json_object *obj)
 static void
 listener_set_port(Listener *listener, json_object *obj)
 {
-    listener->Port = json_object_get_int(obj);
+    listener->Port = (uint16_t)json_object_get_int(obj);
 }
 
 static Listener *
@@ -122,10 +122,9 @@ listener_init()
 void
 listener_start_listeners()
 {
-    for(int i = 0; i < vector_length(listeners); i++)
+    for(unsigned int i = 0; i < vector_length(listeners); i++)
     {
         Listener *listener = vector_get(listeners, i);
-        struct addrinfo *addr;
         unsigned int flags = 0;
         int ret;
 
@@ -147,7 +146,6 @@ listener_start_listeners()
         }
 
         ret = uv_tcp_bind(&listener->handle, (struct sockaddr *)&listener->Address, flags);
-        freeaddrinfo(addr);
         if(ret < 0)
         {
             fprintf(stderr, "Error binding to listener socket (%s)",

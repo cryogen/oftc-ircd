@@ -81,11 +81,12 @@ config_load()
     const char *configPath;
     struct json_object *obj = NULL;
     struct json_tokener *tokener;
-    int ret, len;
+    int ret;
+    size_t len;
 
     len = vector_length(ConfigSectionList);
 
-    for(int i = 0; i < len; i++)
+    for(unsigned int i = 0; i < len; i++)
     {
         ConfigSection *section = vector_get(ConfigSectionList, i);
 
@@ -114,7 +115,7 @@ config_load()
 
     tokener = json_tokener_new();
 
-    while((ret = uv_fs_read(loop, &readReq, fileReq.result, &buffer, 1, -1,
+    while((ret = uv_fs_read(loop, &readReq, (int)fileReq.result, &buffer, 1, -1,
                             NULL)) > 0)
     {
         obj = json_tokener_parse_ex(tokener, fileBuffer, ret);
@@ -135,7 +136,7 @@ config_load()
         {
             fprintf(stderr, "Invalid config, could not find root object\n");
             json_tokener_free(tokener);
-            uv_fs_close(loop, &closeReq, fileReq.result, NULL);
+            uv_fs_close(loop, &closeReq, (int)fileReq.result, NULL);
             return false;
         }
 
@@ -200,14 +201,14 @@ config_load()
 
     json_tokener_free(tokener);
 
-    uv_fs_close(loop, &closeReq, fileReq.result, NULL);
+    uv_fs_close(loop, &closeReq, (int)fileReq.result, NULL);
 
     if(obj == NULL)
     {
         return false;
     }
 
-    for(int i = 0; i < vector_length(ConfigSectionList); i++)
+    for(unsigned int i = 0; i < vector_length(ConfigSectionList); i++)
     {
         ConfigSection *section = vector_get(ConfigSectionList, i);
 

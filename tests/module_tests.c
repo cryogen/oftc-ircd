@@ -34,6 +34,40 @@
 
 #include "module.h"
 
+static ModuleInfo Info;
+static bool CallbackCalled;
+
+static int
+dlsym_callback(uv_lib_t *lib, const char *name, void **ptr, int calls)
+{
+    memset(&Info, 0, sizeof(Info));
+
+    *ptr = &Info;
+
+    return 0;
+}
+
+static bool
+module_load_callback()
+{
+    CallbackCalled = true;
+
+    return true;
+}
+
+static int
+dlsym_load_callback(uv_lib_t *lib, const char *name, void **ptr, int calls)
+{
+    memset(&Info, 0, sizeof(Info));
+
+    Info.Load = module_load_callback;
+    *ptr = &Info;
+
+    CallbackCalled = false;
+    
+    return 0;
+}
+
 static void
 set_path_test_callback(ConfigSection *section,
                        const char *name,
@@ -44,61 +78,13 @@ set_path_test_callback(ConfigSection *section,
     handler(NULL, NULL);
 }
 
-void
-module_init_when_called_sets_up_modules()
-{
-    vector_new_ExpectAndReturn(0, 0, NULL, NULL, NULL);
-    vector_new_ExpectAndReturn(0, 0, NULL, NULL, NULL);
-
-    config_register_section_ExpectAndReturn(NULL, false, NULL, NULL, NULL);
-    config_register_field_ExpectAndReturn(NULL, NULL, 0, 0, NULL, NULL, NULL, NULL);
-
-    module_init();
-
-    OP_VERIFY();
-}
-
-void
-module_config_set_path_when_called_adds_path()
-{
-    const char *path = "test/path";
-
-    vector_new_ExpectAndReturn(0, 0, NULL, NULL, NULL);
-    vector_new_ExpectAndReturn(0, 0, NULL, NULL, NULL);
-
-    config_register_section_ExpectAndReturn(NULL, false, NULL, NULL, NULL);
-    config_register_field_MockWithCallback(set_path_test_callback);
-    json_object_get_string_ExpectAndReturn(NULL, path, NULL);
-    vector_push_back_ExpectAndReturn(NULL, (char *)path, NULL, NULL, cmp_ptr);
-
-    module_init();
-
-    OP_VERIFY();
-}
-
-void
-module_load_all_modules_when_calls_loads_module()
-{
-    vector_length_ExpectAndReturn(NULL, 1, NULL);
-    vector_get_ExpectAndReturn(NULL, 0, "test", NULL, cmp_int);
-
-    Malloc_ExpectAndReturn(0, NULL, NULL);
-    serverstate_get_event_loop_ExpectAndReturn(NULL);
-    uv_fs_scandir_ExpectAndReturn(NULL, NULL, NULL, 0, NULL, 0, NULL, NULL,
-                                  NULL, NULL, NULL);
-
-    module_load_all_modules();
-
-    OP_VERIFY();
-}
-
 static int
 scandir_callback(uv_loop_t *loop,
-                          uv_fs_t *req,
-                          const char *path,
-                          int flags,
-                          uv_fs_cb callback,
-                          int calls)
+                 uv_fs_t *req,
+                 const char *path,
+                 int flags,
+                 uv_fs_cb callback,
+                 int calls)
 {
     callback(req);
 
@@ -131,7 +117,63 @@ scandir_next_file_callback(uv_fs_t *req, uv_dirent_t *ent, int calls)
     return 0;
 }
 
-void
+static int
+dlsym_null_callback(uv_lib_t *lib, const char *name, void **ptr, int calls)
+{
+    *ptr = NULL;
+
+    return 0;
+}
+
+static void
+module_init_when_called_sets_up_modules()
+{
+    vector_new_ExpectAndReturn(0, 0, NULL, NULL, NULL);
+    vector_new_ExpectAndReturn(0, 0, NULL, NULL, NULL);
+
+    config_register_section_ExpectAndReturn(NULL, false, NULL, NULL, NULL);
+    config_register_field_ExpectAndReturn(NULL, NULL, 0, 0, NULL, NULL, NULL, NULL);
+
+    module_init();
+
+    OP_VERIFY();
+}
+
+static void
+module_config_set_path_when_called_adds_path()
+{
+    const char *path = "test/path";
+
+    vector_new_ExpectAndReturn(0, 0, NULL, NULL, NULL);
+    vector_new_ExpectAndReturn(0, 0, NULL, NULL, NULL);
+
+    config_register_section_ExpectAndReturn(NULL, false, NULL, NULL, NULL);
+    config_register_field_MockWithCallback(set_path_test_callback);
+    json_object_get_string_ExpectAndReturn(NULL, path, NULL);
+    vector_push_back_ExpectAndReturn(NULL, (char *)path, NULL, NULL, cmp_ptr);
+
+    module_init();
+
+    OP_VERIFY();
+}
+
+static void
+module_load_all_modules_when_calls_loads_module()
+{
+    vector_length_ExpectAndReturn(NULL, 1, NULL);
+    vector_get_ExpectAndReturn(NULL, 0, "test", NULL, cmp_int);
+
+    Malloc_ExpectAndReturn(0, NULL, NULL);
+    serverstate_get_event_loop_ExpectAndReturn(NULL);
+    uv_fs_scandir_ExpectAndReturn(NULL, NULL, NULL, 0, NULL, 0, NULL, NULL,
+                                  NULL, NULL, NULL);
+
+    module_load_all_modules();
+
+    OP_VERIFY();
+}
+
+static void
 module_scandir_when_eof_does_not_load_module()
 {
     vector_length_ExpectAndReturn(NULL, 1, NULL);
@@ -147,7 +189,7 @@ module_scandir_when_eof_does_not_load_module()
     OP_VERIFY();
 }
 
-void
+static void
 module_scandir_when_not_file_does_not_load_module()
 {
     vector_length_ExpectAndReturn(NULL, 1, NULL);
@@ -163,7 +205,7 @@ module_scandir_when_not_file_does_not_load_module()
     OP_VERIFY();
 }
 
-void
+static void
 module_scandir_when_file_loads_module()
 {
     Module module = { 0 };
@@ -186,7 +228,7 @@ module_scandir_when_file_loads_module()
     OP_VERIFY();
 }
 
-void
+static void
 module_load_when_load_fails_return_false()
 {
     Module module = { 0 };
@@ -203,7 +245,7 @@ module_load_when_load_fails_return_false()
     OP_VERIFY();
 }
 
-void
+static void
 module_load_when_symbol_error_returns_false()
 {
     Module module = { 0 };
@@ -217,49 +259,7 @@ module_load_when_symbol_error_returns_false()
     OP_ASSERT_FALSE(ret);
 }
 
-static int
-dlsym_null_callback(uv_lib_t *lib, const char *name, void **ptr, int calls)
-{
-    *ptr = NULL;
-
-    return 0;
-}
-
-static ModuleInfo Info;
-static bool CallbackCalled;
-
-static int
-dlsym_callback(uv_lib_t *lib, const char *name, void **ptr, int calls)
-{
-    memset(&Info, 0, sizeof(Info));
-
-    *ptr = &Info;
-
-    return 0;
-}
-
-static bool
-module_load_callback()
-{
-    CallbackCalled = true;
-
-    return true;
-}
-
-static int
-dlsym_load_callback(uv_lib_t *lib, const char *name, void **ptr, int calls)
-{
-    memset(&Info, 0, sizeof(Info));
-
-    Info.Load = module_load_callback;
-    *ptr = &Info;
-
-    CallbackCalled = false;
-
-    return 0;
-}
-
-void
+static void
 module_load_when_symbol_null_returns_false()
 {
     Module module = { 0 };
@@ -273,7 +273,7 @@ module_load_when_symbol_null_returns_false()
     OP_ASSERT_FALSE(ret);
 }
 
-void
+static void
 module_load_when_load_succeeds_returns_true()
 {
     Module module = { 0 };
@@ -287,7 +287,7 @@ module_load_when_load_succeeds_returns_true()
     OP_ASSERT_TRUE(ret);
 }
 
-void
+static void
 module_load_when_load_callback_calls_callback()
 {
     Module module = { 0 };

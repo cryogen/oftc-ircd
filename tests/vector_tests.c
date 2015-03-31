@@ -29,7 +29,7 @@
 #include "vector.h"
 #include "memory_stub.h"
 
-void
+static void
 vector_new_when_called_with_zero_element_size_returns_null()
 {
     Vector *vector;
@@ -40,7 +40,7 @@ vector_new_when_called_with_zero_element_size_returns_null()
     OP_VERIFY();
 }
 
-void
+static void
 vector_new_when_called_with_zero_capacity_sets_default_capacity()
 {
     Vector *vector;
@@ -57,7 +57,7 @@ vector_new_when_called_with_zero_capacity_sets_default_capacity()
     OP_VERIFY();
 }
 
-void
+static void
 vector_new_when_called_sets_capactity_and_element_size()
 {
     Vector *vector;
@@ -75,7 +75,7 @@ vector_new_when_called_sets_capactity_and_element_size()
     OP_VERIFY();
 }
 
-void
+static void
 vector_push_back_when_called_with_null_this_returns_null()
 {
     void  *ret = vector_push_back(NULL, NULL);
@@ -84,7 +84,7 @@ vector_push_back_when_called_with_null_this_returns_null()
     OP_VERIFY();
 }
 
-void
+static void
 vector_push_back_when_called_with_null_value_returns_null()
 {
     Vector *vector;
@@ -103,7 +103,7 @@ vector_push_back_when_called_with_null_value_returns_null()
     OP_VERIFY();
 }
 
-void
+static void
 vector_push_back_when_called_sets_length()
 {
     Vector *vector;
@@ -121,7 +121,7 @@ vector_push_back_when_called_sets_length()
     OP_VERIFY();
 }
 
-void
+static void
 vector_push_back_when_called_does_not_increase_capacity()
 {
     Vector *vector;
@@ -139,7 +139,7 @@ vector_push_back_when_called_does_not_increase_capacity()
     OP_VERIFY();
 }
 
-void
+static void
 vector_push_back_when_called_puts_value_in_data()
 {
     Vector *vector;
@@ -159,7 +159,7 @@ vector_push_back_when_called_puts_value_in_data()
     OP_VERIFY();
 }
 
-void vector_push_back_when_called_twice_puts_value_in_data_and_sets_length()
+static void vector_push_back_when_called_twice_puts_value_in_data_and_sets_length()
 {
     Vector *vector;
     Vector retVector = { 0 };
@@ -180,7 +180,7 @@ void vector_push_back_when_called_twice_puts_value_in_data_and_sets_length()
     OP_VERIFY();
 }
 
-void
+static void
 vector_push_back_when_above_capacity_extends_vector()
 {
     Vector *vector;
@@ -206,14 +206,14 @@ vector_push_back_when_above_capacity_extends_vector()
     OP_VERIFY();
 }
 
-void
+static void
 vector_length_when_called_with_null_this_returns_zero()
 {
     OP_ASSERT_EQUAL_INT(0, (int)vector_length(NULL));
     OP_VERIFY();
 }
 
-void
+static void
 vector_length_when_called_returns_correct_length()
 {
     Vector *vector;
@@ -237,14 +237,14 @@ vector_length_when_called_returns_correct_length()
     OP_VERIFY();
 }
 
-void
+static void
 vector_get_when_called_with_null_this_returns_null()
 {
     OP_ASSERT_TRUE(vector_get(NULL, 0) == NULL);
     OP_VERIFY();
 }
 
-void
+static void
 vector_get_when_called_returns_correct_value()
 {
     Vector *vector;
@@ -264,7 +264,7 @@ vector_get_when_called_returns_correct_value()
     OP_VERIFY();
 }
 
-void
+static void
 vector_get_when_called_with_out_of_range_index_returns_null()
 {
     Vector *vector;

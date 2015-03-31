@@ -43,7 +43,7 @@ struct _NetworkAddress
     } Address;
 
     int AddressFamily;
-    int AddressLength;
+    size_t AddressLength;
 };
 
 bool network_address_from_ipstring(const char *ip, NetworkAddress *address);

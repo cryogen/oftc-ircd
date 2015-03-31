@@ -29,7 +29,7 @@
 #include "network.h"
 #include "uv_stub.h"
 
-void
+static void
 network_address_from_ipstring_when_null_ip_returns_false()
 {
     bool ret;
@@ -40,7 +40,7 @@ network_address_from_ipstring_when_null_ip_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 network_address_from_ipstring_when_null_address_returns_false()
 {
     bool ret;
@@ -51,7 +51,7 @@ network_address_from_ipstring_when_null_address_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 network_address_from_ipstring_when_v4fails_returns_false()
 {
     NetworkAddress address;
@@ -65,7 +65,7 @@ network_address_from_ipstring_when_v4fails_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 network_address_from_ipstring_when_dots_in_address_sets_v4()
 {
     NetworkAddress address;
@@ -80,7 +80,7 @@ network_address_from_ipstring_when_dots_in_address_sets_v4()
     OP_VERIFY();
 }
 
-void
+static void
 network_address_from_ipstring_when_v6fails_returns_false()
 {
     NetworkAddress address;
@@ -94,7 +94,7 @@ network_address_from_ipstring_when_v6fails_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 network_address_from_ipstring_when_invalid_address_returns_false()
 {
     NetworkAddress address;
@@ -105,7 +105,7 @@ network_address_from_ipstring_when_invalid_address_returns_false()
     OP_ASSERT_FALSE(ret);
 }
 
-void
+static void
 network_address_from_ipstring_when_colons_in_address_sets_v6()
 {
     NetworkAddress address;
@@ -120,7 +120,7 @@ network_address_from_ipstring_when_colons_in_address_sets_v6()
     OP_VERIFY();
 }
 
-void
+static void
 network_ipstring_from_address_when_address_null_return_false()
 {
     char host[256];
@@ -132,7 +132,7 @@ network_ipstring_from_address_when_address_null_return_false()
     OP_VERIFY();
 }
 
-void
+static void
 network_ipstring_from_address_when_ipstr_null_return_false()
 {
     NetworkAddress address;
@@ -144,7 +144,7 @@ network_ipstring_from_address_when_ipstr_null_return_false()
     OP_VERIFY();
 }
 
-void
+static void
 network_ipstring_from_address_when_v4_and_fails_returns_false()
 {
     NetworkAddress address;
@@ -161,7 +161,7 @@ network_ipstring_from_address_when_v4_and_fails_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 network_ipstring_from_address_when_v6_and_fails_returns_false()
 {
     NetworkAddress address;
@@ -178,7 +178,7 @@ network_ipstring_from_address_when_v6_and_fails_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 network_ipstring_from_address_when_unknown_family_returns_false()
 {
     NetworkAddress address = { 0 };
@@ -191,7 +191,7 @@ network_ipstring_from_address_when_unknown_family_returns_false()
     OP_VERIFY();
 }
 
-void
+static void
 network_ipstring_from_address_when_v4ok_returns_true()
 {
     NetworkAddress address;
@@ -208,7 +208,7 @@ network_ipstring_from_address_when_v4ok_returns_true()
     OP_VERIFY();
 }
 
-void
+static void
 network_ipstring_from_address_when_v6ok_returns_true()
 {
     NetworkAddress address;
@@ -220,6 +220,35 @@ network_ipstring_from_address_when_v6ok_returns_true()
     uv_ip6_name_ExpectAndReturn(NULL, NULL, 0, 0, NULL, NULL, NULL);
 
     ret = network_ipstring_from_address(&address, host, 256);
+
+    OP_ASSERT_TRUE(ret);
+    OP_VERIFY();
+}
+
+static void
+network_address_from_ip_string_and_port_when_port_uses_port()
+{
+    NetworkAddress address;
+    bool ret;
+
+    uv_ip4_addr_ExpectAndReturn(NULL, 1234, NULL, 0, NULL, cmp_int, NULL);
+
+    ret = network_address_from_ipstring_and_port("123.123.123.123", 1234,
+                                                 &address);
+
+    OP_ASSERT_TRUE(ret);
+    OP_VERIFY();
+}
+
+static void
+network_address_from_ip_string_and_port_when_v6port_uses_port()
+{
+    NetworkAddress address;
+    bool ret;
+
+    uv_ip6_addr_ExpectAndReturn(NULL, 1234, NULL, 0, NULL, cmp_int, NULL);
+
+    ret = network_address_from_ipstring_and_port("::", 1234, &address);
 
     OP_ASSERT_TRUE(ret);
     OP_VERIFY();
@@ -258,6 +287,11 @@ main()
                          "network_ipstring_from_address_when_v4ok_returns_true");
     opmock_register_test(network_ipstring_from_address_when_v6ok_returns_true,
                          "network_ipstring_from_address_when_v6ok_returns_true");
+    opmock_register_test(network_address_from_ip_string_and_port_when_port_uses_port,
+                         "network_address_from_ip_string_and_port_when_port_uses_port");
+    opmock_register_test(network_address_from_ip_string_and_port_when_v6port_uses_port,
+                         "network_address_from_ip_string_and_port_when_v6port_uses_port");
+
     opmock_test_suite_run();
 
     return opmock_test_error > 0;

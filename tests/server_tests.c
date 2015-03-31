@@ -31,7 +31,7 @@
 #include "client_stub.h"
 #include "json_object_stub.h"
 
-void
+static void
 server_init_when_called_sets_up_server()
 {
     ConfigSection section;
@@ -65,7 +65,7 @@ set_defaults_twice(ConfigSection *section,
     section->SetDefaults();
 }
 
-void
+static void
 server_set_defaults_when_called_allocates_client()
 {
     ConfigSection section = { 0 };
@@ -79,7 +79,7 @@ server_set_defaults_when_called_allocates_client()
     OP_VERIFY();
 }
 
-void
+static void
 server_set_defaults_when_called_twice_frees_old_client()
 {
     ConfigSection section = { 0 };
@@ -110,7 +110,7 @@ set_name_callback(ConfigSection *section,
     handler(NULL, &obj);
 }
 
-void
+static void
 server_set_name_when_called_sets_name()
 {
     ConfigSection section = { 0 };

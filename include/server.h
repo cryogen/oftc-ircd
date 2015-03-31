@@ -29,7 +29,7 @@
 
 #include "client.h"
 
-void server_init();
-Client *server_get_this_server();
+void server_init(void);
+Client *server_get_this_server(void);
 
 #endif

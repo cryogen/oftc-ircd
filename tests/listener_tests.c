@@ -33,7 +33,7 @@
 static void
 setup()
 {
-    hash_init();
+    static void();
     config_init();
     listener_init();
 }
