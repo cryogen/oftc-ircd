@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "client.h"
 #include "vector.h"
@@ -239,14 +240,10 @@ client_free(Client *client)
 bool
 client_accept(Client *client, uv_stream_t *handle)
 {
-    Listener *listener;
-
     if(client == NULL || handle == NULL)
     {
         return false;
     }
-
-    listener = handle->data;
 
     if(!client_accept_socket(client, handle))
     {

@@ -155,7 +155,7 @@ vector_push_back_when_called_puts_value_in_data()
     ret = vector_push_back(vector, "TEST");
 
     OP_ASSERT_EQUAL_CSTRING("TEST", vector->Data);
-    OP_ASSERT_EQUAL_CSTRING("TEST", ret);
+    OP_ASSERT_EQUAL_CSTRING("TEST", (char *)ret);
     OP_VERIFY();
 }
 
@@ -259,8 +259,8 @@ vector_get_when_called_returns_correct_value()
     vector_push_back(vector, "TEST");
     vector_push_back(vector, "1TES");
 
-    OP_ASSERT_EQUAL_CSTRING("TEST", vector_get(vector, 0));
-    OP_ASSERT_EQUAL_CSTRING("1TES", vector_get(vector, 1));
+    OP_ASSERT_EQUAL_CSTRING("TEST", (char *)vector_get(vector, 0));
+    OP_ASSERT_EQUAL_CSTRING("1TES", (char *)vector_get(vector, 1));
     OP_VERIFY();
 }
 
@@ -280,8 +280,8 @@ vector_get_when_called_with_out_of_range_index_returns_null()
     vector_push_back(vector, "1TES");
 
     OP_ASSERT_TRUE(vector_get(vector, 2) == NULL);
-    OP_ASSERT_EQUAL_CSTRING("TEST", vector_get(vector, 0));
-    OP_ASSERT_EQUAL_CSTRING("1TES", vector_get(vector, 1));
+    OP_ASSERT_EQUAL_CSTRING("TEST", (char *)vector_get(vector, 0));
+    OP_ASSERT_EQUAL_CSTRING("1TES", (char *)vector_get(vector, 1));
     OP_VERIFY();
 }
 
