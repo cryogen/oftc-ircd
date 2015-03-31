@@ -52,7 +52,10 @@ command_free(Command *command)
 }
 
 void
-command_register(const char *name, CommandAccess access, CommandHandler handler)
+command_register(const char *name,
+                 CommandAccess access,
+                 CommandHandler handler,
+                 int minParams)
 {
     Command *command;
 
@@ -61,6 +64,7 @@ command_register(const char *name, CommandAccess access, CommandHandler handler)
     command->Name = name;
     command->RequiredAccess = access;
     command->Handler = handler;
+    command->MinParams = minParams;
 
     hash_add_string(CommandHash, name, command);
 }

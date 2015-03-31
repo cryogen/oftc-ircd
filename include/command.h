@@ -42,11 +42,12 @@ struct _Command
     const char *Name;
     CommandAccess RequiredAccess;
     CommandHandler Handler;
+    int MinParams;
 };
 
 void command_init(void);
 Command *command_new(void);
 void command_free(Command *);
-void command_register(const char *, CommandAccess, CommandHandler);
+void command_register(const char *, CommandAccess, CommandHandler, int);
 
 #endif /* defined(__oftc_ircd__command__) */

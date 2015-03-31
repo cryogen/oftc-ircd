@@ -108,6 +108,7 @@ static int
 scandir_next_file_callback(uv_fs_t *req, uv_dirent_t *ent, int calls)
 {
     ent->type = UV_DIRENT_FILE;
+    ent->name = "test.so";
 
     if(calls > 1)
     {
@@ -150,7 +151,7 @@ module_config_set_path_when_called_adds_path()
     config_register_section_ExpectAndReturn(NULL, false, NULL, NULL, NULL);
     config_register_field_MockWithCallback(set_path_test_callback);
     json_object_get_string_ExpectAndReturn(NULL, path, NULL);
-    vector_push_back_ExpectAndReturn(NULL, (char *)path, NULL, NULL, cmp_ptr);
+    vector_push_back_ExpectAndReturn(NULL, NULL, NULL, NULL, NULL);
 
     module_init();
 
@@ -176,13 +177,18 @@ module_load_all_modules_when_calls_loads_module()
 static void
 module_scandir_when_eof_does_not_load_module()
 {
+    uv_fs_t req;
+
     vector_length_ExpectAndReturn(NULL, 1, NULL);
     vector_get_ExpectAndReturn(NULL, 0, "test", NULL, cmp_int);
 
-    Malloc_ExpectAndReturn(0, NULL, NULL);
+    Malloc_ExpectAndReturn(sizeof(req), &req, cmp_int);
     serverstate_get_event_loop_ExpectAndReturn(NULL);
     uv_fs_scandir_MockWithCallback(scandir_callback);
+    uv_cwd_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
+    uv_chdir_ExpectAndReturn(NULL, 0, NULL);
     uv_fs_scandir_next_ExpectAndReturn(NULL, NULL, UV_EOF, NULL, NULL);
+    uv_chdir_ExpectAndReturn(NULL, 0, NULL);
 
     module_load_all_modules();
 
@@ -192,13 +198,19 @@ module_scandir_when_eof_does_not_load_module()
 static void
 module_scandir_when_not_file_does_not_load_module()
 {
+    uv_fs_t req;
+
     vector_length_ExpectAndReturn(NULL, 1, NULL);
     vector_get_ExpectAndReturn(NULL, 0, "test", NULL, cmp_int);
 
-    Malloc_ExpectAndReturn(0, NULL, NULL);
+    Malloc_ExpectAndReturn(sizeof(req), &req, cmp_int);
+
     serverstate_get_event_loop_ExpectAndReturn(NULL);
     uv_fs_scandir_MockWithCallback(scandir_callback);
+    uv_cwd_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
+    uv_chdir_ExpectAndReturn(NULL, 0, NULL);
     uv_fs_scandir_next_MockWithCallback(scandir_next_not_file_callback);
+    uv_chdir_ExpectAndReturn(NULL, 0, NULL);
 
     module_load_all_modules();
 
@@ -208,20 +220,25 @@ module_scandir_when_not_file_does_not_load_module()
 static void
 module_scandir_when_file_loads_module()
 {
+    uv_fs_t req;
     Module module = { 0 };
 
     vector_length_ExpectAndReturn(NULL, 1, NULL);
     vector_get_ExpectAndReturn(NULL, 0, "test", NULL, cmp_int);
 
-    Malloc_ExpectAndReturn(0, NULL, NULL);
+    Malloc_ExpectAndReturn(sizeof(req), &req, cmp_int);
+
     serverstate_get_event_loop_ExpectAndReturn(NULL);
     uv_fs_scandir_MockWithCallback(scandir_callback);
+    uv_cwd_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
+    uv_chdir_ExpectAndReturn(NULL, 0, NULL);
     uv_fs_scandir_next_MockWithCallback(scandir_next_file_callback);
     Malloc_ExpectAndReturn(sizeof(Module), &module, cmp_int);
     StrDup_ExpectAndReturn(NULL, NULL, NULL);
     uv_dlopen_ExpectAndReturn(NULL, NULL, -1, NULL, NULL);
     Free_ExpectAndReturn(NULL, NULL);
     Free_ExpectAndReturn(NULL, NULL);
+    uv_chdir_ExpectAndReturn(NULL, 0, NULL);
 
     module_load_all_modules();
 

@@ -23,3 +23,33 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include <uv.h>
+
+#include "module.h"
+#include "command.h"
+
+static void
+user_handler()
+{
+}
+
+static bool
+user_load()
+{
+    command_register("USER", Unregistered, user_handler, 4);
+
+    return true;
+}
+
+static bool
+user_unload()
+{
+    return true;
+}
+
+ModuleInfo ModuleInfoPtr =
+{
+    user_load,
+    user_unload
+};

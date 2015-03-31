@@ -68,7 +68,7 @@ command_register_when_called_registers_command()
     Malloc_ExpectAndReturn(sizeof(Command), &command, cmp_int);
     hash_add_string_ExpectAndReturn(NULL, NULL, NULL, NULL, NULL, NULL);
 
-    command_register("TEST", Standard, NULL);
+    command_register("TEST", Standard, NULL, 0);
 
     OP_VERIFY();
 }

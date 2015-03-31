@@ -42,13 +42,41 @@ static ConfigSection *ModuleSection;
 static void
 module_config_set_path(void *element, json_object *obj)
 {
-    vector_push_back(ModulePaths, (char *)json_object_get_string(obj));
+    char *path = (char *)json_object_get_string(obj);
+    vector_push_back(ModulePaths, &path);
+}
+
+static char *
+module_get_extension(const char *filename)
+{
+    char *ret = NULL;
+    char *ext = (char *)filename;
+
+    while((ext = strchr(ext, '.')) != NULL)
+    {
+        ret = ext;
+        ext++;
+    }
+
+    if(ret == NULL)
+    {
+        return ret;
+    }
+
+    return ret + 1;
 }
 
 static void
 module_on_scandir(uv_fs_t *req)
 {
     uv_dirent_t dirEntry;
+    char currentPath[512];
+    size_t size;
+
+    size = sizeof(currentPath);
+
+    uv_cwd(currentPath, &size);
+    uv_chdir(req->path);
 
     while(uv_fs_scandir_next(req, &dirEntry) != UV_EOF)
     {
@@ -57,8 +85,15 @@ module_on_scandir(uv_fs_t *req)
             continue;
         }
 
+        if(strcmp(module_get_extension(dirEntry.name), "so") != 0)
+        {
+            continue;
+        }
+
         module_load(dirEntry.name);
     }
+
+    uv_chdir(currentPath);
 }
 
 void
@@ -99,11 +134,11 @@ module_load_all_modules()
 
     for(size_t i = 0; i < len; i++)
     {
-        const char *path = vector_get(ModulePaths, i);
+        const char **path = vector_get(ModulePaths, i);
 
         req = Malloc(sizeof(uv_fs_t));
 
-        uv_fs_scandir(serverstate_get_event_loop(), req, path, 0,
+        uv_fs_scandir(serverstate_get_event_loop(), req, *path, 0,
                       module_on_scandir);
     }
 }
@@ -124,7 +159,7 @@ module_load(const char *path)
         return false;
     }
 
-    if(uv_dlsym(&module->handle, "ModuleInfo", (void **)&moduleInfo) < 0)
+    if(uv_dlsym(&module->handle, "ModuleInfoPtr", (void **)&moduleInfo) < 0)
     {
         module_free(module);
         return false;
