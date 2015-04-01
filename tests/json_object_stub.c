@@ -1,4 +1,7 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 #include "json_object_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -4310,4 +4313,6 @@ void json_object_get_string_len_ExpectAndReturn (struct json_object * obj, int t
     json_object_get_string_len_struct_inst.calls[json_object_get_string_len_struct_inst.expectedCalls].check_params = 1;
     json_object_get_string_len_struct_inst.expectedCalls++;
 }
+
+#pragma GCC diagnostic pop
 

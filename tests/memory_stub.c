@@ -1,4 +1,8 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 #include "memory_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -469,4 +473,6 @@ void Free_ExpectAndReturn (void * ptr, OPMOCK_MATCHER match_ptr)
     Free_struct_inst.calls[Free_struct_inst.expectedCalls].check_params = 1;
     Free_struct_inst.expectedCalls++;
 }
+
+#pragma GCC diagnostic pop
 

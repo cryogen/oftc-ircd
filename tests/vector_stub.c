@@ -1,4 +1,7 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 #include "vector_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -500,4 +503,6 @@ void vector_length_ExpectAndReturn (Vector * this, size_t to_return, OPMOCK_MATC
     vector_length_struct_inst.calls[vector_length_struct_inst.expectedCalls].check_params = 1;
     vector_length_struct_inst.expectedCalls++;
 }
+
+#pragma GCC diagnostic pop
 

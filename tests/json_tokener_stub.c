@@ -1,4 +1,7 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 #include "json_tokener_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -1163,4 +1166,6 @@ void json_tokener_parse_ex_ExpectAndReturn (struct json_tokener * tok, const cha
     json_tokener_parse_ex_struct_inst.calls[json_tokener_parse_ex_struct_inst.expectedCalls].check_params = 1;
     json_tokener_parse_ex_struct_inst.expectedCalls++;
 }
+
+#pragma GCC diagnostic pop
 

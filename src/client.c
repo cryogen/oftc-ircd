@@ -149,6 +149,11 @@ client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
     {
         // TODO: exit client due to read error
     }
+
+    
+
+    Free(buf->base);
+    Free((void *)buf);
 }
 
 static bool

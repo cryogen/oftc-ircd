@@ -1,4 +1,7 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 #include "hash_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -494,4 +497,6 @@ void hash_find_ExpectAndReturn (Hash * this, const char * key, void * to_return,
     hash_find_struct_inst.calls[hash_find_struct_inst.expectedCalls].check_params = 1;
     hash_find_struct_inst.expectedCalls++;
 }
+
+#pragma GCC diagnostic pop
 

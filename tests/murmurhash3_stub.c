@@ -1,4 +1,7 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 #include "murmurhash3_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -463,4 +466,6 @@ void MurmurHash3_x64_128_ExpectAndReturn (const void * key, int len, uint32_t se
     MurmurHash3_x64_128_struct_inst.calls[MurmurHash3_x64_128_struct_inst.expectedCalls].check_params = 1;
     MurmurHash3_x64_128_struct_inst.expectedCalls++;
 }
+
+#pragma GCC diagnostic pop
 

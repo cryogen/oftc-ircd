@@ -1,4 +1,9 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 #include "uv_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -27146,4 +27151,6 @@ void uv_thread_equal_ExpectAndReturn (const uv_thread_t * t1, const uv_thread_t 
     uv_thread_equal_struct_inst.calls[uv_thread_equal_struct_inst.expectedCalls].check_params = 1;
     uv_thread_equal_struct_inst.expectedCalls++;
 }
+
+#pragma GCC diagnostic pop
 

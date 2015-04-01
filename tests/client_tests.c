@@ -47,6 +47,7 @@ static uv_getaddrinfo_t addrReq;
 static bool callbackCalled;
 static uv_write_t writeReq;
 static char *buffer;
+uv_buf_t uvBuf = { 0 };
 
 static void
 no_match_callback(ClientDnsRequest *request, bool match)
@@ -227,7 +228,9 @@ uv_read_start_read_fail_callback(uv_stream_t *stream,
                                  uv_read_cb readCallback,
                                  int calls)
 {
-    readCallback(stream, -1, NULL);
+    allocCallback((uv_handle_t *)stream, 1024, &uvBuf);
+
+    readCallback(stream, -1, &uvBuf);
 
     return 0;
 }
@@ -238,7 +241,7 @@ uv_read_start_read_closed_callback(uv_stream_t *stream,
                                    uv_read_cb readCallback,
                                    int calls)
 {
-    readCallback(stream, UV_EOF, NULL);
+    readCallback(stream, UV_EOF, &uvBuf);
 
     return 0;
 }

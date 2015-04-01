@@ -1,7 +1,11 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 #include "opmock.h"
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 
 int opmock_test_error;
 int opmock_test_run;
@@ -179,7 +183,7 @@ void opmock_test_suite_run()
 /* these 2 variables are used for approximate
  * comparisons of floating point values.
  */
-static float mo_float_delta = 0.00001;
+static float mo_float_delta = 0.00001f;
 static double mo_double_delta = 0.00001;
 
 int cmp_char(void *a, void *b, const char * name, char *message)
@@ -253,7 +257,7 @@ int cmp_float(void *a, void *b, const char * name, char *message)
   float my_a = *((float *)a);
   float my_b = *((float *)b);
 
-  if(my_a == my_b) {
+  if(my_b - my_a <= DBL_EPSILON) {
     return 0;
   }
   snprintf(message, OP_MATCHER_MESSAGE_LENGTH, 
@@ -267,7 +271,7 @@ int cmp_double(void *a, void *b, const char * name, char *message)
   double my_a = *((double *)a);
   double my_b = *((double *)b);
 
-  if(my_a == my_b) {
+  if(my_b - my_a <= DBL_EPSILON) {
     return 0;
   }
   snprintf(message, OP_MATCHER_MESSAGE_LENGTH, 
@@ -440,7 +444,7 @@ void opmock_sprint_error_messages(char *messages, int max_size)
 
 	for(i = 0; i < max; i++)
 	{
-		int len = strlen(opmock_error_message_array[i].message)+1;/* +1 for the NULL terminating byte */
+		size_t len = strlen(opmock_error_message_array[i].message)+1;/* +1 for the NULL terminating byte */
 		sum += len;
 		if(max_size > (sum+1)) {
 			strcat(messages, opmock_error_message_array[i].message);
@@ -476,3 +480,6 @@ void opmock_test_verify()
 {
 	opmock_verify_all_mocks();
 }
+
+#pragma GCC diagnostic pop
+

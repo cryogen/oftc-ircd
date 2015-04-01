@@ -1,4 +1,7 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 #include "serverstate_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -424,4 +427,6 @@ void serverstate_set_event_loop_ExpectAndReturn (uv_loop_t * arg1, OPMOCK_MATCHE
     serverstate_set_event_loop_struct_inst.calls[serverstate_set_event_loop_struct_inst.expectedCalls].check_params = 1;
     serverstate_set_event_loop_struct_inst.expectedCalls++;
 }
+
+#pragma GCC diagnostic pop
 

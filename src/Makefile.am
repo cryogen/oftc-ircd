@@ -4,7 +4,8 @@ AM_CPPFLAGS =   -I$(top_srcdir)/libuv/include -I$(top_srcdir) \
                 -I../include --coverage 
 AM_LDFLAGS = --coverage
 
-libircd_la_SOURCES =    client.c        \
+libircd_la_SOURCES =    buffer.c        \
+                        client.c        \
                         config.c        \
                         command.c       \
                         hash.c          \

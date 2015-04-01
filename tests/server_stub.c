@@ -1,4 +1,7 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 #include "server_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -203,4 +206,6 @@ void server_get_this_server_ExpectAndReturn (Client * to_return)
     server_get_this_server_struct_inst.calls[server_get_this_server_struct_inst.expectedCalls].check_params = 1;
     server_get_this_server_struct_inst.expectedCalls++;
 }
+
+#pragma GCC diagnostic pop
 
