@@ -31,6 +31,7 @@
 #include <stdbool.h>
 
 #include "network.h"
+#include "buffer.h"
 
 #define HOSTLEN 128
 
@@ -51,6 +52,7 @@ struct _Client
     char Name[HOSTLEN];
     char Host[HOSTLEN];
     NetworkAddress Address;
+    Buffer *ReadBuffer;
 
     // private
     uv_tcp_t *handle;

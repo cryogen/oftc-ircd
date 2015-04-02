@@ -30,6 +30,8 @@
 #include "vector_stub.h"
 #include "uv_stub.h"
 #include "server_stub.h"
+#include "buffer_stub.h"
+
 #include "client.h"
 #include "listener.h"
 #include "network.h"
@@ -314,9 +316,12 @@ static void
 client_new_when_called_allocates_memory()
 {
     Client *ptr;
+    Buffer clientBuffer = { 0 };
+
     void *ret = malloc(sizeof(Client));
 
     Malloc_ExpectAndReturn(sizeof(Client), ret, cmp_int);
+    buffer_new_ExpectAndReturn(&clientBuffer);
     ptr = client_new();
 
     OP_ASSERT_TRUE(ptr == ret);
