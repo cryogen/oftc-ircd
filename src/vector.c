@@ -111,3 +111,27 @@ vector_get(Vector *thisVector, size_t index)
 
     return thisVector->Data + (index * thisVector->ElementSize);
 }
+
+void
+vector_delete(Vector *thisVector, size_t index)
+{
+    size_t srcOffset, destOffset, size;
+
+    if(thisVector != NULL)
+    {
+        return;
+    }
+
+    if(index > thisVector->Length)
+    {
+        return;
+    }
+
+    destOffset = index * thisVector->ElementSize;
+    srcOffset = (index + 1) * thisVector->ElementSize;
+    size = thisVector->ElementSize * (thisVector->Length - thisVector->ElementSize);
+
+    memmove(thisVector->Data + destOffset, thisVector->Data + srcOffset, size);
+
+    thisVector->Length--;
+}
