@@ -35,72 +35,102 @@ buffer_new()
     Buffer *newBuffer;
 
     newBuffer = Malloc(sizeof(Buffer));
-    
-    newBuffer->Size = 0;
-    newBuffer->Capacity = BUFFER_CHUNK_SIZE;
-    newBuffer->buffer = Malloc(BUFFER_CHUNK_SIZE);
-    newBuffer->head = newBuffer->buffer;
-    newBuffer->tail = newBuffer->head;
+
+    newBuffer->Data = list_new();
 
     return newBuffer;
 }
 
 void
-buffer_push_back(Buffer *buffer, char *data, size_t length)
+buffer_add(Buffer *buffer, char *data, size_t length)
 {
+    size_t written = 0;
+    size_t partial;
+    ListEntry *currentChunk;
+
     if(buffer == NULL || data == NULL)
     {
         return;
     }
 
-    if(buffer->Capacity < buffer->Size + length)
+    partial = buffer->Size % BUFFER_CHUNK_SIZE;
+    currentChunk = buffer->currentChunk;
+
+    while(written < length)
     {
-        size_t newLen = ((buffer->Size + length / BUFFER_CHUNK_SIZE) + 1) *
-                        BUFFER_CHUNK_SIZE;
-        buffer->buffer = Realloc(buffer->buffer, newLen);
-        buffer->Capacity = newLen;
+        const char *ptr;
+        size_t toWrite;
+
+        if(length - written + partial > BUFFER_CHUNK_SIZE)
+        {
+            toWrite = BUFFER_CHUNK_SIZE - partial;
+        }
+        else
+        {
+            toWrite = length - written;
+        }
+
+        if(currentChunk == NULL)
+        {
+            ptr = Malloc(BUFFER_CHUNK_SIZE);
+            currentChunk = list_add_tail(buffer->Data, (void *)ptr);
+            buffer->currentChunk = currentChunk;
+        }
+        else
+        {
+            ptr = currentChunk->Data;
+        }
+
+        memcpy((void *)(ptr + partial), data + written, toWrite);
+
+        written += toWrite;
+
+        if(written < length || toWrite == BUFFER_CHUNK_SIZE)
+        {
+            buffer->currentChunk = NULL;
+            currentChunk = NULL;
+        }
     }
 
-    memcpy(buffer->tail, data, length);
-
-    buffer->tail += length;
-    buffer->Size = (size_t)(buffer->tail - buffer->head);
+    buffer->Size += written;
 }
 
-const char *
-buffer_pop_front(Buffer *buffer, size_t len)
+void
+buffer_remove(Buffer *buffer, size_t len)
 {
-    const char *ret;
+    size_t toDelete;
 
     if(buffer == NULL || len == 0)
     {
-        return NULL;
+        return;
     }
 
     if(len > buffer->Size)
     {
-        return NULL;
+        return;
     }
 
-    ret = buffer->head;
-    buffer->head += len;
+    toDelete = len;
 
-    if(buffer->head >= buffer->tail)
+    while(toDelete >= BUFFER_CHUNK_SIZE)
     {
-        if(((size_t)(buffer->tail - buffer->buffer)) + len > buffer->Capacity)
-        {
-            memmove(buffer->buffer, buffer->head, buffer->Size - len);
-            buffer->head = buffer->buffer;
-            buffer->tail = buffer->head + buffer->Size - len;
-            ret = buffer->head;
-        }
-        else
-        {
-            buffer->tail += len;
-        }
+        list_delete(buffer->Data, buffer->Data->Head);
+
+        toDelete -= BUFFER_CHUNK_SIZE;
     }
 
-    buffer->Size = (size_t)(buffer->tail - buffer->head);
+    if(toDelete > 0)
+    {
+        memmove(buffer->Data->Head->Data,
+                ((char *)buffer->Data->Head->Data) + toDelete,
+                BUFFER_CHUNK_SIZE - toDelete);
 
-    return ret;
+        buffer->currentChunk = buffer->Data->Head;
+    }
+    else
+    {
+        buffer->currentChunk = NULL;
+    }
+
+    buffer->Size -= len;
 }

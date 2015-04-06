@@ -150,7 +150,7 @@ client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
         // TODO: exit client due to read error
     }
 
-    buffer_push_back(client->ReadBuffer, buf->base, (size_t)nRead);
+    buffer_add(client->ReadBuffer, buf->base, (size_t)nRead);
 
     Free(buf->base);
     Free((void *)buf);

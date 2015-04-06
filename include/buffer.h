@@ -28,6 +28,7 @@
 #define oftc_ircd_buffer_h
 
 #include <stdlib.h>
+#include "list.h"
 
 #define BUFFER_CHUNK_SIZE 4096
 
@@ -35,15 +36,13 @@ typedef struct _Buffer Buffer;
 
 struct _Buffer
 {
-    char *buffer;
-    char *head;
-    char *tail;
+    List *Data;
+    ListEntry *currentChunk;
     size_t Size;
-    size_t Capacity;
 };
 
 Buffer *buffer_new(void);
-void buffer_push_back(Buffer *buffer, char *data, size_t len);
-const char *buffer_pop_front(Buffer *buffer, size_t len);
+void buffer_add(Buffer *buffer, char *data, size_t len);
+void buffer_remove(Buffer *buffer, size_t len);
 
 #endif
