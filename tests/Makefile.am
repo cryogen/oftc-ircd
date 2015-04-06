@@ -7,18 +7,10 @@ TESTS = client_tests    \
         network_tests   \
         module_tests    \
         server_tests    \
-        buffer_tests
+        buffer_tests    \
+        list_tests
 
-check_PROGRAMS =    client_tests    \
-                    command_tests   \
-                    config_tests    \
-                    hash_tests      \
-                    lstring_tests   \
-                    vector_tests    \
-                    network_tests   \
-                    module_tests    \
-                    server_tests    \
-                    buffer_tests
+check_PROGRAMS =    $(TESTS)
 
 AM_LDFLAGS = --coverage
 
@@ -91,6 +83,12 @@ server_tests_SOURCES =  server_tests.c          \
 buffer_tests_SOURCES =  buffer_tests.c          \
                         opmock.c                \
                         memory_stub.c           \
-                        ../src/buffer.c         
+                        ../src/list.c         \
+                        ../src/buffer.c
+
+list_tests_SOURCES    = list_tests.c            \
+                        opmock.c                \
+                        memory_stub.c           \
+                        ../src/list.c
 
 AM_CPPFLAGS = -g -O0 -I../include -I../libuv/include -I.. -I../json-c --coverage

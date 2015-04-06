@@ -9,6 +9,7 @@ libircd_la_SOURCES =    buffer.c        \
                         config.c        \
                         command.c       \
                         hash.c          \
+                        list.c          \
                         listener.c      \
                         lstring.c       \
                         memory.c        \

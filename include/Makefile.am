@@ -3,6 +3,7 @@ noinst_HEADERS= buffer.h        \
                 config.h        \
                 hash.h          \
                 irc.h           \
+                list.h          \
                 listener.h      \
                 lstring.h       \
                 memory.h        \
