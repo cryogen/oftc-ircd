@@ -114,6 +114,8 @@ buffer_remove(Buffer *buffer, size_t len)
 
     while(toDelete >= BUFFER_CHUNK_SIZE)
     {
+        Free(buffer->Data->Head->Data);
+        
         list_delete(buffer->Data, buffer->Data->Head);
 
         toDelete -= BUFFER_CHUNK_SIZE;
