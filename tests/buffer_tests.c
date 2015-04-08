@@ -85,7 +85,7 @@ buffer_add_when_called_stores_data()
 
     buffer_add(&buffer, "Test", strlen("Test"));
 
-    OP_ASSERT_EQUAL_CSTRING("Test", buffer.Data->Head->Data);
+    OP_ASSERT_EQUAL_CSTRING("Test", (char *)buffer.Data->Head->Data);
     OP_ASSERT_EQUAL_ULONG(4UL, buffer.Size);
 }
 
@@ -120,7 +120,7 @@ buffer_add_when_called_twice_adds_both()
     buffer_add(&buffer, "Test", strlen("Test"));
     buffer_add(&buffer, "Second", strlen("Second"));
 
-    OP_ASSERT_EQUAL_CSTRING("TestSecond", buffer.Data->Head->Data);
+    OP_ASSERT_EQUAL_CSTRING("TestSecond", (char *)buffer.Data->Head->Data);
     OP_ASSERT_EQUAL_ULONG(10UL, buffer.Size);
 }
 

@@ -33,3 +33,4 @@ cov
 .DS_Store
 *_tests
 TEST-test.xml
+.dirstamp

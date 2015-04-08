@@ -179,11 +179,10 @@ static void
 list_delete_when_null_entry_returns()
 {
     List *list = setup_list();
-    ListEntry *entry;
 
     Malloc_ExpectAndReturn(sizeof(ListEntry), &Item1, cmp_int);
 
-    entry = list_add(list, (void *)TestItem1);
+    list_add(list, (void *)TestItem1);
     list_delete(list, NULL);
 
     OP_ASSERT_EQUAL_ULONG(1UL, list->Length);
