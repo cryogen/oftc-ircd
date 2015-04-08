@@ -125,9 +125,9 @@ client_allocate_buffer_callback(uv_handle_t *handle,
                                 size_t suggestedSize,
                                 uv_buf_t *buf)
 {
-    Client *client = handle->data;
+/*    Client *client = handle->data;
 
-    assert(client != NULL);
+    assert(client != NULL);*/
 
     buf->base = Malloc(suggestedSize);
     buf->len = suggestedSize;
