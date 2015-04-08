@@ -1,1 +1,2 @@
-SUBDIRS=json-c libuv src modules include tests
+SUBDIRS=json-c libuv modules include tests src
+ACLOCAL_AMFLAGS=-I m4
