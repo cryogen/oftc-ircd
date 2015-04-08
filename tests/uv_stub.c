@@ -2,7 +2,11 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-prototypes"
 #pragma GCC diagnostic ignored "-Wshadow"
+#ifdef __clang__
+#pragma GCC diagnostic ignored "-Wpedantic"
+#else
 #pragma GCC diagnostic ignored "-pedantic"
+#endif
 
 #include "uv_stub.h"
 #include <stdio.h>
