@@ -189,6 +189,30 @@ parser_get_line_when_called_twice_returns_both()
     OP_ASSERT_EQUAL_CSTRING("OTHER", destBuffer);
 }
 
+static void
+parser_get_line_when_spans_two_blocks_returns_line()
+{
+    bool ret;
+    Buffer *buffer;
+    char destBuffer[512 + 1] = { "12345" };
+    char data[5000];
+    char expected[512 + 1];
+
+    memset(data, 'A', 4997);
+    data[4998] = '\r';
+    data[4999] = '\n';
+
+    memset(expected, 'A', 512);
+    expected[512] = '\0';
+
+    buffer = buffer_new();
+    buffer_add(buffer, data, sizeof(data));
+
+    ret = parser_get_line(buffer, destBuffer, sizeof(destBuffer));
+    OP_ASSERT_TRUE(ret);
+    OP_ASSERT_EQUAL_CSTRING(expected, destBuffer);
+}
+
 int
 main()
 {
@@ -214,6 +238,8 @@ main()
                          "parser_get_line_when_one_line_called_twice_returns_false");
     opmock_register_test(parser_get_line_when_called_twice_returns_both,
                          "parser_get_line_when_called_twice_returns_both");
+    opmock_register_test(parser_get_line_when_spans_two_blocks_returns_line,
+                         "parser_get_line_when_spans_two_blocks_returns_line");
 
     opmock_test_suite_run();
 

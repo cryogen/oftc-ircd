@@ -51,7 +51,8 @@ parser_get_line(Buffer *srcBuffer, char *destBuffer, size_t length)
 
     bufferPtr = currentChunk->Data;
     destPtr = destBuffer;
-    toRead = srcBuffer->Size;
+    toRead = srcBuffer->Size > BUFFER_CHUNK_SIZE ? 
+        BUFFER_CHUNK_SIZE : srcBuffer->Size;
     waitingEol = false;
     found = false;
     toDelete = written = 0;
@@ -93,12 +94,22 @@ parser_get_line(Buffer *srcBuffer, char *destBuffer, size_t length)
 
                 break;
         }
-
-        *destPtr = '\0';
+        
+        if(!found && toRead == 0)
+        {
+            size_t left = srcBuffer->Size - (bufferPtr - (char *)currentChunk->Data);
+            currentChunk = currentChunk->Next;
+            if(currentChunk != NULL)
+            {
+                bufferPtr = currentChunk->Data;
+                toRead = left > BUFFER_CHUNK_SIZE ? BUFFER_CHUNK_SIZE : left;
+            }
+        }
     }
 
     if(found)
     {
+        *destPtr = '\0';
         toDelete += written + 2;
     }
 
