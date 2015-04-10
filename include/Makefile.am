@@ -10,6 +10,7 @@ noinst_HEADERS= buffer.h        \
                 module.h        \
                 murmurhash3.h   \
                 network.h       \
+                parser.h        \
                 server.h        \
                 serverstate.h   \
                 vector.h

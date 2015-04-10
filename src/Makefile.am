@@ -16,6 +16,7 @@ libircd_la_SOURCES =    buffer.c        \
                         module.c        \
                         murmurhash3.c   \
                         network.c       \
+                        parser.c        \
                         server.c        \
                         serverstate.c   \
                         vector.c

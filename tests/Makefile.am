@@ -8,7 +8,8 @@ TESTS = client_tests    \
         module_tests    \
         server_tests    \
         buffer_tests    \
-        list_tests
+        list_tests      \
+        parser_tests    
 
 check_PROGRAMS =    $(TESTS)
 
@@ -83,12 +84,19 @@ server_tests_SOURCES =  server_tests.c          \
 buffer_tests_SOURCES =  buffer_tests.c          \
                         opmock.c                \
                         memory_stub.c           \
-                        ../src/list.c         \
+                        ../src/list.c           \
                         ../src/buffer.c
 
 list_tests_SOURCES    = list_tests.c            \
                         opmock.c                \
                         memory_stub.c           \
                         ../src/list.c
+
+parser_tests_SOURCES  = parser_tests.c          \
+                        opmock.c                \
+                        ../src/parser.c         \
+                        ../src/buffer.c         \
+                        ../src/list.c           \
+                        ../src/memory.c
 
 AM_CPPFLAGS = -g -O0 -I../include -I../libuv/include -I.. -I../json-c --coverage
