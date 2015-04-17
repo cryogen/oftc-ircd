@@ -1,8 +1,7 @@
 lib_LTLIBRARIES = libircd.la
 bin_PROGRAMS = ircd
 AM_CPPFLAGS =   -I$(top_srcdir)/libuv/include -I$(top_srcdir) \
-                -I../include --coverage 
-AM_LDFLAGS = --coverage
+                -I../include 
 
 libircd_la_SOURCES =    buffer.c        \
                         client.c        \

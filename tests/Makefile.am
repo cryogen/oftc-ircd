@@ -13,8 +13,6 @@ TESTS = client_tests    \
 
 check_PROGRAMS =    $(TESTS)
 
-AM_LDFLAGS = --coverage
-
 client_tests_SOURCES =  client_tests.c          \
                         memory_stub.c           \
                         vector_stub.c           \
@@ -99,4 +97,4 @@ parser_tests_SOURCES  = parser_tests.c          \
                         ../src/list.c           \
                         ../src/memory.c
 
-AM_CPPFLAGS = -g -O0 -I../include -I../libuv/include -I.. -I../json-c --coverage
+AM_CPPFLAGS = -I../include -I../libuv/include -I.. -I../json-c
