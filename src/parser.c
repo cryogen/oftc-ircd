@@ -25,6 +25,7 @@
  */
 
 #include "parser.h"
+#include "memory.h"
 
 bool
 parser_get_line(Buffer *srcBuffer, char *destBuffer, size_t length)
@@ -43,7 +44,7 @@ parser_get_line(Buffer *srcBuffer, char *destBuffer, size_t length)
         return false;
     }
     
-    currentChunk = srcBuffer->Data->Head;
+    currentChunk = buffer_get_start(srcBuffer);
     if(currentChunk == NULL)
     {
         return false;
@@ -116,4 +117,49 @@ parser_get_line(Buffer *srcBuffer, char *destBuffer, size_t length)
     buffer_remove(srcBuffer, toDelete);
 
     return found;
+}
+
+ParserResult *
+parser_process_line(const char *buffer, size_t length)
+{
+    size_t read = 0;
+    ParserResult *result;
+    char *destPtr;
+
+    if(buffer == NULL)
+    {
+        return NULL;
+    }
+
+    result = Malloc(sizeof(ParserResult));
+
+    // Trim whitespace
+    while(read < length)
+    {
+        if(*buffer == ' ' || *buffer == '\t')
+        {
+            buffer++;
+            read++;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    destPtr = result->CommandText;
+
+    while(read < length)
+    {
+        if(*buffer == ' ')
+        {
+//            *destPtr '/0';
+            break;
+        }
+
+        *destPtr++ = *buffer++;
+        read++;
+    }
+
+    return result;
 }

@@ -30,7 +30,21 @@
 #include <stdbool.h>
 
 #include "buffer.h"
+#include "command.h"
+#include "client.h"
+#include "vector.h"
+#include "irc.h"
+
+typedef struct _ParserResult ParserResult;
+
+struct _ParserResult
+{
+    char CommandText[IRC_MAXLEN + 1];
+    char Source[IRC_MAXLEN + 1];
+    Vector Params;
+};
 
 bool parser_get_line(Buffer *srcBuffer, char *destBuffer, size_t length);
+ParserResult *parser_process_line(const char *, size_t);
 
 #endif /* defined(__oftc_ircd__parser__) */

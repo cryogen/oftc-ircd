@@ -24,6 +24,11 @@ void buffer_remove_MockReset();
 typedef void (* OPMOCK_buffer_remove_CALLBACK)(Buffer * buffer, size_t len, int calls);
 void buffer_remove_MockWithCallback(OPMOCK_buffer_remove_CALLBACK callback);
 void buffer_remove_VerifyMock();
+void buffer_get_start_ExpectAndReturn(Buffer * buffer, ListEntry * to_return, OPMOCK_MATCHER match_buffer);
+void buffer_get_start_MockReset();
+typedef ListEntry * (* OPMOCK_buffer_get_start_CALLBACK)(Buffer * buffer, int calls);
+void buffer_get_start_MockWithCallback(OPMOCK_buffer_get_start_CALLBACK callback);
+void buffer_get_start_VerifyMock();
 
 #ifdef __cplusplus
 }

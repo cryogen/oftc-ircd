@@ -44,5 +44,6 @@ struct _Buffer
 Buffer *buffer_new(void);
 void buffer_add(Buffer *buffer, char *data, size_t len);
 void buffer_remove(Buffer *buffer, size_t len);
+ListEntry *buffer_get_start(Buffer *buffer);
 
 #endif

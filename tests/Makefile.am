@@ -94,9 +94,10 @@ list_tests_SOURCES    = list_tests.c            \
 
 parser_tests_SOURCES  = parser_tests.c          \
                         opmock.c                \
+                        vector_stub.c           \
+                        buffer_stub.c           \
+                        memory_stub.c           \
                         ../src/parser.c         \
-                        ../src/buffer.c         \
-                        ../src/list.c           \
-                        ../src/memory.c
+                        ../src/list.c           
 
 AM_CPPFLAGS = -g -O0 -I../include -I../libuv/include -I.. -I../json-c --coverage

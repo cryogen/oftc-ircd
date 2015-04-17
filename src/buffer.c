@@ -136,3 +136,14 @@ buffer_remove(Buffer *buffer, size_t len)
 
     buffer->Size -= len;
 }
+
+ListEntry *
+buffer_get_start(Buffer *buffer)
+{
+    if(buffer == NULL || buffer->Data == NULL)
+    {
+        return NULL;
+    }
+
+    return buffer->Data->Head;
+}

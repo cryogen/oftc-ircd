@@ -25,8 +25,35 @@
  */
 
 #include "opmock.h"
+#include "buffer_stub.h"
+#include "memory_stub.h"
 
 #include "parser.h"
+
+static Buffer TestBuffer;
+static char TestData[1024];
+static ListEntry TestEntry;
+static ParserResult ParserRes;
+
+static void
+setup_buffer()
+{
+    memset(&TestBuffer, 0, sizeof(TestBuffer));
+    memset(&TestData, 0, sizeof(TestData));
+    memset(&TestEntry, 0, sizeof(TestEntry));
+
+    TestEntry.Data = TestData;
+
+    buffer_get_start_ExpectAndReturn(NULL, &TestEntry, NULL);
+}
+
+static void
+setup_parser_result()
+{
+    memset(&ParserRes, 0, sizeof(ParserRes));
+
+    Malloc_ExpectAndReturn(sizeof(ParserRes), &ParserRes, cmp_int);
+}
 
 static void
 parser_get_line_when_null_source_returns_false()
@@ -43,10 +70,10 @@ static void
 parser_get_line_when_null_dest_returns_false()
 {
     bool ret;
-    Buffer *buffer;
 
-    buffer = buffer_new();
-    ret = parser_get_line(buffer, NULL, 512);
+    setup_buffer();
+
+    ret = parser_get_line(&TestBuffer, NULL, 512);
 
     OP_ASSERT_FALSE(ret);
 }
@@ -55,11 +82,10 @@ static void
 parser_get_line_when_empty_buffer_returns_false()
 {
     bool ret;
-    Buffer *buffer;
     char destBuffer[512 + 1];
+    Buffer emptyBuffer = { 0 };
 
-    buffer = buffer_new();
-    ret = parser_get_line(buffer, destBuffer, sizeof(destBuffer));
+    ret = parser_get_line(&emptyBuffer, destBuffer, sizeof(destBuffer));
 
     OP_ASSERT_FALSE(ret);
 }
@@ -68,31 +94,32 @@ static void
 parser_get_line_when_line_in_buffer_returns_line()
 {
     bool ret;
-    Buffer *buffer;
     char destBuffer[512 + 1] = { "12345" };
-    char *data = "TEST\r\nFAIL";
 
-    buffer = buffer_new();
-    buffer_add(buffer, data, strlen(data));
+    setup_buffer();
 
-    ret = parser_get_line(buffer, destBuffer, sizeof(destBuffer));
+    strcpy(TestData, "TEST\r\nFAIL");
+    TestBuffer.Size = strlen(TestData);
+
+    ret = parser_get_line(&TestBuffer, destBuffer, sizeof(destBuffer));
 
     OP_ASSERT_TRUE(ret);
     OP_ASSERT_EQUAL_CSTRING("TEST", destBuffer);
+
 }
 
 static void
 parser_get_line_when_line_bigger_than_buffer_truncates()
 {
     bool ret;
-    Buffer *buffer;
     char destBuffer[512 + 1] = { "12345" };
-    char *data = "TEST\r\nFAIL";
 
-    buffer = buffer_new();
-    buffer_add(buffer, data, strlen(data));
+    setup_buffer();
 
-    ret = parser_get_line(buffer, destBuffer, 4);
+    strcpy(TestData, "TEST\r\nFAIL");
+    TestBuffer.Size = strlen(TestData);
+
+    ret = parser_get_line(&TestBuffer, destBuffer, 4);
 
     OP_ASSERT_TRUE(ret);
     OP_ASSERT_EQUAL_CSTRING("TES", destBuffer);
@@ -102,33 +129,14 @@ static void
 parser_get_line_when_spaces_at_front_trim_spaces()
 {
     bool ret;
-    Buffer *buffer;
     char destBuffer[512 + 1] = { "12345" };
-    char *data = "   TEST\r\nFAIL";
 
-    buffer = buffer_new();
-    buffer_add(buffer, data, strlen(data));
+    setup_buffer();
 
-    ret = parser_get_line(buffer, destBuffer, sizeof(destBuffer));
+    strcpy(TestData, "    TEST\r\nFAIL");
+    TestBuffer.Size = strlen(TestData);
 
-    OP_ASSERT_TRUE(ret);
-    OP_ASSERT_EQUAL_CSTRING("TEST", destBuffer);
-}
-
-static void
-parser_get_line_when_spans_two_entries_returns_line()
-{
-    bool ret;
-    Buffer *buffer;
-    char destBuffer[512 + 1] = { "12345" };
-    char *data1 = "TEST";
-    char *data2 = "\r\nFAIL";
-
-    buffer = buffer_new();
-    buffer_add(buffer, data1, strlen(data1));
-    buffer_add(buffer, data2, strlen(data2));
-
-    ret = parser_get_line(buffer, destBuffer, sizeof(destBuffer));
+    ret = parser_get_line(&TestBuffer, destBuffer, sizeof(destBuffer));
 
     OP_ASSERT_TRUE(ret);
     OP_ASSERT_EQUAL_CSTRING("TEST", destBuffer);
@@ -138,14 +146,14 @@ static void
 parser_get_line_when_no_eol_returns_false()
 {
     bool ret;
-    Buffer *buffer;
     char destBuffer[512 + 1] = { "12345" };
-    char *data = "TEST";
 
-    buffer = buffer_new();
-    buffer_add(buffer, data, strlen(data));
+    setup_buffer();
 
-    ret = parser_get_line(buffer, destBuffer, sizeof(destBuffer));
+    strcpy(TestData, "TEST");
+    TestBuffer.Size = strlen(TestData);
+
+    ret = parser_get_line(&TestBuffer, destBuffer, sizeof(destBuffer));
 
     OP_ASSERT_FALSE(ret);
 }
@@ -154,18 +162,22 @@ static void
 parser_get_line_when_one_line_called_twice_returns_false()
 {
     bool ret;
-    Buffer *buffer;
     char destBuffer[512 + 1] = { "12345" };
-    char *data = "TEST\r\nFAIL";
 
-    buffer = buffer_new();
-    buffer_add(buffer, data, strlen(data));
+    setup_buffer();
 
-    ret = parser_get_line(buffer, destBuffer, sizeof(destBuffer));
+    strcpy(TestData, "TEST\r\nFAIL");
+    TestBuffer.Size = strlen(TestData);
+
+    ret = parser_get_line(&TestBuffer, destBuffer, sizeof(destBuffer));
+
     OP_ASSERT_TRUE(ret);
     OP_ASSERT_EQUAL_CSTRING("TEST", destBuffer);
 
-    ret = parser_get_line(buffer, destBuffer, sizeof(destBuffer));
+    strcpy(TestData, "FAIL");
+    TestBuffer.Size = strlen(TestData);
+
+    ret = parser_get_line(&TestBuffer, destBuffer, sizeof(destBuffer));
     OP_ASSERT_FALSE(ret);
 }
 
@@ -173,18 +185,21 @@ static void
 parser_get_line_when_called_twice_returns_both()
 {
     bool ret;
-    Buffer *buffer;
     char destBuffer[512 + 1] = { "12345" };
-    char *data = "TEST\r\nOTHER\r\nFAIL";
 
-    buffer = buffer_new();
-    buffer_add(buffer, data, strlen(data));
+    setup_buffer();
 
-    ret = parser_get_line(buffer, destBuffer, sizeof(destBuffer));
+    strcpy(TestData, "TEST\r\nOTHER\r\nFAIL");
+    TestBuffer.Size = strlen(TestData);
+
+    ret = parser_get_line(&TestBuffer, destBuffer, sizeof(destBuffer));
     OP_ASSERT_TRUE(ret);
     OP_ASSERT_EQUAL_CSTRING("TEST", destBuffer);
 
-    ret = parser_get_line(buffer, destBuffer, sizeof(destBuffer));
+    strcpy(TestData, "OTHER\r\nFAIL");
+    TestBuffer.Size = strlen(TestData);
+
+    ret = parser_get_line(&TestBuffer, destBuffer, sizeof(destBuffer));
     OP_ASSERT_TRUE(ret);
     OP_ASSERT_EQUAL_CSTRING("OTHER", destBuffer);
 }
@@ -193,25 +208,70 @@ static void
 parser_get_line_when_spans_two_blocks_returns_line()
 {
     bool ret;
-    Buffer *buffer;
     char destBuffer[512 + 1] = { "12345" };
-    char data[5000];
+    char chunk1[4096];
+    char chunk2[1000];
     char expected[512 + 1];
+    ListEntry entry2 = { 0 };
 
-    memset(data, 'A', 4997);
-    data[4998] = '\r';
-    data[4999] = '\n';
+    setup_buffer();
+
+    memset(chunk1, 'A', sizeof(chunk1));
+    memset(chunk2, 'A', 997);
+    chunk2[998] = '\r';
+    chunk2[999] = '\n';
 
     memset(expected, 'A', 512);
     expected[512] = '\0';
 
-    buffer = buffer_new();
-    buffer_add(buffer, data, sizeof(data));
+    TestEntry.Data = chunk1;
+    TestEntry.Next = &entry2;
+    entry2.Data = chunk2;
 
-    ret = parser_get_line(buffer, destBuffer, sizeof(destBuffer));
+    TestBuffer.Size = 4096 + 1000;
+
+    ret = parser_get_line(&TestBuffer, destBuffer, sizeof(destBuffer));
     OP_ASSERT_TRUE(ret);
     OP_ASSERT_EQUAL_CSTRING(expected, destBuffer);
 }
+
+static void
+parser_process_line_when_buffer_null_returns_null()
+{
+    ParserResult *ret;
+
+    ret = parser_process_line(NULL, 512);
+
+    OP_ASSERT_TRUE(ret == NULL);
+}
+
+static void
+parser_process_line_when_no_spaces_returns_command()
+{
+    ParserResult *ret;
+
+    setup_parser_result();
+
+    ret = parser_process_line("NOSPACES", 9);
+
+    OP_ASSERT_TRUE(ret != NULL);
+    OP_ASSERT_EQUAL_CSTRING("NOSPACES", ret->CommandText);
+
+    OP_VERIFY();
+}
+
+/*static void
+parser_process_line_when_spaces_returns_command()
+{
+    ParserResult *ret;
+
+    ret = parser_process_line("NOSPACES", 9);
+
+    OP_ASSERT_TRUE(ret != NULL);
+    OP_ASSERT_EQUAL_CSTRING("NOSPACES", ret->CommandText);
+
+    OP_VERIFY();
+}*/
 
 int
 main()
@@ -230,8 +290,6 @@ main()
                          "parser_get_line_when_line_bigger_than_buffer_truncates");
     opmock_register_test(parser_get_line_when_spaces_at_front_trim_spaces,
                          "parser_get_line_when_spaces_at_front_trim_spaces");
-    opmock_register_test(parser_get_line_when_spans_two_entries_returns_line,
-                         "parser_get_line_when_spans_two_entries_returns_line");
     opmock_register_test(parser_get_line_when_no_eol_returns_false,
                          "parser_get_line_when_no_eol_returns_false");
     opmock_register_test(parser_get_line_when_one_line_called_twice_returns_false,
@@ -240,6 +298,10 @@ main()
                          "parser_get_line_when_called_twice_returns_both");
     opmock_register_test(parser_get_line_when_spans_two_blocks_returns_line,
                          "parser_get_line_when_spans_two_blocks_returns_line");
+    opmock_register_test(parser_process_line_when_buffer_null_returns_null,
+                         "parser_process_line_when_buffer_null_returns_null");
+    opmock_register_test(parser_process_line_when_no_spaces_returns_command,
+                         "parser_process_line_when_no_spaces_returns_command");
 
     opmock_test_suite_run();
 
