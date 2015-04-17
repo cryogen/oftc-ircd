@@ -260,18 +260,33 @@ parser_process_line_when_no_spaces_returns_command()
     OP_VERIFY();
 }
 
-/*static void
+static void
 parser_process_line_when_spaces_returns_command()
 {
     ParserResult *ret;
 
-    ret = parser_process_line("NOSPACES", 9);
+    setup_parser_result();
+    ret = parser_process_line("SPACES ARE GOOD", strlen("SPACES ARE GOOD"));
 
     OP_ASSERT_TRUE(ret != NULL);
-    OP_ASSERT_EQUAL_CSTRING("NOSPACES", ret->CommandText);
+    OP_ASSERT_EQUAL_CSTRING("SPACES", ret->CommandText);
 
     OP_VERIFY();
-}*/
+}
+
+static void
+parser_process_line_when_whitespace_skips_whitespace()
+{
+    ParserResult *ret;
+
+    setup_parser_result();
+    ret = parser_process_line("    \tPADDING", strlen("    \tPADDING"));
+
+    OP_ASSERT_TRUE(ret != NULL);
+    OP_ASSERT_EQUAL_CSTRING("PADDING", ret->CommandText);
+
+    OP_VERIFY();
+}
 
 int
 main()
@@ -302,6 +317,10 @@ main()
                          "parser_process_line_when_buffer_null_returns_null");
     opmock_register_test(parser_process_line_when_no_spaces_returns_command,
                          "parser_process_line_when_no_spaces_returns_command");
+    opmock_register_test(parser_process_line_when_spaces_returns_command,
+                         "parser_process_line_when_spaces_returns_command");
+    opmock_register_test(parser_process_line_when_whitespace_skips_whitespace,
+                         "parser_process_line_when_whitespace_skips_whitespace");
 
     opmock_test_suite_run();
 
