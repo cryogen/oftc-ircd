@@ -35,6 +35,13 @@
 #include "vector.h"
 #include "irc.h"
 
+typedef enum _ParserState
+{
+    InitialState,
+    CommandState,
+    ArgState
+} ParserState;
+
 typedef struct _ParserResult ParserResult;
 
 struct _ParserResult

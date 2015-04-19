@@ -58,17 +58,19 @@ parser_get_line(Buffer *srcBuffer, char *destBuffer, size_t length)
     found = false;
     toDelete = written = 0;
 
-    while(toRead > 0) 
+    while(toRead > 0 && *bufferPtr == ' ')
+    {
+        toRead--;
+        toDelete++;
+        bufferPtr++;
+    }
+
+    while(toRead > 0)
     {
         toRead--;
 
         switch(*bufferPtr)
         {
-            case ' ':
-                bufferPtr++;
-                toDelete++;
-                
-                break;
             case '\r':
                 bufferPtr++;
                 waitingEol = true;
@@ -122,9 +124,12 @@ parser_get_line(Buffer *srcBuffer, char *destBuffer, size_t length)
 ParserResult *
 parser_process_line(const char *buffer, size_t length)
 {
-    size_t read = 0;
     ParserResult *result;
+    ParserState state = InitialState;
     char *destPtr;
+    const char *end;
+    char arg[IRC_MAXLEN + 1];
+    bool lastArg = false;
 
     if(buffer == NULL)
     {
@@ -132,33 +137,62 @@ parser_process_line(const char *buffer, size_t length)
     }
 
     result = Malloc(sizeof(ParserResult));
+    vector_new(0, sizeof(arg));
 
-    // Trim whitespace
-    while(read < length)
+    end = buffer + length;
+
+    for(; (*buffer == ' ' || *buffer == '\t') && buffer < end; buffer++)
     {
-        if(*buffer == ' ' || *buffer == '\t')
-        {
-            buffer++;
-            read++;
-        }
-        else
-        {
-            break;
-        }
     }
 
     destPtr = result->CommandText;
+    state = CommandState;
 
-    while(read < length)
+    if(*buffer == ':')
     {
-        if(*buffer == ' ')
+        destPtr = result->Source;
+        state = InitialState;
+        buffer++;
+    }
+
+    while(buffer < end)
+    {
+        char c = *buffer++;
+        if(c == ' ')
         {
-//            *destPtr '/0';
-            break;
+            switch (state)
+            {
+                case InitialState:
+                    state = CommandState;
+                    destPtr = result->CommandText;
+                    continue;
+                case CommandState:
+                    state = ArgState;
+                    memset(arg, 0, sizeof(arg));
+                    destPtr = arg;
+                    continue;
+                default:
+                    if(!lastArg)
+                    {
+                        vector_push_back(&result->Params, arg);
+                        memset(arg, 0, sizeof(arg));
+                        destPtr = arg;
+                        continue;
+                    }
+            }
+        }
+        else if(c == ':' && !lastArg)
+        {
+            lastArg = true;
+            continue;
         }
 
-        *destPtr++ = *buffer++;
-        read++;
+        *destPtr++ = c;
+    }
+
+    if(state == ArgState)
+    {
+        vector_push_back(&result->Params, arg);
     }
 
     return result;

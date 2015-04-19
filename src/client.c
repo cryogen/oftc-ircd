@@ -37,6 +37,7 @@
 #include "serverstate.h"
 #include "irc.h"
 #include "server.h"
+#include "parser.h"
 
 static Vector *clientList;
 static Hash *clientHash;
@@ -137,6 +138,7 @@ static void
 client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
 {
     Client *client = stream->data;
+    char buffer[IRC_MAXLEN + 1];
 
     assert(client != NULL);
 
@@ -151,6 +153,16 @@ client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
     }
 
     buffer_add(client->ReadBuffer, buf->base, (size_t)nRead);
+
+    while(parser_get_line(client->ReadBuffer, buffer, sizeof(buffer)))
+    {
+        ParserResult *result = parser_process_line(buffer, strlen(buffer));
+
+        if(result == NULL)
+        {
+            continue;
+        }
+    }
 
     Free(buf->base);
     Free((void *)buf);

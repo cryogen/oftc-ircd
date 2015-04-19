@@ -27,6 +27,7 @@
 #include "opmock.h"
 #include "buffer_stub.h"
 #include "memory_stub.h"
+#include "vector_stub.h"
 
 #include "parser.h"
 
@@ -53,6 +54,8 @@ setup_parser_result()
     memset(&ParserRes, 0, sizeof(ParserRes));
 
     Malloc_ExpectAndReturn(sizeof(ParserRes), &ParserRes, cmp_int);
+
+    vector_new_ExpectAndReturn(0, 0, NULL, NULL, NULL);
 }
 
 static void
@@ -105,7 +108,23 @@ parser_get_line_when_line_in_buffer_returns_line()
 
     OP_ASSERT_TRUE(ret);
     OP_ASSERT_EQUAL_CSTRING("TEST", destBuffer);
+}
 
+static void
+parser_get_line_when_line_in_buffer_and_spaces_returns_line()
+{
+    bool ret;
+    char destBuffer[512 + 1] = { "12345" };
+
+    setup_buffer();
+
+    strcpy(TestData, "TEST arg\r\nFAIL");
+    TestBuffer.Size = strlen(TestData);
+
+    ret = parser_get_line(&TestBuffer, destBuffer, sizeof(destBuffer));
+
+    OP_ASSERT_TRUE(ret);
+    OP_ASSERT_EQUAL_CSTRING("TEST arg", destBuffer);
 }
 
 static void
@@ -270,8 +289,6 @@ parser_process_line_when_spaces_returns_command()
 
     OP_ASSERT_TRUE(ret != NULL);
     OP_ASSERT_EQUAL_CSTRING("SPACES", ret->CommandText);
-
-    OP_VERIFY();
 }
 
 static void
@@ -284,6 +301,97 @@ parser_process_line_when_whitespace_skips_whitespace()
 
     OP_ASSERT_TRUE(ret != NULL);
     OP_ASSERT_EQUAL_CSTRING("PADDING", ret->CommandText);
+
+    OP_VERIFY();
+}
+
+static void
+parser_process_line_when_source_set_retrieves_source()
+{
+    ParserResult *ret;
+    char *data = ":source.test TEST";
+
+    setup_parser_result();
+    ret = parser_process_line(data, strlen(data));
+
+    OP_ASSERT_TRUE(ret != NULL);
+    OP_ASSERT_EQUAL_CSTRING("TEST", ret->CommandText);
+    OP_ASSERT_EQUAL_CSTRING("source.test", ret->Source);
+
+    OP_VERIFY();
+}
+
+static void
+parser_process_line_when_params_sets_params()
+{
+    ParserResult *ret;
+    char *data = "TEST arg1";
+
+    setup_parser_result();
+
+    vector_push_back_ExpectAndReturn(NULL, "arg1", NULL, NULL, cmp_cstr);
+
+    ret = parser_process_line(data, strlen(data));
+
+    OP_ASSERT_TRUE(ret != NULL);
+    OP_ASSERT_EQUAL_CSTRING("TEST", ret->CommandText);
+
+    OP_VERIFY();
+}
+
+static void
+parser_process_line_when_multiple_params_sets_params()
+{
+    ParserResult *ret;
+    char *data = "TEST arg1 arg2";
+
+    setup_parser_result();
+
+    vector_push_back_ExpectAndReturn(NULL, "arg1", NULL, NULL, cmp_cstr);
+    vector_push_back_ExpectAndReturn(NULL, "arg2", NULL, NULL, cmp_cstr);
+
+    ret = parser_process_line(data, strlen(data));
+
+    OP_ASSERT_TRUE(ret != NULL);
+    OP_ASSERT_EQUAL_CSTRING("TEST", ret->CommandText);
+
+    OP_VERIFY();
+}
+
+static void
+parser_process_line_when_end_param_sets_params()
+{
+    ParserResult *ret;
+    char *data = "TEST arg1 :arg2 notarg3";
+
+    setup_parser_result();
+
+    vector_push_back_ExpectAndReturn(NULL, "arg1", NULL, NULL, cmp_cstr);
+    vector_push_back_ExpectAndReturn(NULL, "arg2 notarg3", NULL, NULL, cmp_cstr);
+
+    ret = parser_process_line(data, strlen(data));
+
+    OP_ASSERT_TRUE(ret != NULL);
+    OP_ASSERT_EQUAL_CSTRING("TEST", ret->CommandText);
+
+    OP_VERIFY();
+}
+
+static void
+parser_process_line_when_end_param_and_colons_sets_params()
+{
+    ParserResult *ret;
+    char *data = "TEST arg1 :arg2 :notarg3 arg4";
+
+    setup_parser_result();
+
+    vector_push_back_ExpectAndReturn(NULL, "arg1", NULL, NULL, cmp_cstr);
+    vector_push_back_ExpectAndReturn(NULL, "arg2 :notarg3 arg4", NULL, NULL, cmp_cstr);
+
+    ret = parser_process_line(data, strlen(data));
+
+    OP_ASSERT_TRUE(ret != NULL);
+    OP_ASSERT_EQUAL_CSTRING("TEST", ret->CommandText);
 
     OP_VERIFY();
 }
@@ -301,6 +409,8 @@ main()
                          "parser_get_line_when_empty_buffer_returns_false");
     opmock_register_test(parser_get_line_when_line_in_buffer_returns_line,
                          "parser_get_line_when_line_in_buffer_returns_line");
+    opmock_register_test(parser_get_line_when_line_in_buffer_and_spaces_returns_line,
+                         "parser_get_line_when_line_in_buffer_and_spaces_returns_line");
     opmock_register_test(parser_get_line_when_line_bigger_than_buffer_truncates,
                          "parser_get_line_when_line_bigger_than_buffer_truncates");
     opmock_register_test(parser_get_line_when_spaces_at_front_trim_spaces,
@@ -321,6 +431,16 @@ main()
                          "parser_process_line_when_spaces_returns_command");
     opmock_register_test(parser_process_line_when_whitespace_skips_whitespace,
                          "parser_process_line_when_whitespace_skips_whitespace");
+    opmock_register_test(parser_process_line_when_source_set_retrieves_source,
+                         "parser_process_line_when_source_set_retrieves_source");
+    opmock_register_test(parser_process_line_when_params_sets_params,
+                         "parser_process_line_when_params_sets_params");
+    opmock_register_test(parser_process_line_when_multiple_params_sets_params,
+                         "parser_process_line_when_multiple_params_sets_params");
+    opmock_register_test(parser_process_line_when_end_param_sets_params,
+                         "parser_process_line_when_end_param_sets_params");
+    opmock_register_test(parser_process_line_when_end_param_and_colons_sets_params,
+                         "parser_process_line_when_end_param_and_colons_sets_params");
 
     opmock_test_suite_run();
 

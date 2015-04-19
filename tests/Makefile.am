@@ -20,6 +20,7 @@ client_tests_SOURCES =  client_tests.c          \
                         uv_stub.c               \
                         server_stub.c           \
                         buffer_stub.c           \
+                        parser_stub.c           \
                         opmock.c                \
                         ../src/serverstate.c    \
                         ../src/network.c        \

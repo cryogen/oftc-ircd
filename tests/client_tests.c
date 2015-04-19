@@ -31,6 +31,7 @@
 #include "uv_stub.h"
 #include "server_stub.h"
 #include "buffer_stub.h"
+#include "parser_stub.h"
 
 #include "client.h"
 #include "listener.h"
