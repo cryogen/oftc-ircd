@@ -1,3 +1,19 @@
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "cGwZ2QPQ8OKdCSiSqw59uEzMYZyk41lUSsVid+DVYh63aaPw79/MKfMJWg3CutygnfqKDF2lN7PcA9DShUcSDea3gTF/N+QsbTb6dN1sWzQTrgM8bHsK9KimntSUHEsTdZTTTtC3V8Q1/f6r8iWvLzvrmTQKanGL02biGqOfCpM="
+
+addons:
+  coverity_scan:
+    project:
+      name: "cryogen/oftc-ircd"
+      description: "Build submitted via Travis CI"
+    notification_email: stu@ipng.org.uk
+    build_command_prepend: "./configure"
+    build_command:   "make"
+    branch_pattern: coverity_scan
+
 language: c
 compiler:
   - clang
