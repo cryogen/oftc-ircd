@@ -157,11 +157,21 @@ client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
     while(parser_get_line(client->ReadBuffer, buffer, sizeof(buffer)))
     {
         ParserResult *result = parser_process_line(buffer, strlen(buffer));
+        Command *command;
 
         if(result == NULL)
         {
             continue;
         }
+        
+        command = command_find(result->CommandText);
+        if(command == NULL)
+        {
+            parser_result_free(result);
+            continue;
+        }
+
+        command->Handler(client, result->Params);
 
         parser_result_free(result);
     }

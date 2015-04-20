@@ -27,7 +27,10 @@
 #ifndef __oftc_ircd__command__
 #define __oftc_ircd__command__
 
-typedef void (*CommandHandler)();
+#include "vector.h"
+#include "client.h"
+
+typedef void (*CommandHandler)(Client *, Vector *);
 typedef struct _Command Command;
 
 typedef enum _CommandAccess

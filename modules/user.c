@@ -30,7 +30,7 @@
 #include "command.h"
 
 static void
-user_handler()
+user_handler(Client *client, Vector *params)
 {
 }
 
