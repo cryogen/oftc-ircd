@@ -19,6 +19,16 @@ void parser_process_line_MockReset();
 typedef ParserResult * (* OPMOCK_parser_process_line_CALLBACK)(const char * arg1, size_t arg2, int calls);
 void parser_process_line_MockWithCallback(OPMOCK_parser_process_line_CALLBACK callback);
 void parser_process_line_VerifyMock();
+void parser_result_new_ExpectAndReturn(ParserResult * to_return);
+void parser_result_new_MockReset();
+typedef ParserResult * (* OPMOCK_parser_result_new_CALLBACK)(int calls);
+void parser_result_new_MockWithCallback(OPMOCK_parser_result_new_CALLBACK callback);
+void parser_result_new_VerifyMock();
+void parser_result_free_ExpectAndReturn(ParserResult * result, OPMOCK_MATCHER match_result);
+void parser_result_free_MockReset();
+typedef void (* OPMOCK_parser_result_free_CALLBACK)(ParserResult * result, int calls);
+void parser_result_free_MockWithCallback(OPMOCK_parser_result_free_CALLBACK callback);
+void parser_result_free_VerifyMock();
 
 #ifdef __cplusplus
 }

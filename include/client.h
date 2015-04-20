@@ -70,5 +70,6 @@ Client *client_new(void);
 void client_free(Client *client);
 bool client_accept(Client *client, uv_stream_t *handle);
 void client_send(Client *source, Client *client, const char *pattern, ...);
+void client_process_read_buffer(Client *client);
 
 #endif /* defined(__oftc_ircd__client__) */

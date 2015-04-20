@@ -37,6 +37,7 @@
 #include "client.h"
 #include "module.h"
 #include "server.h"
+#include "command.h"
 
 static void
 process_commandline(char *const *args, int argCount)
@@ -73,6 +74,7 @@ main(int argc, char *argv[])
     client_init();
     module_init();
     server_init();
+    command_init();
     
     process_commandline(argv, argc);
 

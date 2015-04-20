@@ -126,10 +126,6 @@ client_allocate_buffer_callback(uv_handle_t *handle,
                                 size_t suggestedSize,
                                 uv_buf_t *buf)
 {
-/*    Client *client = handle->data;
-
-    assert(client != NULL);*/
-
     buf->base = Malloc(suggestedSize);
     buf->len = suggestedSize;
 }
@@ -138,7 +134,6 @@ static void
 client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
 {
     Client *client = stream->data;
-    char buffer[IRC_MAXLEN + 1];
 
     assert(client != NULL);
 
@@ -154,27 +149,7 @@ client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
 
     buffer_add(client->ReadBuffer, buf->base, (size_t)nRead);
 
-    while(parser_get_line(client->ReadBuffer, buffer, sizeof(buffer)))
-    {
-        ParserResult *result = parser_process_line(buffer, strlen(buffer));
-        Command *command;
-
-        if(result == NULL)
-        {
-            continue;
-        }
-        
-        command = command_find(result->CommandText);
-        if(command == NULL)
-        {
-            parser_result_free(result);
-            continue;
-        }
-
-        command->Handler(client, result->Params);
-
-        parser_result_free(result);
-    }
+    client_process_read_buffer(client);
 
     Free(buf->base);
 }
@@ -360,4 +335,32 @@ client_send(Client *source, Client *client, const char *format, ...)
     client_internal_send(client, actualBuffer);
 
     va_end(args);
+}
+
+void
+client_process_read_buffer(Client *client)
+{
+    char buffer[IRC_MAXLEN + 1];
+
+    while(parser_get_line(client->ReadBuffer, buffer, sizeof(buffer)))
+    {
+        ParserResult *result = parser_process_line(buffer, strlen(buffer));
+        Command *command;
+
+        if(result == NULL)
+        {
+            continue;
+        }
+
+        command = command_find(result->CommandText);
+        if(command == NULL)
+        {
+            parser_result_free(result);
+            continue;
+        }
+
+        command->Handler(client, result->Params);
+
+        parser_result_free(result);
+    }
 }

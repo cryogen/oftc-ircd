@@ -21,8 +21,10 @@ client_tests_SOURCES =  client_tests.c          \
                         server_stub.c           \
                         buffer_stub.c           \
                         parser_stub.c           \
+                        command_stub.c          \
                         opmock.c                \
                         ../src/serverstate.c    \
+                        ../src/lstring.c        \
                         ../src/network.c        \
                         ../src/client.c
 
@@ -71,6 +73,7 @@ command_tests_SOURCES = command_tests.c         \
                         opmock.c                \
                         memory_stub.c           \
                         hash_stub.c             \
+                        ../src/lstring.c        \
                         ../src/command.c
 
 server_tests_SOURCES =  server_tests.c          \

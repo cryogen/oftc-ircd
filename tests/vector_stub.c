@@ -1,7 +1,4 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-prototypes"
-
 #include "vector_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -28,9 +25,9 @@ static vector_new_struct vector_new_struct_inst;
 
 typedef struct
 {
-    void * this;
+    void * thisVector;
     void * data;
-    OPMOCK_MATCHER match_this;
+    OPMOCK_MATCHER match_thisVector;
     OPMOCK_MATCHER match_data;
     void * to_return;
     char check_params;
@@ -48,9 +45,9 @@ static vector_push_back_struct vector_push_back_struct_inst;
 
 typedef struct
 {
-    void * this;
+    void * thisVector;
     unsigned long index;
-    OPMOCK_MATCHER match_this;
+    OPMOCK_MATCHER match_thisVector;
     OPMOCK_MATCHER match_index;
     void * to_return;
     char check_params;
@@ -68,8 +65,27 @@ static vector_get_struct vector_get_struct_inst;
 
 typedef struct
 {
-    void * this;
-    OPMOCK_MATCHER match_this;
+    void * thisVector;
+    unsigned long index;
+    OPMOCK_MATCHER match_thisVector;
+    OPMOCK_MATCHER match_index;
+    char check_params;
+} vector_delete_call;
+
+typedef struct
+{
+    int expectedCalls;
+    int actualCalls;
+    OPMOCK_vector_delete_CALLBACK callback;
+    vector_delete_call calls[MAX_FUNC_CALL];
+} vector_delete_struct;
+
+static vector_delete_struct vector_delete_struct_inst;
+
+typedef struct
+{
+    void * thisVector;
+    OPMOCK_MATCHER match_thisVector;
     unsigned long to_return;
     char check_params;
 } vector_length_call;
@@ -84,12 +100,31 @@ typedef struct
 
 static vector_length_struct vector_length_struct_inst;
 
+typedef struct
+{
+    void * thisVector;
+    OPMOCK_MATCHER match_thisVector;
+    char check_params;
+} vector_free_call;
+
+typedef struct
+{
+    int expectedCalls;
+    int actualCalls;
+    OPMOCK_vector_free_CALLBACK callback;
+    vector_free_call calls[MAX_FUNC_CALL];
+} vector_free_struct;
+
+static vector_free_struct vector_free_struct_inst;
+
 static void opmock_reset_all_mocks_in_this_header()
 {
     vector_new_MockReset();
     vector_push_back_MockReset();
     vector_get_MockReset();
+    vector_delete_MockReset();
     vector_length_MockReset();
+    vector_free_MockReset();
 }
 
 static void opmock_verify_all_mocks_in_this_header()
@@ -97,7 +132,9 @@ static void opmock_verify_all_mocks_in_this_header()
     vector_new_VerifyMock();
     vector_push_back_VerifyMock();
     vector_get_VerifyMock();
+    vector_delete_VerifyMock();
     vector_length_VerifyMock();
+    vector_free_VerifyMock();
 }
 
 Vector * vector_new(size_t capacity, size_t elementSize)
@@ -204,7 +241,7 @@ void vector_new_ExpectAndReturn (size_t capacity, size_t elementSize, Vector * t
     vector_new_struct_inst.expectedCalls++;
 }
 
-void * vector_push_back(Vector * this, void * data)
+void * vector_push_back(Vector * thisVector, void * data)
 {
     void * default_res = (void *)vector_push_back_struct_inst.calls[0].to_return;
     int opmock_i;
@@ -212,7 +249,7 @@ void * vector_push_back(Vector * this, void * data)
 
     if (vector_push_back_struct_inst.callback != NULL)
     {
-        return vector_push_back_struct_inst.callback (this, data, vector_push_back_struct_inst.actualCalls);
+        return vector_push_back_struct_inst.callback (thisVector, data, vector_push_back_struct_inst.actualCalls);
     }
     if (vector_push_back_struct_inst.expectedCalls == 0)
     {
@@ -220,18 +257,18 @@ void * vector_push_back(Vector * this, void * data)
         return default_res;
     }
 
-    if(strcmp(opmock_get_current_call(), "void * vector_push_back (Vector * this, void * data)") != 0) {
+    if(strcmp(opmock_get_current_call(), "void * vector_push_back (Vector * thisVector, void * data)") != 0) {
         char buffer[OP_ERROR_MESSAGE_LENGTH];
-        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'void * vector_push_back(Vector * this, void * data)',  but was expecting call to '%s'", opmock_get_current_call());
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'void * vector_push_back(Vector * thisVector, void * data)',  but was expecting call to '%s'", opmock_get_current_call());
         opmock_add_error_message(buffer);
     }
     opmock_pop_call();
 
     if (vector_push_back_struct_inst.calls[0].check_params == 1) {
-        if(vector_push_back_struct_inst.calls[0].match_this) {
-            void * val1 = (void *) &vector_push_back_struct_inst.calls[0].this;
-            void * val2 = (void *) &this;
-            int match_result = vector_push_back_struct_inst.calls[0].match_this(val1, val2, "this", get_matcher_message());
+        if(vector_push_back_struct_inst.calls[0].match_thisVector) {
+            void * val1 = (void *) &vector_push_back_struct_inst.calls[0].thisVector;
+            void * val2 = (void *) &thisVector;
+            int match_result = vector_push_back_struct_inst.calls[0].match_thisVector(val1, val2, "thisVector", get_matcher_message());
             if(match_result){
                 char buffer[OP_ERROR_MESSAGE_LENGTH];
                 snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'vector_push_back', %s",vector_push_back_struct_inst.actualCalls, get_matcher_message());
@@ -283,7 +320,7 @@ void vector_push_back_VerifyMock()
     }
 }
 
-void vector_push_back_ExpectAndReturn (Vector * this, void * data, void * to_return, OPMOCK_MATCHER match_this, OPMOCK_MATCHER match_data)
+void vector_push_back_ExpectAndReturn (Vector * thisVector, void * data, void * to_return, OPMOCK_MATCHER match_thisVector, OPMOCK_MATCHER match_data)
 {
     if(vector_push_back_struct_inst.callback != NULL)
     {
@@ -298,17 +335,17 @@ void vector_push_back_ExpectAndReturn (Vector * this, void * data, void * to_ret
 
     opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
     opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
-    opmock_add_call((char *)"void * vector_push_back (Vector * this, void * data)");
-    vector_push_back_struct_inst.calls[vector_push_back_struct_inst.expectedCalls].this = (void *)this;
+    opmock_add_call((char *)"void * vector_push_back (Vector * thisVector, void * data)");
+    vector_push_back_struct_inst.calls[vector_push_back_struct_inst.expectedCalls].thisVector = (void *)thisVector;
     vector_push_back_struct_inst.calls[vector_push_back_struct_inst.expectedCalls].data = (void *)data;
-    vector_push_back_struct_inst.calls[vector_push_back_struct_inst.expectedCalls].match_this = match_this;
+    vector_push_back_struct_inst.calls[vector_push_back_struct_inst.expectedCalls].match_thisVector = match_thisVector;
     vector_push_back_struct_inst.calls[vector_push_back_struct_inst.expectedCalls].match_data = match_data;
     vector_push_back_struct_inst.calls[vector_push_back_struct_inst.expectedCalls].to_return = (void *) to_return;
     vector_push_back_struct_inst.calls[vector_push_back_struct_inst.expectedCalls].check_params = 1;
     vector_push_back_struct_inst.expectedCalls++;
 }
 
-void * vector_get(Vector * this, size_t index)
+void * vector_get(Vector * thisVector, size_t index)
 {
     void * default_res = (void *)vector_get_struct_inst.calls[0].to_return;
     int opmock_i;
@@ -316,7 +353,7 @@ void * vector_get(Vector * this, size_t index)
 
     if (vector_get_struct_inst.callback != NULL)
     {
-        return vector_get_struct_inst.callback (this, index, vector_get_struct_inst.actualCalls);
+        return vector_get_struct_inst.callback (thisVector, index, vector_get_struct_inst.actualCalls);
     }
     if (vector_get_struct_inst.expectedCalls == 0)
     {
@@ -324,18 +361,18 @@ void * vector_get(Vector * this, size_t index)
         return default_res;
     }
 
-    if(strcmp(opmock_get_current_call(), "void * vector_get (Vector * this, size_t index)") != 0) {
+    if(strcmp(opmock_get_current_call(), "void * vector_get (Vector * thisVector, size_t index)") != 0) {
         char buffer[OP_ERROR_MESSAGE_LENGTH];
-        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'void * vector_get(Vector * this, size_t index)',  but was expecting call to '%s'", opmock_get_current_call());
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'void * vector_get(Vector * thisVector, size_t index)',  but was expecting call to '%s'", opmock_get_current_call());
         opmock_add_error_message(buffer);
     }
     opmock_pop_call();
 
     if (vector_get_struct_inst.calls[0].check_params == 1) {
-        if(vector_get_struct_inst.calls[0].match_this) {
-            void * val1 = (void *) &vector_get_struct_inst.calls[0].this;
-            void * val2 = (void *) &this;
-            int match_result = vector_get_struct_inst.calls[0].match_this(val1, val2, "this", get_matcher_message());
+        if(vector_get_struct_inst.calls[0].match_thisVector) {
+            void * val1 = (void *) &vector_get_struct_inst.calls[0].thisVector;
+            void * val2 = (void *) &thisVector;
+            int match_result = vector_get_struct_inst.calls[0].match_thisVector(val1, val2, "thisVector", get_matcher_message());
             if(match_result){
                 char buffer[OP_ERROR_MESSAGE_LENGTH];
                 snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'vector_get', %s",vector_get_struct_inst.actualCalls, get_matcher_message());
@@ -387,7 +424,7 @@ void vector_get_VerifyMock()
     }
 }
 
-void vector_get_ExpectAndReturn (Vector * this, size_t index, void * to_return, OPMOCK_MATCHER match_this, OPMOCK_MATCHER match_index)
+void vector_get_ExpectAndReturn (Vector * thisVector, size_t index, void * to_return, OPMOCK_MATCHER match_thisVector, OPMOCK_MATCHER match_index)
 {
     if(vector_get_struct_inst.callback != NULL)
     {
@@ -402,17 +439,119 @@ void vector_get_ExpectAndReturn (Vector * this, size_t index, void * to_return, 
 
     opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
     opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
-    opmock_add_call((char *)"void * vector_get (Vector * this, size_t index)");
-    vector_get_struct_inst.calls[vector_get_struct_inst.expectedCalls].this = (void *)this;
+    opmock_add_call((char *)"void * vector_get (Vector * thisVector, size_t index)");
+    vector_get_struct_inst.calls[vector_get_struct_inst.expectedCalls].thisVector = (void *)thisVector;
     vector_get_struct_inst.calls[vector_get_struct_inst.expectedCalls].index = (unsigned long)index;
-    vector_get_struct_inst.calls[vector_get_struct_inst.expectedCalls].match_this = match_this;
+    vector_get_struct_inst.calls[vector_get_struct_inst.expectedCalls].match_thisVector = match_thisVector;
     vector_get_struct_inst.calls[vector_get_struct_inst.expectedCalls].match_index = match_index;
     vector_get_struct_inst.calls[vector_get_struct_inst.expectedCalls].to_return = (void *) to_return;
     vector_get_struct_inst.calls[vector_get_struct_inst.expectedCalls].check_params = 1;
     vector_get_struct_inst.expectedCalls++;
 }
 
-size_t vector_length(Vector * this)
+void vector_delete(Vector * thisVector, size_t index)
+{
+    int opmock_i;
+    vector_delete_struct_inst.actualCalls++;
+
+    if (vector_delete_struct_inst.callback != NULL)
+    {
+        vector_delete_struct_inst.callback (thisVector, index, vector_delete_struct_inst.actualCalls);
+        return;
+    }
+    if (vector_delete_struct_inst.expectedCalls == 0)
+    {
+        opmock_add_error_message((char *) "WARNING : unexpected call of 'vector_delete', returning random value.");
+        return;
+    }
+
+    if(strcmp(opmock_get_current_call(), "void vector_delete (Vector * thisVector, size_t index)") != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'void vector_delete(Vector * thisVector, size_t index)',  but was expecting call to '%s'", opmock_get_current_call());
+        opmock_add_error_message(buffer);
+    }
+    opmock_pop_call();
+
+    if (vector_delete_struct_inst.calls[0].check_params == 1) {
+        if(vector_delete_struct_inst.calls[0].match_thisVector) {
+            void * val1 = (void *) &vector_delete_struct_inst.calls[0].thisVector;
+            void * val2 = (void *) &thisVector;
+            int match_result = vector_delete_struct_inst.calls[0].match_thisVector(val1, val2, "thisVector", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'vector_delete', %s",vector_delete_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+        if(vector_delete_struct_inst.calls[0].match_index) {
+            void * val1 = (void *) &vector_delete_struct_inst.calls[0].index;
+            void * val2 = (void *) &index;
+            int match_result = vector_delete_struct_inst.calls[0].match_index(val1, val2, "index", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'vector_delete', %s",vector_delete_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+    }
+
+    for(opmock_i = 1; opmock_i < vector_delete_struct_inst.expectedCalls; opmock_i++) {
+        vector_delete_struct_inst.calls[opmock_i - 1] = vector_delete_struct_inst.calls[opmock_i];
+    }
+
+    vector_delete_struct_inst.expectedCalls--;
+}
+
+void vector_delete_MockReset()
+{
+    vector_delete_struct_inst.expectedCalls = 0;
+    vector_delete_struct_inst.actualCalls = 0;
+    vector_delete_struct_inst.callback = NULL;
+}
+
+void vector_delete_MockWithCallback(OPMOCK_vector_delete_CALLBACK callback)
+{
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    vector_delete_struct_inst.callback = callback;
+    vector_delete_struct_inst.expectedCalls = 0;
+    vector_delete_struct_inst.actualCalls = 0;
+}
+
+void vector_delete_VerifyMock()
+{
+    if (vector_delete_struct_inst.expectedCalls != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : Bad number of calls (%d) for 'vector_delete'",vector_delete_struct_inst.actualCalls);
+        opmock_add_error_message((char *) buffer);
+    }
+}
+
+void vector_delete_ExpectAndReturn (Vector * thisVector, size_t index, OPMOCK_MATCHER match_thisVector, OPMOCK_MATCHER match_index)
+{
+    if(vector_delete_struct_inst.callback != NULL)
+    {
+        vector_delete_MockReset ();
+    }
+
+    if(vector_delete_struct_inst.expectedCalls >= MAX_FUNC_CALL)
+    {
+        printf("WARNING : aborting vector_delete_ExpectAndReturn, call stack overload.");
+        return;
+    }
+
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    opmock_add_call((char *)"void vector_delete (Vector * thisVector, size_t index)");
+    vector_delete_struct_inst.calls[vector_delete_struct_inst.expectedCalls].thisVector = (void *)thisVector;
+    vector_delete_struct_inst.calls[vector_delete_struct_inst.expectedCalls].index = (unsigned long)index;
+    vector_delete_struct_inst.calls[vector_delete_struct_inst.expectedCalls].match_thisVector = match_thisVector;
+    vector_delete_struct_inst.calls[vector_delete_struct_inst.expectedCalls].match_index = match_index;
+    vector_delete_struct_inst.calls[vector_delete_struct_inst.expectedCalls].check_params = 1;
+    vector_delete_struct_inst.expectedCalls++;
+}
+
+size_t vector_length(Vector * thisVector)
 {
     size_t default_res = (size_t)vector_length_struct_inst.calls[0].to_return;
     int opmock_i;
@@ -420,7 +559,7 @@ size_t vector_length(Vector * this)
 
     if (vector_length_struct_inst.callback != NULL)
     {
-        return vector_length_struct_inst.callback (this, vector_length_struct_inst.actualCalls);
+        return vector_length_struct_inst.callback (thisVector, vector_length_struct_inst.actualCalls);
     }
     if (vector_length_struct_inst.expectedCalls == 0)
     {
@@ -428,18 +567,18 @@ size_t vector_length(Vector * this)
         return default_res;
     }
 
-    if(strcmp(opmock_get_current_call(), "size_t vector_length (Vector * this)") != 0) {
+    if(strcmp(opmock_get_current_call(), "size_t vector_length (Vector * thisVector)") != 0) {
         char buffer[OP_ERROR_MESSAGE_LENGTH];
-        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'size_t vector_length(Vector * this)',  but was expecting call to '%s'", opmock_get_current_call());
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'size_t vector_length(Vector * thisVector)',  but was expecting call to '%s'", opmock_get_current_call());
         opmock_add_error_message(buffer);
     }
     opmock_pop_call();
 
     if (vector_length_struct_inst.calls[0].check_params == 1) {
-        if(vector_length_struct_inst.calls[0].match_this) {
-            void * val1 = (void *) &vector_length_struct_inst.calls[0].this;
-            void * val2 = (void *) &this;
-            int match_result = vector_length_struct_inst.calls[0].match_this(val1, val2, "this", get_matcher_message());
+        if(vector_length_struct_inst.calls[0].match_thisVector) {
+            void * val1 = (void *) &vector_length_struct_inst.calls[0].thisVector;
+            void * val2 = (void *) &thisVector;
+            int match_result = vector_length_struct_inst.calls[0].match_thisVector(val1, val2, "thisVector", get_matcher_message());
             if(match_result){
                 char buffer[OP_ERROR_MESSAGE_LENGTH];
                 snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'vector_length', %s",vector_length_struct_inst.actualCalls, get_matcher_message());
@@ -481,7 +620,7 @@ void vector_length_VerifyMock()
     }
 }
 
-void vector_length_ExpectAndReturn (Vector * this, size_t to_return, OPMOCK_MATCHER match_this)
+void vector_length_ExpectAndReturn (Vector * thisVector, size_t to_return, OPMOCK_MATCHER match_thisVector)
 {
     if(vector_length_struct_inst.callback != NULL)
     {
@@ -496,13 +635,101 @@ void vector_length_ExpectAndReturn (Vector * this, size_t to_return, OPMOCK_MATC
 
     opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
     opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
-    opmock_add_call((char *)"size_t vector_length (Vector * this)");
-    vector_length_struct_inst.calls[vector_length_struct_inst.expectedCalls].this = (void *)this;
-    vector_length_struct_inst.calls[vector_length_struct_inst.expectedCalls].match_this = match_this;
+    opmock_add_call((char *)"size_t vector_length (Vector * thisVector)");
+    vector_length_struct_inst.calls[vector_length_struct_inst.expectedCalls].thisVector = (void *)thisVector;
+    vector_length_struct_inst.calls[vector_length_struct_inst.expectedCalls].match_thisVector = match_thisVector;
     vector_length_struct_inst.calls[vector_length_struct_inst.expectedCalls].to_return = (unsigned long) to_return;
     vector_length_struct_inst.calls[vector_length_struct_inst.expectedCalls].check_params = 1;
     vector_length_struct_inst.expectedCalls++;
 }
 
-#pragma GCC diagnostic pop
+void vector_free(Vector * thisVector)
+{
+    int opmock_i;
+    vector_free_struct_inst.actualCalls++;
+
+    if (vector_free_struct_inst.callback != NULL)
+    {
+        vector_free_struct_inst.callback (thisVector, vector_free_struct_inst.actualCalls);
+        return;
+    }
+    if (vector_free_struct_inst.expectedCalls == 0)
+    {
+        opmock_add_error_message((char *) "WARNING : unexpected call of 'vector_free', returning random value.");
+        return;
+    }
+
+    if(strcmp(opmock_get_current_call(), "void vector_free (Vector * thisVector)") != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'void vector_free(Vector * thisVector)',  but was expecting call to '%s'", opmock_get_current_call());
+        opmock_add_error_message(buffer);
+    }
+    opmock_pop_call();
+
+    if (vector_free_struct_inst.calls[0].check_params == 1) {
+        if(vector_free_struct_inst.calls[0].match_thisVector) {
+            void * val1 = (void *) &vector_free_struct_inst.calls[0].thisVector;
+            void * val2 = (void *) &thisVector;
+            int match_result = vector_free_struct_inst.calls[0].match_thisVector(val1, val2, "thisVector", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'vector_free', %s",vector_free_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+    }
+
+    for(opmock_i = 1; opmock_i < vector_free_struct_inst.expectedCalls; opmock_i++) {
+        vector_free_struct_inst.calls[opmock_i - 1] = vector_free_struct_inst.calls[opmock_i];
+    }
+
+    vector_free_struct_inst.expectedCalls--;
+}
+
+void vector_free_MockReset()
+{
+    vector_free_struct_inst.expectedCalls = 0;
+    vector_free_struct_inst.actualCalls = 0;
+    vector_free_struct_inst.callback = NULL;
+}
+
+void vector_free_MockWithCallback(OPMOCK_vector_free_CALLBACK callback)
+{
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    vector_free_struct_inst.callback = callback;
+    vector_free_struct_inst.expectedCalls = 0;
+    vector_free_struct_inst.actualCalls = 0;
+}
+
+void vector_free_VerifyMock()
+{
+    if (vector_free_struct_inst.expectedCalls != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : Bad number of calls (%d) for 'vector_free'",vector_free_struct_inst.actualCalls);
+        opmock_add_error_message((char *) buffer);
+    }
+}
+
+void vector_free_ExpectAndReturn (Vector * thisVector, OPMOCK_MATCHER match_thisVector)
+{
+    if(vector_free_struct_inst.callback != NULL)
+    {
+        vector_free_MockReset ();
+    }
+
+    if(vector_free_struct_inst.expectedCalls >= MAX_FUNC_CALL)
+    {
+        printf("WARNING : aborting vector_free_ExpectAndReturn, call stack overload.");
+        return;
+    }
+
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    opmock_add_call((char *)"void vector_free (Vector * thisVector)");
+    vector_free_struct_inst.calls[vector_free_struct_inst.expectedCalls].thisVector = (void *)thisVector;
+    vector_free_struct_inst.calls[vector_free_struct_inst.expectedCalls].match_thisVector = match_thisVector;
+    vector_free_struct_inst.calls[vector_free_struct_inst.expectedCalls].check_params = 1;
+    vector_free_struct_inst.expectedCalls++;
+}
 
