@@ -48,10 +48,13 @@ struct _ParserResult
 {
     char CommandText[IRC_MAXLEN + 1];
     char Source[IRC_MAXLEN + 1];
-    Vector Params;
+    Vector *Params;
 };
 
 bool parser_get_line(Buffer *srcBuffer, char *destBuffer, size_t length);
 ParserResult *parser_process_line(const char *, size_t);
+
+ParserResult *parser_result_new();
+void parser_result_free(ParserResult *result);
 
 #endif /* defined(__oftc_ircd__parser__) */

@@ -42,9 +42,10 @@ struct _Vector
 };
 
 Vector *vector_new(size_t capacity, size_t elementSize);
-void *vector_push_back(Vector *this, void *data);
-void *vector_get(Vector *this, size_t index);
-void vector_delete(Vector *this, size_t index);
-size_t vector_length(Vector *this);
+void *vector_push_back(Vector *thisVector, void *data);
+void *vector_get(Vector *thisVector, size_t index);
+void vector_delete(Vector *thisVector, size_t index);
+size_t vector_length(Vector *thisVector);
+void vector_free(Vector *thisVector);
 
 #endif /* defined(__oftc_ircd__vector__) */

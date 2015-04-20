@@ -162,10 +162,11 @@ client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
         {
             continue;
         }
+
+        parser_result_free(result);
     }
 
     Free(buf->base);
-    Free((void *)buf);
 }
 
 static bool

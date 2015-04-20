@@ -135,3 +135,15 @@ vector_delete(Vector *thisVector, size_t index)
 
     thisVector->Length--;
 }
+
+void
+vector_free(Vector *thisVector)
+{
+    if(thisVector == NULL)
+    {
+        return;
+    }
+
+    Free(thisVector->Data);
+    Free(thisVector);
+}

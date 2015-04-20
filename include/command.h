@@ -49,5 +49,6 @@ void command_init(void);
 Command *command_new(void);
 void command_free(Command *);
 void command_register(const char *, CommandAccess, CommandHandler, int);
+Command *command_find(const char *);
 
 #endif /* defined(__oftc_ircd__command__) */

@@ -27,6 +27,7 @@
 #include "command.h"
 #include "hash.h"
 #include "memory.h"
+#include "lstring.h"
 
 static Hash *CommandHash;
 
@@ -67,4 +68,24 @@ command_register(const char *name,
     command->MinParams = minParams;
 
     hash_add_string(CommandHash, name, command);
+}
+
+Command *
+command_find(const char *name)
+{
+    Command *ret;
+
+    if(string_is_null_or_empty(name))
+    {
+        return NULL;
+    }
+
+    ret = hash_find(CommandHash, name);
+
+    if(ret == NULL)
+    {
+        return NULL;
+    }
+
+    return ret;
 }

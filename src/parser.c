@@ -138,8 +138,7 @@ parser_process_line(const char *buffer, size_t length)
         return NULL;
     }
 
-    result = Malloc(sizeof(ParserResult));
-    vector_new(0, sizeof(arg));
+    result = parser_result_new();
 
     end = buffer + length;
 
@@ -176,7 +175,7 @@ parser_process_line(const char *buffer, size_t length)
                 default:
                     if(!lastArg)
                     {
-                        vector_push_back(&result->Params, arg);
+                        vector_push_back(result->Params, arg);
                         memset(arg, 0, sizeof(arg));
                         destPtr = arg;
                         continue;
@@ -194,8 +193,25 @@ parser_process_line(const char *buffer, size_t length)
 
     if(state == ArgState)
     {
-        vector_push_back(&result->Params, arg);
+        vector_push_back(result->Params, arg);
     }
 
     return result;
+}
+
+ParserResult *
+parser_result_new()
+{
+    ParserResult *result = Malloc(sizeof(ParserResult));
+
+    result->Params = vector_new(0, IRC_MAXLEN + 1);
+
+    return result;
+}
+
+void
+parser_result_free(ParserResult *result)
+{
+    vector_free(result->Params);
+    Free(result);
 }
