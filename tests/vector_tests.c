@@ -159,7 +159,8 @@ vector_push_back_when_called_puts_value_in_data()
     OP_VERIFY();
 }
 
-static void vector_push_back_when_called_twice_puts_value_in_data_and_sets_length()
+static void 
+vector_push_back_when_called_twice_puts_value_in_data_and_sets_length()
 {
     Vector *vector;
     Vector retVector = { 0 };
@@ -285,6 +286,96 @@ vector_get_when_called_with_out_of_range_index_returns_null()
     OP_VERIFY();
 }
 
+static void
+vector_delete_when_null_vector_returns()
+{
+    vector_delete(NULL, 0);
+
+    OP_VERIFY();
+}
+
+static void
+vector_delete_when_not_present_returns()
+{
+    Vector retVector = { 0 };
+    Vector *vector;
+    char data[4096];
+
+    Malloc_ExpectAndReturn(0, &retVector, NULL);
+    Malloc_ExpectAndReturn(0, data, NULL);
+
+    vector = vector_new(0, 5);
+    vector_push_back(vector, "TEST");
+    vector_delete(vector, 1);
+
+    OP_ASSERT_EQUAL_INT(1, (int)vector_length(vector));
+
+    OP_VERIFY();
+}
+
+static void
+vector_delete_when_present_deletes()
+{
+    Vector retVector = { 0 };
+    Vector *vector;
+    char data[4096];
+
+    Malloc_ExpectAndReturn(0, &retVector, NULL);
+    Malloc_ExpectAndReturn(0, data, NULL);
+
+    vector = vector_new(0, 5);
+    vector_push_back(vector, "TEST");
+    vector_delete(vector, 0);
+
+    OP_ASSERT_EQUAL_INT(0, (int)vector_length(vector));
+
+    OP_VERIFY();
+}
+
+static void
+vector_delete_when_multiple_deletes_first()
+{
+    Vector retVector = { 0 };
+    Vector *vector;
+    char data[4096];
+
+    Malloc_ExpectAndReturn(0, &retVector, NULL);
+    Malloc_ExpectAndReturn(0, data, NULL);
+
+    vector = vector_new(0, 5);
+    vector_push_back(vector, "TEST");
+    vector_push_back(vector, "1234");
+    vector_delete(vector, 0);
+
+    OP_ASSERT_EQUAL_INT(1, (int)vector_length(vector));
+    OP_ASSERT_EQUAL_CSTRING("1234", (char *)vector_get(vector, 0));
+
+    OP_VERIFY();
+}
+
+static void
+vector_delete_when_multiple_deletes_middle()
+{
+    Vector retVector = { 0 };
+    Vector *vector;
+    char data[4096];
+
+    Malloc_ExpectAndReturn(0, &retVector, NULL);
+    Malloc_ExpectAndReturn(0, data, NULL);
+
+    vector = vector_new(0, 5);
+    vector_push_back(vector, "1111");
+    vector_push_back(vector, "2222");
+    vector_push_back(vector, "3333");
+    vector_delete(vector, 1);
+
+    OP_ASSERT_EQUAL_INT(2, (int)vector_length(vector));
+    OP_ASSERT_EQUAL_CSTRING("1111", (char *)vector_get(vector, 0));
+    OP_ASSERT_EQUAL_CSTRING("3333", (char *)vector_get(vector, 1));
+
+    OP_VERIFY();
+}
+
 int
 main()
 {
@@ -320,6 +411,16 @@ main()
                          "vector_get_when_called_returns_correct_value");
     opmock_register_test(vector_get_when_called_with_out_of_range_index_returns_null,
                          "vector_get_when_called_with_out_of_range_index_returns_null");
+    opmock_register_test(vector_delete_when_null_vector_returns,
+                         "vector_delete_when_null_vector_returns");
+    opmock_register_test(vector_delete_when_not_present_returns,
+                         "vector_delete_when_not_present_returns");
+    opmock_register_test(vector_delete_when_present_deletes,
+                         "vector_delete_when_present_deletes");
+    opmock_register_test(vector_delete_when_multiple_deletes_first,
+                         "vector_delete_when_multiple_deletes_first");
+    opmock_register_test(vector_delete_when_multiple_deletes_middle,
+                         "vector_delete_when_multiple_deletes_middle");
 
     opmock_test_suite_run();
 
