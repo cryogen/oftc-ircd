@@ -73,6 +73,52 @@ command_register_when_called_registers_command()
     OP_VERIFY();
 }
 
+static void
+command_find_when_null_name_returns_null()
+{
+    Command *ret;
+
+    ret = command_find(NULL);
+
+    OP_ASSERT_TRUE(ret == NULL);
+}
+
+static void
+command_find_when_empty_name_returns_null()
+{
+    Command *ret;
+
+    ret = command_find("");
+
+    OP_ASSERT_TRUE(ret == NULL);
+}
+
+static void
+command_find_when_not_found_returns_null()
+{
+    Command *ret;
+    
+    hash_find_ExpectAndReturn(NULL, "TEST", NULL, NULL, cmp_cstr);
+
+    ret = command_find("TEST");
+
+    OP_ASSERT_TRUE(ret == NULL);
+    OP_VERIFY();
+}
+
+static void
+command_find_when_found_returns_command()
+{
+    Command *ret;
+    Command command = { 0 };
+
+    hash_find_ExpectAndReturn(NULL, "TEST", &command, NULL, cmp_cstr);
+
+    ret = command_find("TEST");
+
+    OP_ASSERT_TRUE(ret != NULL);
+}
+
 int
 main()
 {
@@ -86,6 +132,14 @@ main()
                          "command_free_when_called_with_null_does_nothing");
     opmock_register_test(command_free_when_called_with_command_frees,
                          "command_free_when_called_with_command_frees");
+    opmock_register_test(command_find_when_null_name_returns_null,
+                         "command_find_when_null_name_returns_null");
+    opmock_register_test(command_find_when_empty_name_returns_null,
+                         "command_find_when_empty_name_returns_null");
+    opmock_register_test(command_find_when_not_found_returns_null,
+                         "command_find_when_not_found_returns_null");
+    opmock_register_test(command_find_when_found_returns_command,
+                         "command_find_when_found_returns_command");
 
     opmock_test_suite_run();
 
