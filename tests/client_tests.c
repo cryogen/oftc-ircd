@@ -751,7 +751,12 @@ client_process_read_buffer_when_handler_null_works_ok()
 {
     Client client = { 0 };
 
-    setup_command();
+    setup_parser();
+
+    command_find_ExpectAndReturn(NULL, &ResultCommand, NULL);
+    vector_length_ExpectAndReturn(NULL, 1, NULL);
+    parser_result_free_ExpectAndReturn(&Result, cmp_ptr);
+    parser_get_line_ExpectAndReturn(NULL, NULL, 0, NULL, NULL, NULL, NULL);
 
     ResultCommand.Handler = NULL;
 
@@ -785,6 +790,26 @@ client_process_read_buffer_when_no_access_does_not_call_handler()
     callback_called = false;
     ResultCommand.Handler = handler_callback;
     ResultCommand.RequiredAccess = Standard;
+
+    client_process_read_buffer(&client);
+
+    OP_ASSERT_FALSE(callback_called);
+}
+
+static void
+client_process_read_buffer_when_too_few_args_does_not_call_handler()
+{
+    Client client = { 0 };
+
+    setup_parser();
+
+    vector_length_ExpectAndReturn(NULL, 0, NULL);
+    parser_result_free_ExpectAndReturn(&Result, cmp_ptr);
+    parser_get_line_ExpectAndReturn(NULL, NULL, 0, NULL, NULL, NULL, NULL);
+
+    callback_called = false;
+    ResultCommand.Handler = handler_callback;
+    ResultCommand.MinParams = 1;
 
     client_process_read_buffer(&client);
 
@@ -851,6 +876,8 @@ int main()
                          "client_process_read_buffer_when_handler_calls_handler");
     opmock_register_test(client_process_read_buffer_when_no_access_does_not_call_handler,
                          "client_process_read_buffer_when_no_access_does_not_call_handler");
+    opmock_register_test(client_process_read_buffer_when_too_few_args_does_not_call_handler,
+                         "client_process_read_buffer_when_too_few_args_does_not_call_handler");
 
     opmock_test_suite_run();
 

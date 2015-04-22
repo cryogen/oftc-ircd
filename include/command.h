@@ -38,7 +38,7 @@ struct _Command
     const char *Name;
     CommandAccess RequiredAccess;
     CommandHandler Handler;
-    int MinParams;
+    unsigned int MinParams;
 };
 
 void command_init(void);

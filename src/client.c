@@ -365,6 +365,12 @@ client_process_read_buffer(Client *client)
             continue;
         }
 
+        if(vector_length(result->Params) < command->MinParams)
+        {
+            parser_result_free(result);
+            continue;
+        }
+
         if(command->Handler != NULL)
         {
             command->Handler(client, result->Params);
