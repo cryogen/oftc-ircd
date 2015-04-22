@@ -32,6 +32,7 @@
 #include "server_stub.h"
 #include "buffer_stub.h"
 #include "parser_stub.h"
+#include "command_stub.h"
 
 #include "client.h"
 #include "listener.h"
@@ -51,6 +52,31 @@ static bool callbackCalled;
 static uv_write_t writeReq;
 static char *buffer;
 uv_buf_t uvBuf = { 0 };
+static ParserResult Result;
+static Command ResultCommand;
+
+static void
+setup_parser()
+{
+    memset(&Result, 0, sizeof(Result));
+
+    parser_get_line_ExpectAndReturn(NULL, NULL, 0, true, NULL, NULL, NULL);
+    parser_process_line_ExpectAndReturn(NULL, 0, &Result, NULL, NULL);
+}
+
+static void
+setup_command()
+{
+    setup_parser();
+
+    memset(&ResultCommand, 0, sizeof(Command));
+    
+    command_find_ExpectAndReturn(NULL, &ResultCommand, NULL);
+
+    parser_result_free_ExpectAndReturn(&Result, cmp_ptr);
+    parser_get_line_ExpectAndReturn(NULL, NULL, 0, NULL, NULL, NULL, NULL);
+}
+
 
 static void
 no_match_callback(ClientDnsRequest *request, bool match)
@@ -297,6 +323,14 @@ setup_sockname()
     uv_tcp_getsockname_MockWithCallback(getsockname_mock);
     uv_ip4_addr_MockWithCallback(uv_ip4_addr_callback);
     Malloc_ExpectAndReturn(sizeof(uv_getnameinfo_t), &req, cmp_int);
+}
+
+static bool callback_called = false;
+
+static void
+handler_callback(Client *client, Vector *args)
+{
+    callback_called = true;
 }
 
 static void
@@ -681,6 +715,82 @@ client_send_when_511_long_is_truncated()
     free(buffer);
 }
 
+
+static void
+client_process_read_buffer_when_null_result_continues()
+{
+    Client client = { 0 };
+
+    parser_get_line_ExpectAndReturn(NULL, NULL, 0, true, NULL, NULL, NULL);
+    parser_process_line_ExpectAndReturn(NULL, 0, NULL, NULL, NULL);
+    parser_get_line_ExpectAndReturn(NULL, NULL, 0, NULL, NULL, NULL, NULL);
+
+    client_process_read_buffer(&client);
+    
+    OP_VERIFY();
+}
+
+static void
+client_process_read_buffer_when_command_not_found_frees_result()
+{
+    Client client = { 0 };
+
+    setup_parser();
+
+    command_find_ExpectAndReturn(NULL, NULL, NULL);
+    parser_result_free_ExpectAndReturn(&Result, cmp_ptr);
+    parser_get_line_ExpectAndReturn(NULL, NULL, 0, NULL, NULL, NULL, NULL);
+
+    client_process_read_buffer(&client);
+    
+    OP_VERIFY();
+}
+
+static void
+client_process_read_buffer_when_handler_null_works_ok()
+{
+    Client client = { 0 };
+
+    setup_command();
+
+    ResultCommand.Handler = NULL;
+
+    client_process_read_buffer(&client);
+    
+    OP_VERIFY();
+}
+
+
+static void
+client_process_read_buffer_when_handler_calls_handler()
+{
+    Client client = { 0 };
+
+    setup_command();
+
+    ResultCommand.Handler = handler_callback;
+
+    client_process_read_buffer(&client);
+
+    OP_ASSERT_TRUE(callback_called);
+}
+
+static void
+client_process_read_buffer_when_no_access_does_not_call_handler()
+{
+    Client client = { 0 };
+
+    setup_command();
+
+    callback_called = false;
+    ResultCommand.Handler = handler_callback;
+    ResultCommand.RequiredAccess = Standard;
+
+    client_process_read_buffer(&client);
+
+    OP_ASSERT_FALSE(callback_called);
+}
+
 int main()
 {
     opmock_test_suite_reset();
@@ -731,6 +841,16 @@ int main()
                          "client_send_when_too_long_is_truncated");
     opmock_register_test(client_send_when_511_long_is_truncated,
                          "client_send_when_511_long_is_truncated");
+    opmock_register_test(client_process_read_buffer_when_null_result_continues,
+                         "client_process_read_buffer_when_null_result_continues");
+    opmock_register_test(client_process_read_buffer_when_command_not_found_frees_result,
+                         "client_process_read_buffer_when_command_not_found_frees_result");
+    opmock_register_test(client_process_read_buffer_when_handler_null_works_ok,
+                         "client_process_read_buffer_when_handler_null_works_ok");
+    opmock_register_test(client_process_read_buffer_when_handler_calls_handler,
+                         "client_process_read_buffer_when_handler_calls_handler");
+    opmock_register_test(client_process_read_buffer_when_no_access_does_not_call_handler,
+                         "client_process_read_buffer_when_no_access_does_not_call_handler");
 
     opmock_test_suite_run();
 

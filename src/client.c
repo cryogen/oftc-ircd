@@ -359,7 +359,16 @@ client_process_read_buffer(Client *client)
             continue;
         }
 
-        command->Handler(client, result->Params);
+        if(client->AccessLevel < command->RequiredAccess)
+        {
+            parser_result_free(result);
+            continue;
+        }
+
+        if(command->Handler != NULL)
+        {
+            command->Handler(client, result->Params);
+        }
 
         parser_result_free(result);
     }

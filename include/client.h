@@ -47,12 +47,21 @@ typedef enum _DnsNotice
     NotFound
 } DnsNotice;
 
+typedef enum _CommandAccess
+{
+    Unregistered,
+    Standard,
+    Oper
+} CommandAccess;
+
+
 struct _Client
 {
     char Name[HOSTLEN];
     char Host[HOSTLEN];
     NetworkAddress Address;
     Buffer *ReadBuffer;
+    CommandAccess AccessLevel;
 
     // private
     uv_tcp_t *handle;

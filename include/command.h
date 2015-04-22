@@ -33,13 +33,6 @@
 typedef void (*CommandHandler)(Client *, Vector *);
 typedef struct _Command Command;
 
-typedef enum _CommandAccess
-{
-    Unregistered,
-    Standard,
-    Oper
-} CommandAccess;
-
 struct _Command
 {
     const char *Name;
