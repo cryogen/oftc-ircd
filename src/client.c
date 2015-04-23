@@ -379,3 +379,27 @@ client_process_read_buffer(Client *client)
         parser_result_free(result);
     }
 }
+
+bool
+client_set_nickname(Client *client, const char *nickname)
+{
+    strncpy(client->Name, nickname, NICKLEN);
+
+    return true;
+}
+
+bool 
+client_set_username(Client *client, const char *username)
+{
+    strncpy(client->Username, username, USERLEN);
+
+    return true;
+}
+
+bool
+client_set_realname(Client *client, const char *realname)
+{
+    strncpy(client->Realname, realname, REALLEN);
+
+    return true;
+}

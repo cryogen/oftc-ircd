@@ -34,6 +34,9 @@
 #include "buffer.h"
 
 #define HOSTLEN 128
+#define NICKLEN 16
+#define USERLEN 16
+#define REALLEN 128
 
 typedef struct _Client Client;
 typedef struct _ClientDnsRequest ClientDnsRequest;
@@ -57,8 +60,10 @@ typedef enum _CommandAccess
 
 struct _Client
 {
-    char Name[HOSTLEN];
-    char Host[HOSTLEN];
+    char Name[NICKLEN + 1];
+    char Username[USERLEN + 1];
+    char Realname[REALLEN + 1];
+    char Host[HOSTLEN + 1];
     NetworkAddress Address;
     Buffer *ReadBuffer;
     CommandAccess AccessLevel;
@@ -80,5 +85,8 @@ void client_free(Client *client);
 bool client_accept(Client *client, uv_stream_t *handle);
 void client_send(Client *source, Client *client, const char *pattern, ...);
 void client_process_read_buffer(Client *client);
+bool client_set_username(Client *client, const char *username);
+bool client_set_nickname(Client *client, const char *nickname);
+bool client_set_realname(Client *client, const char *realname);
 
 #endif /* defined(__oftc_ircd__client__) */
