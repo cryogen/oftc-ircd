@@ -25,6 +25,8 @@
  */
 
 #include <uv.h>
+#include <string.h>
+
 #include "connection.h"
 #include "client.h"
 #include "serverstate.h"
