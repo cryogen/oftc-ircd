@@ -5,8 +5,9 @@ AM_CPPFLAGS =   -I$(top_srcdir)/libuv/include -I$(top_srcdir) \
 
 libircd_la_SOURCES =    buffer.c        \
                         client.c        \
-                        config.c        \
                         command.c       \
+                        config.c        \
+                        connection.c    \
                         hash.c          \
                         list.c          \
                         listener.c      \

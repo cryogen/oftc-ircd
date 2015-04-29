@@ -1,6 +1,7 @@
 noinst_HEADERS= buffer.h        \
                 client.h        \
                 config.h        \
+                connection.h    \
                 hash.h          \
                 irc.h           \
                 list.h          \

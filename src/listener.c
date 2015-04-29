@@ -36,6 +36,7 @@
 #include "network.h"
 #include "client.h"
 #include "serverstate.h"
+#include "connection.h"
 
 static Vector *listeners;
 
@@ -85,20 +86,13 @@ listener_add(Listener *listener)
 static void
 listener_on_connection(uv_stream_t *handle, int status)
 {
-    Client *client;
-
     if(status < 0)
     {
         fprintf(stderr, "Error on listen");
         return;
     }
 
-    client = client_new();
-
-    if(!client_accept(client, handle))
-    {
-        client_free(client);
-    }
+    connection_accept(handle);
 }
 
 void

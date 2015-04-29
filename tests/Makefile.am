@@ -9,7 +9,8 @@ TESTS = client_tests    \
         server_tests    \
         buffer_tests    \
         list_tests      \
-        parser_tests    
+        parser_tests    \
+        connection_tests
 
 check_PROGRAMS =    $(TESTS)
 
@@ -22,10 +23,10 @@ client_tests_SOURCES =  client_tests.c          \
                         buffer_stub.c           \
                         parser_stub.c           \
                         command_stub.c          \
+                        network_stub.c          \
                         opmock.c                \
                         ../src/serverstate.c    \
                         ../src/lstring.c        \
-                        ../src/network.c        \
                         ../src/client.c
 
 config_tests_SOURCES =  config_tests.c          \
@@ -100,6 +101,15 @@ parser_tests_SOURCES  = parser_tests.c          \
                         buffer_stub.c           \
                         memory_stub.c           \
                         ../src/parser.c         \
-                        ../src/list.c           
+                        ../src/list.c
+
+connection_tests_SOURCES =  connection_tests.c  \
+                            opmock.c            \
+                            memory_stub.c       \
+                            client_stub.c       \
+                            uv_stub.c           \
+                            serverstate_stub.c  \
+                            network_stub.c      \
+                            ../src/connection.c
 
 AM_CPPFLAGS = -I../include -I../libuv/include -I.. -I../json-c

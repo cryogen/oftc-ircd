@@ -105,3 +105,19 @@ network_ipstring_from_address(NetworkAddress *address,
 
     return true;
 }
+
+bool
+network_address_from_stream(uv_tcp_t *handle, NetworkAddress *address)
+{
+    address->AddressLength = sizeof(NetworkAddress);
+    if(uv_tcp_getsockname(handle,
+                          (struct sockaddr *)address,
+                          (int *)&address->AddressLength) != 0)
+    {
+        return false;
+    }
+
+    address->AddressFamily = address->Address.Addr4.sin_family;
+
+    return true;
+}

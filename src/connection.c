@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2014, Stuart Walsh
+ * Copyright (c) 2015, Stuart Walsh
  * All rights reserved.
- * network.h network utility functions
+ * connection.c underlying network connection
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,32 +24,43 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __oftc_ircd__network__
-#define __oftc_ircd__network__
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <stdbool.h>
 #include <uv.h>
+#include "connection.h"
+#include "client.h"
+#include "serverstate.h"
+#include "memory.h"
 
-typedef struct _NetworkAddress NetworkAddress;
-
-struct _NetworkAddress
+void
+connection_accept(uv_stream_t *handle)
 {
-    union
+    Client *newClient;
+    uv_tcp_t *newHandle;
+    NetworkAddress address = { 0 };
+
+    if(handle == NULL)
     {
-        struct sockaddr_in Addr4;
-        struct sockaddr_in6 Addr6;
-    } Address;
+        return;
+    }
 
-    int AddressFamily;
-    size_t AddressLength;
-};
+    newHandle = Malloc(sizeof(uv_tcp_t));
+    uv_tcp_init(serverstate_get_event_loop(), newHandle);
+    if(uv_accept(handle, (uv_stream_t *)newHandle) != 0)
+    {
+        Free(handle);
+        return;
+    }
 
-bool network_address_from_ipstring(const char *ip, NetworkAddress *address);
-bool network_address_from_ipstring_and_port(const char *ip, unsigned short port, NetworkAddress *address);
-bool network_ipstring_from_address(NetworkAddress *address, char *ip, size_t ipLen);
-bool network_address_from_stream(uv_tcp_t *handle, NetworkAddress *address);
+    if(!network_address_from_stream(newHandle, &address))
+    {
+        uv_close((uv_handle_t *)handle, NULL);
+        Free(handle);
+        return;
+    }
 
-#endif /* defined(__oftc_ircd__network__) */
+    newClient = client_new();
+    newClient->handle = newHandle;
+
+    memcpy(&newClient->Address, &address, sizeof(NetworkAddress));
+
+    client_lookup_dns(newClient);
+}

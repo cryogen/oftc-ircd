@@ -1,8 +1,4 @@
 /* OPMOCK2 GENERATED CODE - DO NOT MODIFY */
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-prototypes"
-
 #include "client_stub.h"
 #include <stdio.h>
 #include <string.h>
@@ -58,29 +54,107 @@ static client_free_struct client_free_struct_inst;
 typedef struct
 {
     void * client;
-    void * handle;
     OPMOCK_MATCHER match_client;
-    OPMOCK_MATCHER match_handle;
-    _Bool to_return;
     char check_params;
-} client_accept_call;
+} client_lookup_dns_call;
 
 typedef struct
 {
     int expectedCalls;
     int actualCalls;
-    OPMOCK_client_accept_CALLBACK callback;
-    client_accept_call calls[MAX_FUNC_CALL];
-} client_accept_struct;
+    OPMOCK_client_lookup_dns_CALLBACK callback;
+    client_lookup_dns_call calls[MAX_FUNC_CALL];
+} client_lookup_dns_struct;
 
-static client_accept_struct client_accept_struct_inst;
+static client_lookup_dns_struct client_lookup_dns_struct_inst;
+
+typedef struct
+{
+    void * client;
+    OPMOCK_MATCHER match_client;
+    char check_params;
+} client_process_read_buffer_call;
+
+typedef struct
+{
+    int expectedCalls;
+    int actualCalls;
+    OPMOCK_client_process_read_buffer_CALLBACK callback;
+    client_process_read_buffer_call calls[MAX_FUNC_CALL];
+} client_process_read_buffer_struct;
+
+static client_process_read_buffer_struct client_process_read_buffer_struct_inst;
+
+typedef struct
+{
+    void * client;
+    void * username;
+    OPMOCK_MATCHER match_client;
+    OPMOCK_MATCHER match_username;
+    _Bool to_return;
+    char check_params;
+} client_set_username_call;
+
+typedef struct
+{
+    int expectedCalls;
+    int actualCalls;
+    OPMOCK_client_set_username_CALLBACK callback;
+    client_set_username_call calls[MAX_FUNC_CALL];
+} client_set_username_struct;
+
+static client_set_username_struct client_set_username_struct_inst;
+
+typedef struct
+{
+    void * client;
+    void * nickname;
+    OPMOCK_MATCHER match_client;
+    OPMOCK_MATCHER match_nickname;
+    _Bool to_return;
+    char check_params;
+} client_set_nickname_call;
+
+typedef struct
+{
+    int expectedCalls;
+    int actualCalls;
+    OPMOCK_client_set_nickname_CALLBACK callback;
+    client_set_nickname_call calls[MAX_FUNC_CALL];
+} client_set_nickname_struct;
+
+static client_set_nickname_struct client_set_nickname_struct_inst;
+
+typedef struct
+{
+    void * client;
+    void * realname;
+    OPMOCK_MATCHER match_client;
+    OPMOCK_MATCHER match_realname;
+    _Bool to_return;
+    char check_params;
+} client_set_realname_call;
+
+typedef struct
+{
+    int expectedCalls;
+    int actualCalls;
+    OPMOCK_client_set_realname_CALLBACK callback;
+    client_set_realname_call calls[MAX_FUNC_CALL];
+} client_set_realname_struct;
+
+static client_set_realname_struct client_set_realname_struct_inst;
 
 static void opmock_reset_all_mocks_in_this_header()
 {
     client_init_MockReset();
     client_new_MockReset();
     client_free_MockReset();
-    client_accept_MockReset();
+    client_lookup_dns_MockReset();
+    client_process_read_buffer_MockReset();
+    client_set_username_MockReset();
+    client_set_nickname_MockReset();
+    client_set_realname_MockReset();
 }
 
 static void opmock_verify_all_mocks_in_this_header()
@@ -88,7 +162,11 @@ static void opmock_verify_all_mocks_in_this_header()
     client_init_VerifyMock();
     client_new_VerifyMock();
     client_free_VerifyMock();
-    client_accept_VerifyMock();
+    client_lookup_dns_VerifyMock();
+    client_process_read_buffer_VerifyMock();
+    client_set_username_VerifyMock();
+    client_set_nickname_VerifyMock();
+    client_set_realname_VerifyMock();
 }
 
 void client_init()
@@ -339,109 +417,495 @@ void client_free_ExpectAndReturn (Client * client, OPMOCK_MATCHER match_client)
     client_free_struct_inst.expectedCalls++;
 }
 
-_Bool client_accept(Client * client, uv_stream_t * handle)
+void client_lookup_dns(Client * client)
 {
-    _Bool default_res = (_Bool)client_accept_struct_inst.calls[0].to_return;
     int opmock_i;
-    client_accept_struct_inst.actualCalls++;
+    client_lookup_dns_struct_inst.actualCalls++;
 
-    if (client_accept_struct_inst.callback != NULL)
+    if (client_lookup_dns_struct_inst.callback != NULL)
     {
-        return client_accept_struct_inst.callback (client, handle, client_accept_struct_inst.actualCalls);
+        client_lookup_dns_struct_inst.callback (client, client_lookup_dns_struct_inst.actualCalls);
+        return;
     }
-    if (client_accept_struct_inst.expectedCalls == 0)
+    if (client_lookup_dns_struct_inst.expectedCalls == 0)
     {
-        opmock_add_error_message((char *) "WARNING : unexpected call of 'client_accept', returning random value.");
-        return default_res;
+        opmock_add_error_message((char *) "WARNING : unexpected call of 'client_lookup_dns', returning random value.");
+        return;
     }
 
-    if(strcmp(opmock_get_current_call(), "_Bool client_accept (Client * client, uv_stream_t * handle)") != 0) {
+    if(strcmp(opmock_get_current_call(), "void client_lookup_dns (Client * client)") != 0) {
         char buffer[OP_ERROR_MESSAGE_LENGTH];
-        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to '_Bool client_accept(Client * client, uv_stream_t * handle)',  but was expecting call to '%s'", opmock_get_current_call());
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'void client_lookup_dns(Client * client)',  but was expecting call to '%s'", opmock_get_current_call());
         opmock_add_error_message(buffer);
     }
     opmock_pop_call();
 
-    if (client_accept_struct_inst.calls[0].check_params == 1) {
-        if(client_accept_struct_inst.calls[0].match_client) {
-            void * val1 = (void *) &client_accept_struct_inst.calls[0].client;
+    if (client_lookup_dns_struct_inst.calls[0].check_params == 1) {
+        if(client_lookup_dns_struct_inst.calls[0].match_client) {
+            void * val1 = (void *) &client_lookup_dns_struct_inst.calls[0].client;
             void * val2 = (void *) &client;
-            int match_result = client_accept_struct_inst.calls[0].match_client(val1, val2, "client", get_matcher_message());
+            int match_result = client_lookup_dns_struct_inst.calls[0].match_client(val1, val2, "client", get_matcher_message());
             if(match_result){
                 char buffer[OP_ERROR_MESSAGE_LENGTH];
-                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'client_accept', %s",client_accept_struct_inst.actualCalls, get_matcher_message());
-                opmock_add_error_message((char *) buffer);
-            }
-        }
-        if(client_accept_struct_inst.calls[0].match_handle) {
-            void * val1 = (void *) &client_accept_struct_inst.calls[0].handle;
-            void * val2 = (void *) &handle;
-            int match_result = client_accept_struct_inst.calls[0].match_handle(val1, val2, "handle", get_matcher_message());
-            if(match_result){
-                char buffer[OP_ERROR_MESSAGE_LENGTH];
-                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'client_accept', %s",client_accept_struct_inst.actualCalls, get_matcher_message());
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'client_lookup_dns', %s",client_lookup_dns_struct_inst.actualCalls, get_matcher_message());
                 opmock_add_error_message((char *) buffer);
             }
         }
     }
 
-    for(opmock_i = 1; opmock_i < client_accept_struct_inst.expectedCalls; opmock_i++) {
-        client_accept_struct_inst.calls[opmock_i - 1] = client_accept_struct_inst.calls[opmock_i];
+    for(opmock_i = 1; opmock_i < client_lookup_dns_struct_inst.expectedCalls; opmock_i++) {
+        client_lookup_dns_struct_inst.calls[opmock_i - 1] = client_lookup_dns_struct_inst.calls[opmock_i];
     }
 
-    client_accept_struct_inst.expectedCalls--;
-    return default_res;
+    client_lookup_dns_struct_inst.expectedCalls--;
 }
 
-void client_accept_MockReset()
+void client_lookup_dns_MockReset()
 {
-    client_accept_struct_inst.expectedCalls = 0;
-    client_accept_struct_inst.actualCalls = 0;
-    client_accept_struct_inst.callback = NULL;
+    client_lookup_dns_struct_inst.expectedCalls = 0;
+    client_lookup_dns_struct_inst.actualCalls = 0;
+    client_lookup_dns_struct_inst.callback = NULL;
 }
 
-void client_accept_MockWithCallback(OPMOCK_client_accept_CALLBACK callback)
+void client_lookup_dns_MockWithCallback(OPMOCK_client_lookup_dns_CALLBACK callback)
 {
     opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
     opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
-    client_accept_struct_inst.callback = callback;
-    client_accept_struct_inst.expectedCalls = 0;
-    client_accept_struct_inst.actualCalls = 0;
+    client_lookup_dns_struct_inst.callback = callback;
+    client_lookup_dns_struct_inst.expectedCalls = 0;
+    client_lookup_dns_struct_inst.actualCalls = 0;
 }
 
-void client_accept_VerifyMock()
+void client_lookup_dns_VerifyMock()
 {
-    if (client_accept_struct_inst.expectedCalls != 0) {
+    if (client_lookup_dns_struct_inst.expectedCalls != 0) {
         char buffer[OP_ERROR_MESSAGE_LENGTH];
-        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : Bad number of calls (%d) for 'client_accept'",client_accept_struct_inst.actualCalls);
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : Bad number of calls (%d) for 'client_lookup_dns'",client_lookup_dns_struct_inst.actualCalls);
         opmock_add_error_message((char *) buffer);
     }
 }
 
-void client_accept_ExpectAndReturn (Client * client, uv_stream_t * handle, _Bool to_return, OPMOCK_MATCHER match_client, OPMOCK_MATCHER match_handle)
+void client_lookup_dns_ExpectAndReturn (Client * client, OPMOCK_MATCHER match_client)
 {
-    if(client_accept_struct_inst.callback != NULL)
+    if(client_lookup_dns_struct_inst.callback != NULL)
     {
-        client_accept_MockReset ();
+        client_lookup_dns_MockReset ();
     }
 
-    if(client_accept_struct_inst.expectedCalls >= MAX_FUNC_CALL)
+    if(client_lookup_dns_struct_inst.expectedCalls >= MAX_FUNC_CALL)
     {
-        printf("WARNING : aborting client_accept_ExpectAndReturn, call stack overload.");
+        printf("WARNING : aborting client_lookup_dns_ExpectAndReturn, call stack overload.");
         return;
     }
 
     opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
     opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
-    opmock_add_call((char *)"_Bool client_accept (Client * client, uv_stream_t * handle)");
-    client_accept_struct_inst.calls[client_accept_struct_inst.expectedCalls].client = (void *)client;
-    client_accept_struct_inst.calls[client_accept_struct_inst.expectedCalls].handle = (void *)handle;
-    client_accept_struct_inst.calls[client_accept_struct_inst.expectedCalls].match_client = match_client;
-    client_accept_struct_inst.calls[client_accept_struct_inst.expectedCalls].match_handle = match_handle;
-    client_accept_struct_inst.calls[client_accept_struct_inst.expectedCalls].to_return = (_Bool) to_return;
-    client_accept_struct_inst.calls[client_accept_struct_inst.expectedCalls].check_params = 1;
-    client_accept_struct_inst.expectedCalls++;
+    opmock_add_call((char *)"void client_lookup_dns (Client * client)");
+    client_lookup_dns_struct_inst.calls[client_lookup_dns_struct_inst.expectedCalls].client = (void *)client;
+    client_lookup_dns_struct_inst.calls[client_lookup_dns_struct_inst.expectedCalls].match_client = match_client;
+    client_lookup_dns_struct_inst.calls[client_lookup_dns_struct_inst.expectedCalls].check_params = 1;
+    client_lookup_dns_struct_inst.expectedCalls++;
 }
 
-#pragma GCC diagnostic pop
+void client_process_read_buffer(Client * client)
+{
+    int opmock_i;
+    client_process_read_buffer_struct_inst.actualCalls++;
+
+    if (client_process_read_buffer_struct_inst.callback != NULL)
+    {
+        client_process_read_buffer_struct_inst.callback (client, client_process_read_buffer_struct_inst.actualCalls);
+        return;
+    }
+    if (client_process_read_buffer_struct_inst.expectedCalls == 0)
+    {
+        opmock_add_error_message((char *) "WARNING : unexpected call of 'client_process_read_buffer', returning random value.");
+        return;
+    }
+
+    if(strcmp(opmock_get_current_call(), "void client_process_read_buffer (Client * client)") != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'void client_process_read_buffer(Client * client)',  but was expecting call to '%s'", opmock_get_current_call());
+        opmock_add_error_message(buffer);
+    }
+    opmock_pop_call();
+
+    if (client_process_read_buffer_struct_inst.calls[0].check_params == 1) {
+        if(client_process_read_buffer_struct_inst.calls[0].match_client) {
+            void * val1 = (void *) &client_process_read_buffer_struct_inst.calls[0].client;
+            void * val2 = (void *) &client;
+            int match_result = client_process_read_buffer_struct_inst.calls[0].match_client(val1, val2, "client", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'client_process_read_buffer', %s",client_process_read_buffer_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+    }
+
+    for(opmock_i = 1; opmock_i < client_process_read_buffer_struct_inst.expectedCalls; opmock_i++) {
+        client_process_read_buffer_struct_inst.calls[opmock_i - 1] = client_process_read_buffer_struct_inst.calls[opmock_i];
+    }
+
+    client_process_read_buffer_struct_inst.expectedCalls--;
+}
+
+void client_process_read_buffer_MockReset()
+{
+    client_process_read_buffer_struct_inst.expectedCalls = 0;
+    client_process_read_buffer_struct_inst.actualCalls = 0;
+    client_process_read_buffer_struct_inst.callback = NULL;
+}
+
+void client_process_read_buffer_MockWithCallback(OPMOCK_client_process_read_buffer_CALLBACK callback)
+{
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    client_process_read_buffer_struct_inst.callback = callback;
+    client_process_read_buffer_struct_inst.expectedCalls = 0;
+    client_process_read_buffer_struct_inst.actualCalls = 0;
+}
+
+void client_process_read_buffer_VerifyMock()
+{
+    if (client_process_read_buffer_struct_inst.expectedCalls != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : Bad number of calls (%d) for 'client_process_read_buffer'",client_process_read_buffer_struct_inst.actualCalls);
+        opmock_add_error_message((char *) buffer);
+    }
+}
+
+void client_process_read_buffer_ExpectAndReturn (Client * client, OPMOCK_MATCHER match_client)
+{
+    if(client_process_read_buffer_struct_inst.callback != NULL)
+    {
+        client_process_read_buffer_MockReset ();
+    }
+
+    if(client_process_read_buffer_struct_inst.expectedCalls >= MAX_FUNC_CALL)
+    {
+        printf("WARNING : aborting client_process_read_buffer_ExpectAndReturn, call stack overload.");
+        return;
+    }
+
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    opmock_add_call((char *)"void client_process_read_buffer (Client * client)");
+    client_process_read_buffer_struct_inst.calls[client_process_read_buffer_struct_inst.expectedCalls].client = (void *)client;
+    client_process_read_buffer_struct_inst.calls[client_process_read_buffer_struct_inst.expectedCalls].match_client = match_client;
+    client_process_read_buffer_struct_inst.calls[client_process_read_buffer_struct_inst.expectedCalls].check_params = 1;
+    client_process_read_buffer_struct_inst.expectedCalls++;
+}
+
+_Bool client_set_username(Client * client, const char * username)
+{
+    _Bool default_res = (_Bool)client_set_username_struct_inst.calls[0].to_return;
+    int opmock_i;
+    client_set_username_struct_inst.actualCalls++;
+
+    if (client_set_username_struct_inst.callback != NULL)
+    {
+        return client_set_username_struct_inst.callback (client, username, client_set_username_struct_inst.actualCalls);
+    }
+    if (client_set_username_struct_inst.expectedCalls == 0)
+    {
+        opmock_add_error_message((char *) "WARNING : unexpected call of 'client_set_username', returning random value.");
+        return default_res;
+    }
+
+    if(strcmp(opmock_get_current_call(), "_Bool client_set_username (Client * client, const char * username)") != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to '_Bool client_set_username(Client * client, const char * username)',  but was expecting call to '%s'", opmock_get_current_call());
+        opmock_add_error_message(buffer);
+    }
+    opmock_pop_call();
+
+    if (client_set_username_struct_inst.calls[0].check_params == 1) {
+        if(client_set_username_struct_inst.calls[0].match_client) {
+            void * val1 = (void *) &client_set_username_struct_inst.calls[0].client;
+            void * val2 = (void *) &client;
+            int match_result = client_set_username_struct_inst.calls[0].match_client(val1, val2, "client", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'client_set_username', %s",client_set_username_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+        if(client_set_username_struct_inst.calls[0].match_username) {
+            void * val1 = (void *) &client_set_username_struct_inst.calls[0].username;
+            void * val2 = (void *) &username;
+            int match_result = client_set_username_struct_inst.calls[0].match_username(val1, val2, "username", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'client_set_username', %s",client_set_username_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+    }
+
+    for(opmock_i = 1; opmock_i < client_set_username_struct_inst.expectedCalls; opmock_i++) {
+        client_set_username_struct_inst.calls[opmock_i - 1] = client_set_username_struct_inst.calls[opmock_i];
+    }
+
+    client_set_username_struct_inst.expectedCalls--;
+    return default_res;
+}
+
+void client_set_username_MockReset()
+{
+    client_set_username_struct_inst.expectedCalls = 0;
+    client_set_username_struct_inst.actualCalls = 0;
+    client_set_username_struct_inst.callback = NULL;
+}
+
+void client_set_username_MockWithCallback(OPMOCK_client_set_username_CALLBACK callback)
+{
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    client_set_username_struct_inst.callback = callback;
+    client_set_username_struct_inst.expectedCalls = 0;
+    client_set_username_struct_inst.actualCalls = 0;
+}
+
+void client_set_username_VerifyMock()
+{
+    if (client_set_username_struct_inst.expectedCalls != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : Bad number of calls (%d) for 'client_set_username'",client_set_username_struct_inst.actualCalls);
+        opmock_add_error_message((char *) buffer);
+    }
+}
+
+void client_set_username_ExpectAndReturn (Client * client, const char * username, _Bool to_return, OPMOCK_MATCHER match_client, OPMOCK_MATCHER match_username)
+{
+    if(client_set_username_struct_inst.callback != NULL)
+    {
+        client_set_username_MockReset ();
+    }
+
+    if(client_set_username_struct_inst.expectedCalls >= MAX_FUNC_CALL)
+    {
+        printf("WARNING : aborting client_set_username_ExpectAndReturn, call stack overload.");
+        return;
+    }
+
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    opmock_add_call((char *)"_Bool client_set_username (Client * client, const char * username)");
+    client_set_username_struct_inst.calls[client_set_username_struct_inst.expectedCalls].client = (void *)client;
+    client_set_username_struct_inst.calls[client_set_username_struct_inst.expectedCalls].username = (void *)username;
+    client_set_username_struct_inst.calls[client_set_username_struct_inst.expectedCalls].match_client = match_client;
+    client_set_username_struct_inst.calls[client_set_username_struct_inst.expectedCalls].match_username = match_username;
+    client_set_username_struct_inst.calls[client_set_username_struct_inst.expectedCalls].to_return = (_Bool) to_return;
+    client_set_username_struct_inst.calls[client_set_username_struct_inst.expectedCalls].check_params = 1;
+    client_set_username_struct_inst.expectedCalls++;
+}
+
+_Bool client_set_nickname(Client * client, const char * nickname)
+{
+    _Bool default_res = (_Bool)client_set_nickname_struct_inst.calls[0].to_return;
+    int opmock_i;
+    client_set_nickname_struct_inst.actualCalls++;
+
+    if (client_set_nickname_struct_inst.callback != NULL)
+    {
+        return client_set_nickname_struct_inst.callback (client, nickname, client_set_nickname_struct_inst.actualCalls);
+    }
+    if (client_set_nickname_struct_inst.expectedCalls == 0)
+    {
+        opmock_add_error_message((char *) "WARNING : unexpected call of 'client_set_nickname', returning random value.");
+        return default_res;
+    }
+
+    if(strcmp(opmock_get_current_call(), "_Bool client_set_nickname (Client * client, const char * nickname)") != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to '_Bool client_set_nickname(Client * client, const char * nickname)',  but was expecting call to '%s'", opmock_get_current_call());
+        opmock_add_error_message(buffer);
+    }
+    opmock_pop_call();
+
+    if (client_set_nickname_struct_inst.calls[0].check_params == 1) {
+        if(client_set_nickname_struct_inst.calls[0].match_client) {
+            void * val1 = (void *) &client_set_nickname_struct_inst.calls[0].client;
+            void * val2 = (void *) &client;
+            int match_result = client_set_nickname_struct_inst.calls[0].match_client(val1, val2, "client", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'client_set_nickname', %s",client_set_nickname_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+        if(client_set_nickname_struct_inst.calls[0].match_nickname) {
+            void * val1 = (void *) &client_set_nickname_struct_inst.calls[0].nickname;
+            void * val2 = (void *) &nickname;
+            int match_result = client_set_nickname_struct_inst.calls[0].match_nickname(val1, val2, "nickname", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'client_set_nickname', %s",client_set_nickname_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+    }
+
+    for(opmock_i = 1; opmock_i < client_set_nickname_struct_inst.expectedCalls; opmock_i++) {
+        client_set_nickname_struct_inst.calls[opmock_i - 1] = client_set_nickname_struct_inst.calls[opmock_i];
+    }
+
+    client_set_nickname_struct_inst.expectedCalls--;
+    return default_res;
+}
+
+void client_set_nickname_MockReset()
+{
+    client_set_nickname_struct_inst.expectedCalls = 0;
+    client_set_nickname_struct_inst.actualCalls = 0;
+    client_set_nickname_struct_inst.callback = NULL;
+}
+
+void client_set_nickname_MockWithCallback(OPMOCK_client_set_nickname_CALLBACK callback)
+{
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    client_set_nickname_struct_inst.callback = callback;
+    client_set_nickname_struct_inst.expectedCalls = 0;
+    client_set_nickname_struct_inst.actualCalls = 0;
+}
+
+void client_set_nickname_VerifyMock()
+{
+    if (client_set_nickname_struct_inst.expectedCalls != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : Bad number of calls (%d) for 'client_set_nickname'",client_set_nickname_struct_inst.actualCalls);
+        opmock_add_error_message((char *) buffer);
+    }
+}
+
+void client_set_nickname_ExpectAndReturn (Client * client, const char * nickname, _Bool to_return, OPMOCK_MATCHER match_client, OPMOCK_MATCHER match_nickname)
+{
+    if(client_set_nickname_struct_inst.callback != NULL)
+    {
+        client_set_nickname_MockReset ();
+    }
+
+    if(client_set_nickname_struct_inst.expectedCalls >= MAX_FUNC_CALL)
+    {
+        printf("WARNING : aborting client_set_nickname_ExpectAndReturn, call stack overload.");
+        return;
+    }
+
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    opmock_add_call((char *)"_Bool client_set_nickname (Client * client, const char * nickname)");
+    client_set_nickname_struct_inst.calls[client_set_nickname_struct_inst.expectedCalls].client = (void *)client;
+    client_set_nickname_struct_inst.calls[client_set_nickname_struct_inst.expectedCalls].nickname = (void *)nickname;
+    client_set_nickname_struct_inst.calls[client_set_nickname_struct_inst.expectedCalls].match_client = match_client;
+    client_set_nickname_struct_inst.calls[client_set_nickname_struct_inst.expectedCalls].match_nickname = match_nickname;
+    client_set_nickname_struct_inst.calls[client_set_nickname_struct_inst.expectedCalls].to_return = (_Bool) to_return;
+    client_set_nickname_struct_inst.calls[client_set_nickname_struct_inst.expectedCalls].check_params = 1;
+    client_set_nickname_struct_inst.expectedCalls++;
+}
+
+_Bool client_set_realname(Client * client, const char * realname)
+{
+    _Bool default_res = (_Bool)client_set_realname_struct_inst.calls[0].to_return;
+    int opmock_i;
+    client_set_realname_struct_inst.actualCalls++;
+
+    if (client_set_realname_struct_inst.callback != NULL)
+    {
+        return client_set_realname_struct_inst.callback (client, realname, client_set_realname_struct_inst.actualCalls);
+    }
+    if (client_set_realname_struct_inst.expectedCalls == 0)
+    {
+        opmock_add_error_message((char *) "WARNING : unexpected call of 'client_set_realname', returning random value.");
+        return default_res;
+    }
+
+    if(strcmp(opmock_get_current_call(), "_Bool client_set_realname (Client * client, const char * realname)") != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to '_Bool client_set_realname(Client * client, const char * realname)',  but was expecting call to '%s'", opmock_get_current_call());
+        opmock_add_error_message(buffer);
+    }
+    opmock_pop_call();
+
+    if (client_set_realname_struct_inst.calls[0].check_params == 1) {
+        if(client_set_realname_struct_inst.calls[0].match_client) {
+            void * val1 = (void *) &client_set_realname_struct_inst.calls[0].client;
+            void * val2 = (void *) &client;
+            int match_result = client_set_realname_struct_inst.calls[0].match_client(val1, val2, "client", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'client_set_realname', %s",client_set_realname_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+        if(client_set_realname_struct_inst.calls[0].match_realname) {
+            void * val1 = (void *) &client_set_realname_struct_inst.calls[0].realname;
+            void * val2 = (void *) &realname;
+            int match_result = client_set_realname_struct_inst.calls[0].match_realname(val1, val2, "realname", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'client_set_realname', %s",client_set_realname_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+    }
+
+    for(opmock_i = 1; opmock_i < client_set_realname_struct_inst.expectedCalls; opmock_i++) {
+        client_set_realname_struct_inst.calls[opmock_i - 1] = client_set_realname_struct_inst.calls[opmock_i];
+    }
+
+    client_set_realname_struct_inst.expectedCalls--;
+    return default_res;
+}
+
+void client_set_realname_MockReset()
+{
+    client_set_realname_struct_inst.expectedCalls = 0;
+    client_set_realname_struct_inst.actualCalls = 0;
+    client_set_realname_struct_inst.callback = NULL;
+}
+
+void client_set_realname_MockWithCallback(OPMOCK_client_set_realname_CALLBACK callback)
+{
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    client_set_realname_struct_inst.callback = callback;
+    client_set_realname_struct_inst.expectedCalls = 0;
+    client_set_realname_struct_inst.actualCalls = 0;
+}
+
+void client_set_realname_VerifyMock()
+{
+    if (client_set_realname_struct_inst.expectedCalls != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : Bad number of calls (%d) for 'client_set_realname'",client_set_realname_struct_inst.actualCalls);
+        opmock_add_error_message((char *) buffer);
+    }
+}
+
+void client_set_realname_ExpectAndReturn (Client * client, const char * realname, _Bool to_return, OPMOCK_MATCHER match_client, OPMOCK_MATCHER match_realname)
+{
+    if(client_set_realname_struct_inst.callback != NULL)
+    {
+        client_set_realname_MockReset ();
+    }
+
+    if(client_set_realname_struct_inst.expectedCalls >= MAX_FUNC_CALL)
+    {
+        printf("WARNING : aborting client_set_realname_ExpectAndReturn, call stack overload.");
+        return;
+    }
+
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    opmock_add_call((char *)"_Bool client_set_realname (Client * client, const char * realname)");
+    client_set_realname_struct_inst.calls[client_set_realname_struct_inst.expectedCalls].client = (void *)client;
+    client_set_realname_struct_inst.calls[client_set_realname_struct_inst.expectedCalls].realname = (void *)realname;
+    client_set_realname_struct_inst.calls[client_set_realname_struct_inst.expectedCalls].match_client = match_client;
+    client_set_realname_struct_inst.calls[client_set_realname_struct_inst.expectedCalls].match_realname = match_realname;
+    client_set_realname_struct_inst.calls[client_set_realname_struct_inst.expectedCalls].to_return = (_Bool) to_return;
+    client_set_realname_struct_inst.calls[client_set_realname_struct_inst.expectedCalls].check_params = 1;
+    client_set_realname_struct_inst.expectedCalls++;
+}
 

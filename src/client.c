@@ -85,8 +85,6 @@ client_on_addr_callback(uv_getaddrinfo_t *req, int status, struct addrinfo *res)
 
     if(res == NULL)
     {
-        network_ipstring_from_address(&dnsRequest->Client->Address,
-                                      dnsRequest->Host, HOSTLEN);
         call_dns_callback(dnsRequest, false);
     }
     else
@@ -154,27 +152,19 @@ client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
     Free(buf->base);
 }
 
-static bool
-client_accept_socket(Client *client, uv_stream_t *handle)
-{
-    assert(client != NULL);
-
-    client->handle = Malloc(sizeof(uv_tcp_t));
-    uv_tcp_init(serverstate_get_event_loop(), client->handle);
-    if(uv_accept(handle, (uv_stream_t *)client->handle) != 0)
-    {
-        return false;
-    }
-
-    client->handle->data = client;
-
-    return true;
-}
-
 static void
 client_dns_complete_callback(ClientDnsRequest *request, bool match)
 {
     Client *client = request->Client;
+
+    if(match)
+    {
+    }
+    else
+    {
+        network_ipstring_from_address(&request->Client->Address, request->Host,
+                                      HOSTLEN);
+    }
 
     client_send(server_get_this_server(), client, "NOTICE * :%s",
                 DnsNotices[match ? Found : NotFound]);
@@ -184,6 +174,8 @@ client_dns_complete_callback(ClientDnsRequest *request, bool match)
     {
         // TODO: Exit client
     }
+
+    Free(request);
 }
 
 static void
@@ -215,32 +207,6 @@ client_internal_send(Client *client, char *buffer)
     req = Malloc(sizeof(uv_write_t));
 
     uv_write(req, (uv_stream_t *)client->handle, &buf, 1, client_write_callback);
-}
-
-static void
-client_lookup_dns(Client *client)
-{
-    ClientDnsRequest *dnsRequest;
-    uv_getnameinfo_t *req;
-
-    if(client == NULL)
-    {
-        return;
-    }
-
-    dnsRequest = Malloc(sizeof(ClientDnsRequest));
-    dnsRequest->Client = client;
-    dnsRequest->Callback = client_dns_complete_callback;
-
-    req = Malloc(sizeof(uv_getnameinfo_t));
-    req->data = dnsRequest;
-
-    if(uv_getnameinfo(serverstate_get_event_loop(), req, client_on_name_callback,
-                      (struct sockaddr *)&client->Address, 0) != 0)
-    {
-        Free(req);
-        call_dns_callback(dnsRequest, false);
-    }
 }
 
 void
@@ -280,35 +246,33 @@ client_free(Client *client)
     Free(client);
 }
 
-bool
-client_accept(Client *client, uv_stream_t *handle)
+void
+client_lookup_dns(Client *client)
 {
-    if(client == NULL || handle == NULL)
-    {
-        return false;
-    }
+    ClientDnsRequest *dnsRequest;
+    uv_getnameinfo_t *req;
 
-    if(!client_accept_socket(client, handle))
+    if(client == NULL)
     {
-        return false;
+        return;
     }
-
-    client->Address.AddressLength = sizeof(client->Address);
-    if(uv_tcp_getsockname((uv_tcp_t *)client->handle,
-                             (struct sockaddr *)&client->Address,
-                             (int *)&client->Address.AddressLength) != 0)
-    {
-        return false;
-    }
-
-    client->Address.AddressFamily = client->Address.Address.Addr4.sin_family;
 
     client_send(server_get_this_server(), client, "NOTICE * :%s",
                 DnsNotices[LookingUp]);
-    
-    client_lookup_dns(client);
 
-    return true;
+    dnsRequest = Malloc(sizeof(ClientDnsRequest));
+    dnsRequest->Client = client;
+    dnsRequest->Callback = client_dns_complete_callback;
+
+    req = Malloc(sizeof(uv_getnameinfo_t));
+    req->data = dnsRequest;
+
+    if(uv_getnameinfo(serverstate_get_event_loop(), req, client_on_name_callback,
+                      (struct sockaddr *)&client->Address, 0) != 0)
+    {
+        Free(req);
+        call_dns_callback(dnsRequest, false);
+    }
 }
 
 __attribute__((__format__ (__printf__, 3, 0)))
