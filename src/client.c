@@ -38,6 +38,7 @@
 #include "irc.h"
 #include "server.h"
 #include "parser.h"
+#include "connection.h"
 
 static Vector *clientList;
 static Hash *clientHash;
@@ -178,37 +179,6 @@ client_dns_complete_callback(ClientDnsRequest *request, bool match)
     Free(request);
 }
 
-static void
-client_write_callback(uv_write_t *req, int status)
-{
-    Free(req);
-}
-
-static void
-client_internal_send(Client *client, char *buffer)
-{
-    uv_write_t *req;
-    uv_buf_t buf;
-    size_t len;
-
-    len = strlen(buffer);
-    if(len > IRC_MAXLEN - 2)
-    {
-        len = IRC_MAXLEN - 2;
-    }
-
-    buffer[len++] = '\r';
-    buffer[len++] = '\n';
-    buffer[len] = '\0';
-
-    buf.base = buffer;
-    buf.len = len;
-
-    req = Malloc(sizeof(uv_write_t));
-
-    uv_write(req, (uv_stream_t *)client->handle, &buf, 1, client_write_callback);
-}
-
 void
 client_init()
 {
@@ -296,7 +266,7 @@ client_send(Client *source, Client *client, const char *format, ...)
         snprintf(actualBuffer, sizeof(actualBuffer), "%s", buffer);
     }
 
-    client_internal_send(client, actualBuffer);
+    connection_send(client, actualBuffer);
 
     va_end(args);
 }

@@ -28,7 +28,9 @@
 #define oftc_ircd_connection_h
 
 #include <uv.h>
+#include "client.h"
 
 void connection_accept(uv_stream_t *handle);
+void connection_send(Client *client, char *buffer);
 
 #endif

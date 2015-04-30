@@ -31,6 +31,13 @@
 #include "client.h"
 #include "serverstate.h"
 #include "memory.h"
+#include "irc.h"
+
+static void
+connection_write_callback(uv_write_t *req, int status)
+{
+    Free(req);
+}
 
 void
 connection_accept(uv_stream_t *handle)
@@ -66,3 +73,30 @@ connection_accept(uv_stream_t *handle)
 
     client_lookup_dns(newClient);
 }
+
+void
+connection_send(Client *client, char *buffer)
+{
+    uv_write_t *req;
+    uv_buf_t buf;
+    size_t len;
+
+    len = strlen(buffer);
+    if(len > IRC_MAXLEN - 2)
+    {
+        len = IRC_MAXLEN - 2;
+    }
+
+    buffer[len++] = '\r';
+    buffer[len++] = '\n';
+    buffer[len] = '\0';
+
+    buf.base = buffer;
+    buf.len = len;
+
+    req = Malloc(sizeof(uv_write_t));
+
+    uv_write(req, (uv_stream_t *)client->handle, &buf, 1,
+             connection_write_callback);
+}
+
