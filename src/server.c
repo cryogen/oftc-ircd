@@ -36,7 +36,7 @@ static Client *ThisServer = NULL;
 static void
 server_set_name(void *element, json_object *object)
 {
-    strncpy(ThisServer->Name, json_object_get_string(object), HOSTLEN - 1);
+    strncpy(ThisServer->Name, json_object_get_string(object), NICKLEN);
 }
 
 static void
