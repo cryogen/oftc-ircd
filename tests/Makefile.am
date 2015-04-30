@@ -24,6 +24,7 @@ client_tests_SOURCES =  client_tests.c          \
                         parser_stub.c           \
                         command_stub.c          \
                         network_stub.c          \
+                        connection_stub.c       \
                         opmock.c                \
                         ../src/serverstate.c    \
                         ../src/lstring.c        \

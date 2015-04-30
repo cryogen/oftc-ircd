@@ -34,6 +34,7 @@
 #include "parser_stub.h"
 #include "command_stub.h"
 #include "network_stub.h"
+#include "connection_stub.h"
 
 #include "client.h"
 #include "listener.h"
@@ -44,7 +45,6 @@
 static Client TestClient;
 static Client Server;
 static ClientDnsRequest DnsRequest;
-static char *buffer;
 static ParserResult Result;
 static Command ResultCommand;
 static uv_getnameinfo_t NameRequest;
@@ -56,8 +56,7 @@ setup_send()
 {
     server_get_this_server_ExpectAndReturn(&Server);
 
-    Malloc_ExpectAndReturn(0, NULL, NULL);
-    uv_write_ExpectAndReturn(NULL, NULL, 0, 0, NULL, 0, NULL, NULL, NULL, NULL, NULL);
+    connection_send_ExpectAndReturn(NULL, NULL, NULL, NULL);
 }
 
 static void
@@ -245,21 +244,6 @@ uv_read_start_read_closed_callback(uv_stream_t *stream,
                                    int calls)
 {
     readCallback(stream, UV_EOF, &UvBuf);
-
-    return 0;
-}
-
-static int
-write_callback(uv_write_t *w,
-               uv_stream_t *stream,
-               const uv_buf_t *buf,
-               unsigned int numBuf,
-               uv_write_cb callback,
-               int calls)
-{
-    buffer = strdup(buf[0].base);
-
-    callback(w, 0);
 
     return 0;
 }
@@ -541,13 +525,11 @@ client_on_read_when_connection_closed_closes_connection()
 static void
 client_send_when_no_source_sends_message()
 {
-    uv_write_MockWithCallback(write_callback);
+    connection_send_ExpectAndReturn(&TestClient, "Test", cmp_ptr, cmp_cstr);
 
     client_send(NULL, &TestClient, "%s", "Test");
 
-    OP_ASSERT_EQUAL_CSTRING("Test\r\n", buffer);
-
-    free(buffer);
+    OP_VERIFY();
 }
 
 static void
@@ -557,63 +539,13 @@ client_send_when_source_sends_message_with_source()
 
     strcpy(testServer.Name, "Test.Server");
 
-    uv_write_MockWithCallback(write_callback);
+    connection_send_ExpectAndReturn(&TestClient, ":Test.Server Test",
+                                    cmp_ptr, cmp_cstr);
 
     client_send(&testServer, &TestClient, "%s", "Test");
 
-    OP_ASSERT_EQUAL_CSTRING(":Test.Server Test\r\n", buffer);
-
-    free(buffer);
+    OP_VERIFY();
 }
-
-static void
-client_send_when_too_long_is_truncated()
-{
-    uv_write_MockWithCallback(write_callback);
-
-    client_send(NULL, &TestClient, "%s",
-"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-"123456789012bunnies");
-
-    OP_ASSERT_EQUAL_CSTRING(
-"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-"1234567890\r\n", buffer);
-
-    free(buffer);
-}
-
-static void
-client_send_when_511_long_is_truncated()
-{
-    uv_write_MockWithCallback(write_callback);
-
-    client_send(NULL, &TestClient, "%s",
-    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-    "12345678901");
-
-    OP_ASSERT_EQUAL_CSTRING(
-    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-    "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-    "1234567890\r\n", buffer);
-    
-    free(buffer);
-}
-
 
 static void
 client_process_read_buffer_when_null_result_continues()
@@ -753,10 +685,6 @@ int main()
                          "client_send_when_no_source_sends_message");
     opmock_register_test(client_send_when_source_sends_message_with_source,
                          "client_send_when_source_sends_message_with_source");
-    opmock_register_test(client_send_when_too_long_is_truncated,
-                         "client_send_when_too_long_is_truncated");
-    opmock_register_test(client_send_when_511_long_is_truncated,
-                         "client_send_when_511_long_is_truncated");
     opmock_register_test(client_process_read_buffer_when_null_result_continues,
                          "client_process_read_buffer_when_null_result_continues");
     opmock_register_test(client_process_read_buffer_when_command_not_found_frees_result,
