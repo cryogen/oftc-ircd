@@ -21,11 +21,10 @@ CFLAGS="-Werror $CFLAGS"
 
 AX_ARG_ENABLE_DEBUGGING
 AX_ARG_ENABLE_PROFILING
-AX_CHECK_OPENSSL
 
 C_FLAGS_CHECK([-Weverything])
 
-AC_CONFIG_SUBDIRS([libuv json-c])
+AC_CONFIG_SUBDIRS([libuv json-c libtls])
 AC_CONFIG_FILES([ Makefile          \
                   src/Makefile      \
                   modules/Makefile  \

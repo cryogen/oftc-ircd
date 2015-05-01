@@ -26,12 +26,17 @@
 
 #include <uv.h>
 #include <string.h>
+#include <tls.h>
+#include <stdio.h>
 
 #include "connection.h"
 #include "client.h"
 #include "serverstate.h"
 #include "memory.h"
 #include "irc.h"
+#include "listener.h"
+
+static ConnectionState CurrentConnectionState = { 0 };
 
 static void
 connection_write_callback(uv_write_t *req, int status)
@@ -40,11 +45,28 @@ connection_write_callback(uv_write_t *req, int status)
 }
 
 void
+connection_init()
+{
+    tls_init();
+
+    CurrentConnectionState.TlsConfiguration = tls_config_new();
+    CurrentConnectionState.ServerContext = tls_server();
+    CurrentConnectionState.ClientContext = tls_client();
+
+    tls_configure(CurrentConnectionState.ServerContext,  
+                  CurrentConnectionState.TlsConfiguration);
+    tls_configure(CurrentConnectionState.ClientContext,  
+                  CurrentConnectionState.TlsConfiguration);
+}
+
+void
 connection_accept(uv_stream_t *handle)
 {
     Client *newClient;
     uv_tcp_t *newHandle;
     NetworkAddress address = { 0 };
+    Listener *listener = handle->data;
+    struct tls *context = NULL;
 
     if(handle == NULL)
     {
@@ -70,6 +92,23 @@ connection_accept(uv_stream_t *handle)
     newClient->handle = newHandle;
 
     memcpy(&newClient->Address, &address, sizeof(NetworkAddress));
+
+    if(listener->IsTls)
+    {
+        uv_os_fd_t fd;
+        int ret = TLS_READ_AGAIN;
+
+        uv_fileno((uv_handle_t *)newHandle, &fd);
+
+        while(ret == TLS_READ_AGAIN || ret == TLS_WRITE_AGAIN)
+        {
+            ret = tls_accept_socket(CurrentConnectionState.ServerContext, 
+                                    &context, fd);
+
+            printf("%d\n", ret);
+            printf("%s\n", tls_error(CurrentConnectionState.ServerContext));
+        }
+    }
 
     client_lookup_dns(newClient);
 }

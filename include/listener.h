@@ -42,6 +42,7 @@ struct _Listener
     const char *Host;
     uint16_t Port;
     NetworkAddress Address;
+    bool IsTls;
 
     // Private fields
     uv_tcp_t handle;

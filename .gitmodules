@@ -5,3 +5,6 @@
 [submodule "json-c"]
 	path = json-c
 	url = https://github.com/cryogen/json-c.git
+[submodule "libtls"]
+	path = libtls
+	url = https://github.com/libressl-portable/portable.git

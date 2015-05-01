@@ -28,8 +28,19 @@
 #define oftc_ircd_connection_h
 
 #include <uv.h>
+#include <tls.h>
 #include "client.h"
 
+typedef struct _ConnectionState ConnectionState;
+
+struct _ConnectionState
+{
+    struct tls *ServerContext;
+    struct tls *ClientContext;
+    struct tls_config *TlsConfiguration;
+};
+
+void connection_init();
 void connection_accept(uv_stream_t *handle);
 void connection_send(Client *client, char *buffer);
 

@@ -38,6 +38,7 @@
 #include "module.h"
 #include "server.h"
 #include "command.h"
+#include "connection.h"
 
 static void
 process_commandline(char *const *args, int argCount)
@@ -75,6 +76,7 @@ main(int argc, char *argv[])
     module_init();
     server_init();
     command_init();
+    connection_init();
     
     process_commandline(argv, argc);
 

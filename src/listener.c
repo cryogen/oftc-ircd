@@ -58,6 +58,12 @@ listener_set_port(Listener *listener, json_object *obj)
     listener->Port = (uint16_t)json_object_get_int(obj);
 }
 
+static void
+listener_set_tls(Listener *listener, json_object *obj)
+{
+    listener->IsTls = json_object_get_boolean(obj);
+}
+
 static Listener *
 listener_new_listener()
 {
@@ -72,6 +78,7 @@ listener_add(Listener *listener)
         Listener *v4Listener = listener_new_listener();
         v4Listener->Port = listener->Port;
         v4Listener->Host = StrDup("0.0.0.0");
+        v4Listener->IsTls = listener->IsTls;
 
         listener_add(v4Listener);
 
@@ -109,6 +116,8 @@ listener_init()
                           (ConfigFieldHandler)listener_set_host);
     config_register_field(section, "port", json_type_int,
                           (ConfigFieldHandler)listener_set_port);
+    config_register_field(section, "tls", json_type_boolean,
+                          (ConfigFieldHandler)listener_set_tls);
 
     listeners = vector_new(0, sizeof(Listener));
 }
