@@ -84,6 +84,7 @@ connection_init_tls()
                             CurrentConnectionState.PrivateKey);
     tls_config_set_cert_file(CurrentConnectionState.TlsConfiguration,
                              CurrentConnectionState.CertificateFile);
+
     tls_configure(CurrentConnectionState.ServerContext,  
                   CurrentConnectionState.TlsConfiguration);
     tls_configure(CurrentConnectionState.ClientContext,  
@@ -120,7 +121,9 @@ connection_accept(uv_stream_t *handle)
         return;
     }
 
+
     newClient = client_new();
+    newHandle->data = newClient;
     newClient->handle = newHandle;
 
     memcpy(&newClient->Address, &address, sizeof(NetworkAddress));
