@@ -83,6 +83,7 @@ main(int argc, char *argv[])
     config_load();
     listener_start_listeners();
     module_load_all_modules();
+    connection_init_tls();
 
     uv_run(serverstate_get_event_loop(), UV_RUN_DEFAULT);
     

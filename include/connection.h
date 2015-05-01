@@ -38,9 +38,12 @@ struct _ConnectionState
     struct tls *ServerContext;
     struct tls *ClientContext;
     struct tls_config *TlsConfiguration;
+    const char *PrivateKey;
+    const char *CertificateFile;
 };
 
-void connection_init();
+void connection_init(void);
+void connection_init_tls(void);
 void connection_accept(uv_stream_t *handle);
 void connection_send(Client *client, char *buffer);
 

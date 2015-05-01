@@ -28,6 +28,7 @@
 #include <string.h>
 #include <tls.h>
 #include <stdio.h>
+#include <json-c/json.h>
 
 #include "connection.h"
 #include "client.h"
@@ -35,6 +36,7 @@
 #include "memory.h"
 #include "irc.h"
 #include "listener.h"
+#include "config.h"
 
 static ConnectionState CurrentConnectionState = { 0 };
 
@@ -44,8 +46,33 @@ connection_write_callback(uv_write_t *req, int status)
     Free(req);
 }
 
+static void
+connection_set_private_key(void *element, json_object *obj)
+{
+    CurrentConnectionState.PrivateKey = json_object_get_string(obj);
+}
+
+static void
+connection_set_certificate_file(void *element, json_object *obj)
+{
+    CurrentConnectionState.CertificateFile = json_object_get_string(obj);
+}
+
 void
 connection_init()
+{
+    ConfigSection *connectionSection;
+
+    connectionSection = config_register_section("connection", false);
+
+    config_register_field(connectionSection, "privatekey", json_type_string,
+                          connection_set_private_key);
+    config_register_field(connectionSection, "certificatefile", json_type_string,
+                          connection_set_certificate_file);
+}
+
+void
+connection_init_tls()
 {
     tls_init();
 
@@ -53,11 +80,16 @@ connection_init()
     CurrentConnectionState.ServerContext = tls_server();
     CurrentConnectionState.ClientContext = tls_client();
 
+    tls_config_set_key_file(CurrentConnectionState.TlsConfiguration,
+                            CurrentConnectionState.PrivateKey);
+    tls_config_set_cert_file(CurrentConnectionState.TlsConfiguration,
+                             CurrentConnectionState.CertificateFile);
     tls_configure(CurrentConnectionState.ServerContext,  
                   CurrentConnectionState.TlsConfiguration);
     tls_configure(CurrentConnectionState.ClientContext,  
                   CurrentConnectionState.TlsConfiguration);
 }
+
 
 void
 connection_accept(uv_stream_t *handle)
@@ -105,8 +137,10 @@ connection_accept(uv_stream_t *handle)
             ret = tls_accept_socket(CurrentConnectionState.ServerContext, 
                                     &context, fd);
 
-            printf("%d\n", ret);
-            printf("%s\n", tls_error(CurrentConnectionState.ServerContext));
+            if(ret == -1)
+            {
+                printf("%s\n", tls_error(CurrentConnectionState.ServerContext));
+            }
         }
     }
 
