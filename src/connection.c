@@ -29,6 +29,7 @@
 #include <tls.h>
 #include <stdio.h>
 #include <json-c/json.h>
+#include <assert.h>
 
 #include "connection.h"
 #include "client.h"
@@ -160,6 +161,95 @@ connection_accept(uv_stream_t *handle)
     }
 
     client_lookup_dns(newClient);
+}
+
+static void
+connection_allocate_buffer_callback(uv_handle_t *handle,
+                                    size_t suggestedSize,
+                                    uv_buf_t *buf)
+{
+    buf->base = Malloc(suggestedSize);
+    buf->len = suggestedSize;
+}
+
+static void
+connection_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
+{
+    Client *client = stream->data;
+
+    assert(client != NULL);
+
+    if(nRead == UV_EOF)
+    {
+        // TODO: exit client due to connection closed, probably get consolidated
+        // with below
+        uv_close((uv_handle_t *)client->handle, NULL);
+        return;
+    }
+    else if(nRead < 0)
+    {
+        // TODO: exit client due to read error
+        uv_close((uv_handle_t *)client->handle, NULL);
+        return;
+    }
+
+    buffer_add(client->ReadBuffer, buf->base, (size_t)nRead);
+
+    client_process_read_buffer(client);
+
+    Free(buf->base);
+}
+
+static void
+connection_poll_callback(uv_poll_t *handle, int status, int events)
+{
+    Client *client = handle->data;
+    uv_buf_t buffer = { 0 };
+    size_t len;
+
+    if(status != 0)
+    {
+        // TODO: Exit client
+        return;
+    }
+
+    connection_allocate_buffer_callback((uv_handle_t *)handle, 65535, &buffer);
+    tls_read(client->TlsContext, buffer.base, buffer.len, &len);
+    connection_on_read_callback((uv_stream_t *)handle, len, &buffer);
+}
+
+void
+connection_start_read(Client *client)
+{
+    if(client == NULL)
+    {
+        return;
+    }
+
+    if(client->TlsContext != NULL)
+    {
+        uv_os_fd_t fd;
+        uv_poll_t *handle = Malloc(sizeof(uv_poll_t));
+
+        handle->data = client;
+
+        uv_fileno((uv_handle_t *)client->handle, &fd);
+
+        uv_poll_init(serverstate_get_event_loop(), handle, fd);
+        if(uv_poll_start(handle, UV_READABLE, connection_poll_callback) < 0)
+        {
+            // TODO: Exit client
+        }
+    }
+    else
+    {
+        if(uv_read_start((uv_stream_t *)client->handle,
+                         connection_allocate_buffer_callback,
+                         connection_on_read_callback) < 0)
+        {
+            // TODO: Exit client
+        }
+    }
 }
 
 void

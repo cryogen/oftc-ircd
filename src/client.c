@@ -121,43 +121,6 @@ client_on_name_callback(uv_getnameinfo_t* req, int status, const char *hostname,
 }
 
 static void
-client_allocate_buffer_callback(uv_handle_t *handle,
-                                size_t suggestedSize,
-                                uv_buf_t *buf)
-{
-    buf->base = Malloc(suggestedSize);
-    buf->len = suggestedSize;
-}
-
-static void
-client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
-{
-    Client *client = stream->data;
-
-    assert(client != NULL);
-
-    if(nRead == UV_EOF)
-    {
-        // TODO: exit client due to connection closed, probably get consolidated
-        // with below
-        uv_close((uv_handle_t *)client->handle, NULL);
-        return;
-    }
-    else if(nRead < 0)
-    {
-        // TODO: exit client due to read error
-        uv_close((uv_handle_t *)client->handle, NULL);
-        return;
-    }
-
-    buffer_add(client->ReadBuffer, buf->base, (size_t)nRead);
-
-    client_process_read_buffer(client);
-
-    Free(buf->base);
-}
-
-static void
 client_dns_complete_callback(ClientDnsRequest *request, bool match)
 {
     Client *client = request->Client;
@@ -174,11 +137,7 @@ client_dns_complete_callback(ClientDnsRequest *request, bool match)
     client_send(server_get_this_server(), client, "NOTICE * :%s",
                 DnsNotices[match ? Found : NotFound]);
 
-    if(uv_read_start((uv_stream_t *)client->handle, client_allocate_buffer_callback,
-                     client_on_read_callback) < 0)
-    {
-        // TODO: Exit client
-    }
+    connection_start_read(client);
 
     Free(request);
 }

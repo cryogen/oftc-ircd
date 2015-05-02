@@ -46,5 +46,6 @@ void connection_init(void);
 void connection_init_tls(void);
 void connection_accept(uv_stream_t *handle);
 void connection_send(Client *client, char *buffer);
+void connection_start_read(Client *client);
 
 #endif

@@ -344,7 +344,7 @@ client_lookup_dns_when_getnameinfo_fails_sets_ip_as_host()
 
     setup_send();
 
-    uv_read_start_ExpectAndReturn(NULL, NULL, NULL, 0, NULL, NULL, NULL);
+    connection_start_read_ExpectAndReturn(NULL, NULL);
     Free_ExpectAndReturn(NULL, NULL);
 
     client_lookup_dns(&TestClient);
@@ -377,7 +377,7 @@ client_lookup_dns_when_namecallback_returns_bad_status_frees_request()
 
     setup_send();
 
-    uv_read_start_ExpectAndReturn(NULL, NULL, NULL, -1, NULL, NULL, NULL);
+    connection_start_read_ExpectAndReturn(NULL, NULL);
     Free_ExpectAndReturn(NULL, NULL);
     Free_ExpectAndReturn(&NameRequest, cmp_ptr);
 
@@ -419,7 +419,7 @@ client_lookup_dns_when_addrcallback_returns_bad_status_frees_request()
 
     setup_send();
 
-    uv_read_start_ExpectAndReturn(NULL, NULL, NULL, 0, NULL, NULL, NULL);
+    connection_start_read_ExpectAndReturn(NULL, NULL);
     Free_ExpectAndReturn(NULL, NULL);
     Free_ExpectAndReturn(&AddressRequest, cmp_ptr);
     Free_ExpectAndReturn(&NameRequest, cmp_ptr);
@@ -446,7 +446,7 @@ client_lookup_dns_when_addrcallback_and_no_host_match_sets_ip_as_host()
 
     setup_send();
 
-    uv_read_start_ExpectAndReturn(NULL, NULL, NULL, 0, NULL, NULL, NULL);
+    connection_start_read_ExpectAndReturn(NULL, NULL);
     Free_ExpectAndReturn(NULL, NULL);
 
     Free_ExpectAndReturn(&AddressRequest, cmp_ptr);
@@ -471,7 +471,7 @@ client_lookup_dns_when_addrcallback_and_host_match_sets_host()
 
     setup_send();
 
-    uv_read_start_ExpectAndReturn(NULL, NULL, NULL, 0, NULL, NULL, NULL);
+    connection_start_read_ExpectAndReturn(NULL, NULL);
     Free_ExpectAndReturn(NULL, NULL);
 
     Free_ExpectAndReturn(&AddressRequest, cmp_ptr);

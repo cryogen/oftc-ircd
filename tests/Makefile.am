@@ -109,6 +109,7 @@ connection_tests_SOURCES =  connection_tests.c  \
                             memory_stub.c       \
                             client_stub.c       \
                             uv_stub.c           \
+                            buffer_stub.c       \
                             serverstate_stub.c  \
                             network_stub.c      \
                             config_stub.c       \
