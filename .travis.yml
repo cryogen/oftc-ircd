@@ -5,6 +5,7 @@ compiler:
 before_script:
   - cd json-c && ./autogen.sh && cd ..
   - cd libuv && ./autogen.sh && cd ..
+  - cd libtls && ./autogen.sh && cd ..
   - autoreconf -i -f 
 
 script:
