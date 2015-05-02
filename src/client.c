@@ -140,10 +140,14 @@ client_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *buf)
     {
         // TODO: exit client due to connection closed, probably get consolidated
         // with below
+        uv_close((uv_handle_t *)client->handle, NULL);
+        return;
     }
     else if(nRead < 0)
     {
         // TODO: exit client due to read error
+        uv_close((uv_handle_t *)client->handle, NULL);
+        return;
     }
 
     buffer_add(client->ReadBuffer, buf->base, (size_t)nRead);

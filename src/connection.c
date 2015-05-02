@@ -82,13 +82,21 @@ connection_init_tls()
 
     tls_config_set_key_file(CurrentConnectionState.TlsConfiguration,
                             CurrentConnectionState.PrivateKey);
+
     tls_config_set_cert_file(CurrentConnectionState.TlsConfiguration,
                              CurrentConnectionState.CertificateFile);
 
-    tls_configure(CurrentConnectionState.ServerContext,  
-                  CurrentConnectionState.TlsConfiguration);
-    tls_configure(CurrentConnectionState.ClientContext,  
-                  CurrentConnectionState.TlsConfiguration);
+    if(tls_configure(CurrentConnectionState.ServerContext,
+                  CurrentConnectionState.TlsConfiguration) != 0)
+    {
+        printf("%s\n", tls_error(CurrentConnectionState.ServerContext));
+    }
+
+    if(tls_configure(CurrentConnectionState.ClientContext,
+                  CurrentConnectionState.TlsConfiguration) != 0)
+    {
+        printf("%s\n", tls_error(CurrentConnectionState.ClientContext));
+    }
 }
 
 
@@ -99,7 +107,6 @@ connection_accept(uv_stream_t *handle)
     uv_tcp_t *newHandle;
     NetworkAddress address = { 0 };
     Listener *listener;
-    struct tls *context = NULL;
 
     if(handle == NULL)
     {
@@ -133,6 +140,7 @@ connection_accept(uv_stream_t *handle)
     if(listener->IsTls)
     {
         uv_os_fd_t fd;
+        struct tls *context = NULL;
         int ret = TLS_READ_AGAIN;
 
         uv_fileno((uv_handle_t *)newHandle, &fd);
@@ -147,6 +155,8 @@ connection_accept(uv_stream_t *handle)
                 printf("%s\n", tls_error(CurrentConnectionState.ServerContext));
             }
         }
+
+        newClient->TlsContext = context;
     }
 
     client_lookup_dns(newClient);
@@ -172,9 +182,16 @@ connection_send(Client *client, char *buffer)
     buf.base = buffer;
     buf.len = len;
 
-    req = Malloc(sizeof(uv_write_t));
+    if(client->TlsContext != NULL)
+    {
+        tls_write(client->TlsContext, buffer, len, &len);
+    }
+    else
+    {
+        req = Malloc(sizeof(uv_write_t));
 
-    uv_write(req, (uv_stream_t *)client->handle, &buf, 1,
-             connection_write_callback);
+        uv_write(req, (uv_stream_t *)client->handle, &buf, 1,
+                 connection_write_callback);
+    }
 }
 

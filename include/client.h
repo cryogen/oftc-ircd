@@ -67,6 +67,7 @@ struct _Client
     NetworkAddress Address;
     Buffer *ReadBuffer;
     CommandAccess AccessLevel;
+    struct tls *TlsContext;
 
     // private
     uv_tcp_t *handle;
