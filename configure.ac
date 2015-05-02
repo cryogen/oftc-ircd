@@ -4,6 +4,7 @@ AC_INIT([oftc-ircd], [0.0.1])
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([foreign subdir-objects])
+AM_SILENT_RULES([yes])
 LT_INIT([dlopen])
 
 AM_ENABLE_SHARED

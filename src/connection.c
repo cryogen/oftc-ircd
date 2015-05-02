@@ -98,13 +98,15 @@ connection_accept(uv_stream_t *handle)
     Client *newClient;
     uv_tcp_t *newHandle;
     NetworkAddress address = { 0 };
-    Listener *listener = handle->data;
+    Listener *listener;
     struct tls *context = NULL;
 
     if(handle == NULL)
     {
         return;
     }
+
+    listener = handle->data;
 
     newHandle = Malloc(sizeof(uv_tcp_t));
     uv_tcp_init(serverstate_get_event_loop(), newHandle);

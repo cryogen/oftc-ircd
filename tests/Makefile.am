@@ -111,6 +111,9 @@ connection_tests_SOURCES =  connection_tests.c  \
                             uv_stub.c           \
                             serverstate_stub.c  \
                             network_stub.c      \
+                            config_stub.c       \
+                            json_object_stub.c  \
+                            tls_stub.c          \
                             ../src/connection.c
 
 AM_CPPFLAGS = -I../include -I../libuv/include -I.. -I../json-c -I../libtls/include
