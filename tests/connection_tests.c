@@ -106,6 +106,7 @@ connection_init_tls_when_server_configure_fails_logs_error()
     tls_client_ExpectAndReturn(NULL);
     tls_config_set_key_file_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
     tls_config_set_cert_file_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
+    tls_config_insecure_noverifycert_ExpectAndReturn(NULL, NULL);
     tls_configure_ExpectAndReturn(NULL, NULL, -1, NULL, NULL);
     tls_error_ExpectAndReturn(NULL, "Error", NULL);
     tls_configure_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
@@ -123,6 +124,7 @@ connection_init_tls_when_client_configure_fails_logs_error()
     tls_client_ExpectAndReturn(NULL);
     tls_config_set_key_file_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
     tls_config_set_cert_file_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
+    tls_config_insecure_noverifycert_ExpectAndReturn(NULL, NULL);
     tls_configure_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
     tls_configure_ExpectAndReturn(NULL, NULL, -1, NULL, NULL);
     tls_error_ExpectAndReturn(NULL, "Client Configure Error", NULL);
@@ -141,6 +143,7 @@ connection_init_tls_when_success_returns_ok()
     tls_client_ExpectAndReturn(NULL);
     tls_config_set_key_file_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
     tls_config_set_cert_file_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
+    tls_config_insecure_noverifycert_ExpectAndReturn(NULL, NULL);
     tls_configure_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
     tls_configure_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
 
@@ -320,6 +323,7 @@ connection_accept_when_tls_succeeds_looksup_dns()
     client_new_ExpectAndReturn(&TestClient);
     uv_fileno_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
     tls_accept_socket_ExpectAndReturn(NULL, NULL, 0, 0, NULL, NULL, NULL);
+    tls_get_cert_fingerprint_ExpectAndReturn(NULL, NULL, 0, 0, NULL, NULL, NULL);
     client_lookup_dns_ExpectAndReturn(NULL, NULL);
 
     connection_accept((uv_stream_t *)&Handle);

@@ -2,9 +2,8 @@
 #ifndef _TLS_STUB_H
 #define _TLS_STUB_H
 
-#include <stdint.h>
 #include <stddef.h>
-
+#include <stdint.h>
 #include <tls.h>
 #include "opmock.h"
 
@@ -192,6 +191,11 @@ void tls_load_file_MockReset();
 typedef uint8_t * (* OPMOCK_tls_load_file_CALLBACK)(const char * _file, size_t * _len, char * _password, int calls);
 void tls_load_file_MockWithCallback(OPMOCK_tls_load_file_CALLBACK callback);
 void tls_load_file_VerifyMock();
+void tls_get_cert_fingerprint_ExpectAndReturn(struct tls * _ctx, char * _buf, size_t _buflen, int to_return, OPMOCK_MATCHER match__ctx, OPMOCK_MATCHER match__buf, OPMOCK_MATCHER match__buflen);
+void tls_get_cert_fingerprint_MockReset();
+typedef int (* OPMOCK_tls_get_cert_fingerprint_CALLBACK)(struct tls * _ctx, char * _buf, size_t _buflen, int calls);
+void tls_get_cert_fingerprint_MockWithCallback(OPMOCK_tls_get_cert_fingerprint_CALLBACK callback);
+void tls_get_cert_fingerprint_VerifyMock();
 
 #ifdef __cplusplus
 }

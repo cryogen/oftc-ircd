@@ -714,6 +714,28 @@ typedef struct
 
 static tls_load_file_struct tls_load_file_struct_inst;
 
+typedef struct
+{
+    void * _ctx;
+    void * _buf;
+    unsigned long _buflen;
+    OPMOCK_MATCHER match__ctx;
+    OPMOCK_MATCHER match__buf;
+    OPMOCK_MATCHER match__buflen;
+    int to_return;
+    char check_params;
+} tls_get_cert_fingerprint_call;
+
+typedef struct
+{
+    int expectedCalls;
+    int actualCalls;
+    OPMOCK_tls_get_cert_fingerprint_CALLBACK callback;
+    tls_get_cert_fingerprint_call calls[MAX_FUNC_CALL];
+} tls_get_cert_fingerprint_struct;
+
+static tls_get_cert_fingerprint_struct tls_get_cert_fingerprint_struct_inst;
+
 static void opmock_reset_all_mocks_in_this_header()
 {
     tls_init_MockReset();
@@ -752,6 +774,7 @@ static void opmock_reset_all_mocks_in_this_header()
     tls_write_MockReset();
     tls_close_MockReset();
     tls_load_file_MockReset();
+    tls_get_cert_fingerprint_MockReset();
 }
 
 static void opmock_verify_all_mocks_in_this_header()
@@ -792,6 +815,7 @@ static void opmock_verify_all_mocks_in_this_header()
     tls_write_VerifyMock();
     tls_close_VerifyMock();
     tls_load_file_VerifyMock();
+    tls_get_cert_fingerprint_VerifyMock();
 }
 
 int tls_init()
@@ -4518,5 +4542,121 @@ void tls_load_file_ExpectAndReturn (const char * _file, size_t * _len, char * _p
     tls_load_file_struct_inst.calls[tls_load_file_struct_inst.expectedCalls].to_return = (unsigned char *) to_return;
     tls_load_file_struct_inst.calls[tls_load_file_struct_inst.expectedCalls].check_params = 1;
     tls_load_file_struct_inst.expectedCalls++;
+}
+
+int tls_get_cert_fingerprint(struct tls * _ctx, char * _buf, size_t _buflen)
+{
+    int default_res = (int)tls_get_cert_fingerprint_struct_inst.calls[0].to_return;
+    int opmock_i;
+    tls_get_cert_fingerprint_struct_inst.actualCalls++;
+
+    if (tls_get_cert_fingerprint_struct_inst.callback != NULL)
+    {
+        return tls_get_cert_fingerprint_struct_inst.callback (_ctx, _buf, _buflen, tls_get_cert_fingerprint_struct_inst.actualCalls);
+    }
+    if (tls_get_cert_fingerprint_struct_inst.expectedCalls == 0)
+    {
+        opmock_add_error_message((char *) "WARNING : unexpected call of 'tls_get_cert_fingerprint', returning random value.");
+        return default_res;
+    }
+
+    if(strcmp(opmock_get_current_call(), "int tls_get_cert_fingerprint (struct tls * _ctx, char * _buf, size_t _buflen)") != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'int tls_get_cert_fingerprint(struct tls * _ctx, char * _buf, size_t _buflen)',  but was expecting call to '%s'", opmock_get_current_call());
+        opmock_add_error_message(buffer);
+    }
+    opmock_pop_call();
+
+    if (tls_get_cert_fingerprint_struct_inst.calls[0].check_params == 1) {
+        if(tls_get_cert_fingerprint_struct_inst.calls[0].match__ctx) {
+            void * val1 = (void *) &tls_get_cert_fingerprint_struct_inst.calls[0]._ctx;
+            void * val2 = (void *) &_ctx;
+            int match_result = tls_get_cert_fingerprint_struct_inst.calls[0].match__ctx(val1, val2, "_ctx", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'tls_get_cert_fingerprint', %s",tls_get_cert_fingerprint_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+        if(tls_get_cert_fingerprint_struct_inst.calls[0].match__buf) {
+            void * val1 = (void *) &tls_get_cert_fingerprint_struct_inst.calls[0]._buf;
+            void * val2 = (void *) &_buf;
+            int match_result = tls_get_cert_fingerprint_struct_inst.calls[0].match__buf(val1, val2, "_buf", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'tls_get_cert_fingerprint', %s",tls_get_cert_fingerprint_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+        if(tls_get_cert_fingerprint_struct_inst.calls[0].match__buflen) {
+            void * val1 = (void *) &tls_get_cert_fingerprint_struct_inst.calls[0]._buflen;
+            void * val2 = (void *) &_buflen;
+            int match_result = tls_get_cert_fingerprint_struct_inst.calls[0].match__buflen(val1, val2, "_buflen", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'tls_get_cert_fingerprint', %s",tls_get_cert_fingerprint_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+    }
+
+    for(opmock_i = 1; opmock_i < tls_get_cert_fingerprint_struct_inst.expectedCalls; opmock_i++) {
+        tls_get_cert_fingerprint_struct_inst.calls[opmock_i - 1] = tls_get_cert_fingerprint_struct_inst.calls[opmock_i];
+    }
+
+    tls_get_cert_fingerprint_struct_inst.expectedCalls--;
+    return default_res;
+}
+
+void tls_get_cert_fingerprint_MockReset()
+{
+    tls_get_cert_fingerprint_struct_inst.expectedCalls = 0;
+    tls_get_cert_fingerprint_struct_inst.actualCalls = 0;
+    tls_get_cert_fingerprint_struct_inst.callback = NULL;
+}
+
+void tls_get_cert_fingerprint_MockWithCallback(OPMOCK_tls_get_cert_fingerprint_CALLBACK callback)
+{
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    tls_get_cert_fingerprint_struct_inst.callback = callback;
+    tls_get_cert_fingerprint_struct_inst.expectedCalls = 0;
+    tls_get_cert_fingerprint_struct_inst.actualCalls = 0;
+}
+
+void tls_get_cert_fingerprint_VerifyMock()
+{
+    if (tls_get_cert_fingerprint_struct_inst.expectedCalls != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : Bad number of calls (%d) for 'tls_get_cert_fingerprint'",tls_get_cert_fingerprint_struct_inst.actualCalls);
+        opmock_add_error_message((char *) buffer);
+    }
+}
+
+void tls_get_cert_fingerprint_ExpectAndReturn (struct tls * _ctx, char * _buf, size_t _buflen, int to_return, OPMOCK_MATCHER match__ctx, OPMOCK_MATCHER match__buf, OPMOCK_MATCHER match__buflen)
+{
+    if(tls_get_cert_fingerprint_struct_inst.callback != NULL)
+    {
+        tls_get_cert_fingerprint_MockReset ();
+    }
+
+    if(tls_get_cert_fingerprint_struct_inst.expectedCalls >= MAX_FUNC_CALL)
+    {
+        printf("WARNING : aborting tls_get_cert_fingerprint_ExpectAndReturn, call stack overload.");
+        return;
+    }
+
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    opmock_add_call((char *)"int tls_get_cert_fingerprint (struct tls * _ctx, char * _buf, size_t _buflen)");
+    tls_get_cert_fingerprint_struct_inst.calls[tls_get_cert_fingerprint_struct_inst.expectedCalls]._ctx = (void *)_ctx;
+    tls_get_cert_fingerprint_struct_inst.calls[tls_get_cert_fingerprint_struct_inst.expectedCalls]._buf = (void *)_buf;
+    tls_get_cert_fingerprint_struct_inst.calls[tls_get_cert_fingerprint_struct_inst.expectedCalls]._buflen = (unsigned long)_buflen;
+    tls_get_cert_fingerprint_struct_inst.calls[tls_get_cert_fingerprint_struct_inst.expectedCalls].match__ctx = match__ctx;
+    tls_get_cert_fingerprint_struct_inst.calls[tls_get_cert_fingerprint_struct_inst.expectedCalls].match__buf = match__buf;
+    tls_get_cert_fingerprint_struct_inst.calls[tls_get_cert_fingerprint_struct_inst.expectedCalls].match__buflen = match__buflen;
+    tls_get_cert_fingerprint_struct_inst.calls[tls_get_cert_fingerprint_struct_inst.expectedCalls].to_return = (int) to_return;
+    tls_get_cert_fingerprint_struct_inst.calls[tls_get_cert_fingerprint_struct_inst.expectedCalls].check_params = 1;
+    tls_get_cert_fingerprint_struct_inst.expectedCalls++;
 }
 

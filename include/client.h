@@ -68,6 +68,7 @@ struct _Client
     Buffer *ReadBuffer;
     CommandAccess AccessLevel;
     struct tls *TlsContext;
+    char CertificateFp[21];
 
     // private
     uv_tcp_t *handle;

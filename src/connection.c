@@ -82,6 +82,8 @@ connection_tls_handshake(Client *client)
     }
 
     client->TlsContext = context;
+    tls_get_cert_fingerprint(client->TlsContext, client->CertificateFp,
+                             sizeof(client->CertificateFp));
 
     return true;
 }
@@ -178,6 +180,8 @@ connection_init_tls()
 
     tls_config_set_cert_file(CurrentConnectionState.TlsConfiguration,
                              CurrentConnectionState.CertificateFile);
+
+    tls_config_insecure_noverifycert(CurrentConnectionState.TlsConfiguration);
 
     if(tls_configure(CurrentConnectionState.ServerContext,
                      CurrentConnectionState.TlsConfiguration) != 0)
