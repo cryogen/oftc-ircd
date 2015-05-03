@@ -119,6 +119,20 @@ scandir_next_file_callback(uv_fs_t *req, uv_dirent_t *ent, int calls)
 }
 
 static int
+scandir_next_file_no_dot_callback(uv_fs_t *req, uv_dirent_t *ent, int calls)
+{
+    ent->type = UV_DIRENT_FILE;
+    ent->name = "testso";
+
+    if(calls > 1)
+    {
+        return UV_EOF;
+    }
+
+    return 0;
+}
+
+static int
 dlsym_null_callback(uv_lib_t *lib, const char *name, void **ptr, int calls)
 {
     *ptr = NULL;
@@ -246,6 +260,28 @@ module_scandir_when_file_loads_module()
 }
 
 static void
+module_scandir_when_file_no_dot_no_load_module()
+{
+    uv_fs_t req;
+
+    vector_length_ExpectAndReturn(NULL, 1, NULL);
+    vector_get_ExpectAndReturn(NULL, 0, "test", NULL, cmp_int);
+
+    Malloc_ExpectAndReturn(sizeof(req), &req, cmp_int);
+
+    serverstate_get_event_loop_ExpectAndReturn(NULL);
+    uv_fs_scandir_MockWithCallback(scandir_callback);
+    uv_cwd_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
+    uv_chdir_ExpectAndReturn(NULL, 0, NULL);
+    uv_fs_scandir_next_MockWithCallback(scandir_next_file_no_dot_callback);
+    uv_chdir_ExpectAndReturn(NULL, 0, NULL);
+
+    module_load_all_modules();
+
+    OP_VERIFY();
+}
+
+static void
 module_load_when_load_fails_return_false()
 {
     Module module = { 0 };
@@ -334,6 +370,8 @@ main()
                          "module_scandir_when_eof_does_not_load_module");
     opmock_register_test(module_scandir_when_not_file_does_not_load_module,
                          "module_scandir_when_not_file_does_not_load_module");
+    opmock_register_test(module_scandir_when_file_no_dot_no_load_module,
+                         "module_scandir_when_file_no_dot_no_load_module");
     opmock_register_test(module_scandir_when_file_loads_module,
                          "module_scandir_when_file_loads_module");
     opmock_register_test(module_load_when_load_fails_return_false,

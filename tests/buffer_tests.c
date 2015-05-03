@@ -261,6 +261,40 @@ buffer_remove_when_more_than_chunk_size_moves_chunk()
     OP_ASSERT_EQUAL_CSTRING("11", tmp);
 }
 
+static void
+buffer_get_start_when_null_buffer_returns_null()
+{
+    OP_ASSERT_TRUE(buffer_get_start(NULL) == NULL);
+}
+
+static void
+buffer_get_start_when_data_null_returns_null()
+{
+    Buffer buffer = { 0 };
+    ListEntry *head;
+
+    head = buffer_get_start(&buffer);
+
+    OP_ASSERT_TRUE(head == NULL);
+}
+
+static void
+buffer_get_start_when_data_returns_data()
+{
+    Buffer buffer = { 0 };
+    List list = { 0 };
+    ListEntry entry = { 0 };
+    ListEntry *head;
+
+    list.Head = &entry;
+    entry.Data = "test";
+    buffer.Data = &list;
+
+    head = buffer_get_start(&buffer);
+
+    OP_ASSERT_TRUE(&entry == head);
+}
+
 int
 main()
 {
@@ -290,6 +324,12 @@ main()
                          "buffer_remove_when_overflows_wraps");
     opmock_register_test(buffer_remove_when_more_than_chunk_size_moves_chunk,
                          "buffer_remove_when_more_than_chunk_size_moves_chunk");
+    opmock_register_test(buffer_get_start_when_null_buffer_returns_null,
+                         "buffer_get_start_when_null_buffer_returns_null");
+    opmock_register_test(buffer_get_start_when_data_null_returns_null,
+                         "buffer_get_start_when_data_null_returns_null");
+    opmock_register_test(buffer_get_start_when_data_returns_data,
+                         "buffer_get_start_when_data_returns_data");
 
     opmock_test_suite_run();
 

@@ -118,3 +118,7 @@ connection_tests_SOURCES =  connection_tests.c  \
                             ../src/connection.c
 
 AM_CPPFLAGS = -I../include -I../libuv/include -I.. -I../json-c -I../libtls/include
+
+clean-local:
+		rm -rf *.gcda
+		rm -rf *.gcno 

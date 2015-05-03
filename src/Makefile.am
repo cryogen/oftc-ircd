@@ -24,3 +24,7 @@ libircd_la_SOURCES =    buffer.c        \
 ircd_SOURCES =  main.c
 
 ircd_LDADD = ../libuv/libuv.la ../json-c/libjson-c.la libircd.la ../libtls/tls/libtls.la
+
+clean-local:
+		rm -rf *.gcda
+		rm -rf *.gcno 

@@ -127,6 +127,14 @@ server_set_name_when_called_sets_name()
     OP_VERIFY();
 }
 
+static void
+server_get_this_server_when_called_returns_server()
+{
+    server_get_this_server();
+
+    OP_VERIFY();
+}
+
 int
 main()
 {
@@ -140,6 +148,8 @@ main()
                          "server_set_defaults_when_called_twice_frees_old_client");
     opmock_register_test(server_set_name_when_called_sets_name,
                          "server_set_name_when_called_sets_name");
+    opmock_register_test(server_get_this_server_when_called_returns_server,
+                         "server_get_this_server_when_called_returns_server");
 
     opmock_test_suite_run();
 

@@ -30,6 +30,8 @@
 #include "uv_stub.h"
 #include "serverstate_stub.h"
 #include "network_stub.h"
+#include "config_stub.h"
+#include "tls_stub.h"
 
 #include "connection.h"
 
@@ -58,6 +60,22 @@ write_callback(uv_write_t *w,
     callback(w, 0);
 
     return 0;
+}
+
+static void
+connection_init_when_called_sets_up_config()
+{
+    config_register_section_ExpectAndReturn("connection", false, NULL,
+                                            cmp_cstr, cmp_byte);
+    config_register_field_ExpectAndReturn(NULL, "privatekey", json_type_string,
+                                          NULL, NULL, cmp_cstr, cmp_int, NULL);
+    config_register_field_ExpectAndReturn(NULL, "certificatefile",
+                                          json_type_string, NULL, NULL,
+                                          cmp_cstr, cmp_int, NULL);
+
+    connection_init();
+
+    OP_VERIFY();
 }
 
 static void
@@ -93,6 +111,26 @@ connection_accept_when_get_address_fails_returns()
     Free_ExpectAndReturn(&Handle, cmp_ptr);
 
     connection_accept((uv_stream_t *)&Handle);
+
+    OP_VERIFY();
+}
+
+static void
+conneciton_send_when_tls_sends_via_tls()
+{
+    char testBuffer[2048] = { 0 };
+
+    memcpy(testBuffer, "TEST", 4);
+
+    TestClient.TlsContext = malloc(100);
+
+    tls_write_ExpectAndReturn(NULL, NULL, 0, NULL, 0, NULL, NULL, NULL, NULL);
+
+    connection_send(&TestClient, testBuffer);
+
+    free(TestClient.TlsContext);
+
+    TestClient.TlsContext = NULL;
 
     OP_VERIFY();
 }
@@ -160,12 +198,16 @@ int main()
 {
     opmock_test_suite_reset();
 
+    opmock_register_test(connection_init_when_called_sets_up_config,
+                         "connection_init_when_called_sets_up_config");
     opmock_register_test(connection_accept_when_called_with_null_handle_returns,
                          "connection_accept_when_called_with_null_handle_returns");
     opmock_register_test(connection_accept_when_uv_accept_fails_returns,
                          "connection_accept_when_uv_accept_fails_returns");
     opmock_register_test(connection_accept_when_get_address_fails_returns,
                          "connection_accept_when_get_address_fails_returns");
+    opmock_register_test(conneciton_send_when_tls_sends_via_tls,
+                         "conneciton_send_when_tls_sends_via_tls");
     opmock_register_test(connection_send_when_too_long_is_truncated,
                          "connection_send_when_too_long_is_truncated");
     opmock_register_test(connection_send_when_511_long_is_truncated,

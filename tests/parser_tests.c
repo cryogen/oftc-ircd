@@ -94,6 +94,20 @@ parser_get_line_when_empty_buffer_returns_false()
 }
 
 static void
+parser_get_line_when_buffer_head_null_return_false()
+{
+    bool ret;
+    char destBuffer[512 + 1];
+    Buffer emptyBuffer = { 0 };
+
+    buffer_get_start_ExpectAndReturn(&emptyBuffer, NULL, cmp_ptr);
+
+    ret = parser_get_line(&emptyBuffer, destBuffer, sizeof(destBuffer));
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
 parser_get_line_when_line_in_buffer_returns_line()
 {
     bool ret;
@@ -396,6 +410,27 @@ parser_process_line_when_end_param_and_colons_sets_params()
     OP_VERIFY();
 }
 
+static void
+parser_result_free_when_null_result_returns()
+{
+    parser_result_free(NULL);
+
+    OP_VERIFY();
+}
+
+static void
+parser_result_free_when_called_frees_result()
+{
+    ParserResult result = { 0 };
+
+    vector_free_ExpectAndReturn(result.Params, cmp_ptr);
+    Free_ExpectAndReturn(&result, cmp_ptr);
+
+    parser_result_free(&result);
+
+    OP_VERIFY();
+}
+
 int
 main()
 {
@@ -407,6 +442,8 @@ main()
                          "parser_get_line_when_null_dest_returns_false");
     opmock_register_test(parser_get_line_when_empty_buffer_returns_false,
                          "parser_get_line_when_empty_buffer_returns_false");
+    opmock_register_test(parser_get_line_when_buffer_head_null_return_false,
+                         "parser_get_line_when_buffer_head_null_return_false");
     opmock_register_test(parser_get_line_when_line_in_buffer_returns_line,
                          "parser_get_line_when_line_in_buffer_returns_line");
     opmock_register_test(parser_get_line_when_line_in_buffer_and_spaces_returns_line,
@@ -441,6 +478,10 @@ main()
                          "parser_process_line_when_end_param_sets_params");
     opmock_register_test(parser_process_line_when_end_param_and_colons_sets_params,
                          "parser_process_line_when_end_param_and_colons_sets_params");
+    opmock_register_test(parser_result_free_when_null_result_returns,
+                         "parser_result_free_when_null_result_returns");
+    opmock_register_test(parser_result_free_when_called_frees_result,
+                         "parser_result_free_when_called_frees_result");
 
     opmock_test_suite_run();
 

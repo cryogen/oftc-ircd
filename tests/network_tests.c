@@ -254,6 +254,77 @@ network_address_from_ip_string_and_port_when_v6port_uses_port()
     OP_VERIFY();
 }
 
+static void
+network_address_from_stream_when_stream_null_returns_false()
+{
+    bool ret;
+    NetworkAddress address = { 0 };
+
+    ret = network_address_from_stream(NULL, &address);
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
+network_address_from_stream_when_address_null_returns_false()
+{
+    uv_tcp_t stream = { 0 };
+    bool ret;
+
+    ret = network_address_from_stream(&stream, NULL);
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
+network_address_from_stream_when_sockname_fails_returns_false()
+{
+    uv_tcp_t stream = { 0 };
+    NetworkAddress address = { 0 };
+    bool ret;
+
+    uv_tcp_getsockname_ExpectAndReturn(&stream, NULL, NULL, -1, cmp_ptr,
+                                       NULL, NULL);
+
+    ret = network_address_from_stream(&stream, &address);
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static int
+setup_address(void *left, void *right, const char *name, char *message)
+{
+    struct sockaddr_in *addr = *(struct sockaddr_in **)right;
+
+    addr->sin_addr.s_addr = inet_addr("127.0.0.1");
+    addr->sin_len = sizeof(struct sockaddr_in);
+    addr->sin_family = AF_INET;
+
+    return 0;
+}
+
+static void
+network_address_from_stream_when_succeeds_returns_true()
+{
+    uv_tcp_t stream = { 0 };
+    NetworkAddress address = { 0 };
+    bool ret;
+
+    printf("%p\n", &address);
+
+    uv_tcp_getsockname_ExpectAndReturn(&stream, NULL, NULL, 0, cmp_ptr,
+                                       setup_address, NULL);
+
+    ret = network_address_from_stream(&stream, &address);
+
+    OP_ASSERT_TRUE(ret);
+    OP_ASSERT_EQUAL_INT(AF_INET, address.AddressFamily);
+    OP_ASSERT_EQUAL_CSTRING("127.0.0.1",
+                            inet_ntoa(address.Address.Addr4.sin_addr));
+
+    OP_VERIFY();
+}
+
 int
 main()
 {
@@ -291,6 +362,14 @@ main()
                          "network_address_from_ip_string_and_port_when_port_uses_port");
     opmock_register_test(network_address_from_ip_string_and_port_when_v6port_uses_port,
                          "network_address_from_ip_string_and_port_when_v6port_uses_port");
+    opmock_register_test(network_address_from_stream_when_stream_null_returns_false,
+                         "network_address_from_stream_when_stream_null_returns_false");
+    opmock_register_test(network_address_from_stream_when_address_null_returns_false,
+                         "network_address_from_stream_when_address_null_returns_false");
+    opmock_register_test(network_address_from_stream_when_sockname_fails_returns_false,
+                         "network_address_from_stream_when_sockname_fails_returns_false");
+    opmock_register_test(network_address_from_stream_when_succeeds_returns_true,
+                         "network_address_from_stream_when_succeeds_returns_true");
 
     opmock_test_suite_run();
 

@@ -280,6 +280,11 @@ client_process_read_buffer(Client *client)
 bool
 client_set_nickname(Client *client, const char *nickname)
 {
+    if(client == NULL || nickname == NULL)
+    {
+        return false;
+    }
+
     strncpy(client->Name, nickname, NICKLEN);
 
     return true;
@@ -288,6 +293,11 @@ client_set_nickname(Client *client, const char *nickname)
 bool 
 client_set_username(Client *client, const char *username)
 {
+    if(client == NULL || username == NULL)
+    {
+        return false;
+    }
+
     strncpy(client->Username, username, USERLEN);
 
     return true;
@@ -296,6 +306,11 @@ client_set_username(Client *client, const char *username)
 bool
 client_set_realname(Client *client, const char *realname)
 {
+    if(client == NULL || realname == NULL)
+    {
+        return false;
+    }
+    
     strncpy(client->Realname, realname, REALLEN);
 
     return true;

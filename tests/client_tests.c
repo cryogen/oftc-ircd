@@ -49,7 +49,6 @@ static ParserResult Result;
 static Command ResultCommand;
 static uv_getnameinfo_t NameRequest;
 static uv_getaddrinfo_t AddressRequest;
-static uv_buf_t UvBuf = { 0 };
 
 static void
 setup_send()
@@ -107,9 +106,9 @@ setup_command()
 
 static int
 getnameinfo_goodstatus(uv_loop_t* loop,
-                       uv_getnameinfo_t* request,
+                       uv_getnameinfo_t *request,
                        uv_getnameinfo_cb getnameinfo_cb,
-                       const struct sockaddr* addr,
+                       const struct sockaddr *addr,
                        int flags,
                        int calls)
 {
@@ -120,12 +119,27 @@ getnameinfo_goodstatus(uv_loop_t* loop,
 
 static int
 getnameinfo_badstatus(uv_loop_t* loop,
-                      uv_getnameinfo_t* request,
+                      uv_getnameinfo_t *request,
                       uv_getnameinfo_cb getnameinfo_cb,
-                      const struct sockaddr* addr,
+                      const struct sockaddr *addr,
                       int flags,
                       int calls)
 {
+    getnameinfo_cb(request, 1, NULL, NULL);
+
+    return 0;
+}
+
+static int
+set_null_callback(uv_loop_t *loop,
+                  uv_getnameinfo_t *request,
+                  uv_getnameinfo_cb getnameinfo_cb,
+                  const struct sockaddr *addr,
+                  int flags,
+                  int calls)
+{
+    DnsRequest.Callback = NULL;
+
     getnameinfo_cb(request, 1, NULL, NULL);
 
     return 0;
@@ -198,52 +212,6 @@ uv_ip4_name_callback(const struct sockaddr_in *src,
                      int calls)
 {
     inet_ntop(AF_INET, &src->sin_addr, dst, (socklen_t)size);
-
-    return 0;
-}
-
-static void
-verify_alloc_test(uv_buf_t *buf)
-{
-    OP_ASSERT_EQUAL_INT(1024, (int)buf->len);
-    OP_ASSERT_TRUE(buf->base != NULL);
-}
-
-static int
-uv_read_start_alloc_callback(uv_stream_t *stream,
-                             uv_alloc_cb allocCallback,
-                             uv_read_cb readCallback,
-                             int calls)
-{
-    uv_buf_t buf = { 0 };
-
-    allocCallback((uv_handle_t *)stream, 1024, &buf);
-
-    verify_alloc_test(&buf);
-
-    return 0;
-}
-
-static int
-uv_read_start_read_fail_callback(uv_stream_t *stream,
-                                 uv_alloc_cb allocCallback,
-                                 uv_read_cb readCallback,
-                                 int calls)
-{
-    allocCallback((uv_handle_t *)stream, 1024, &UvBuf);
-
-    readCallback(stream, -1, &UvBuf);
-
-    return 0;
-}
-
-static int
-uv_read_start_read_closed_callback(uv_stream_t *stream,
-                                   uv_alloc_cb allocCallback,
-                                   uv_read_cb readCallback,
-                                   int calls)
-{
-    readCallback(stream, UV_EOF, &UvBuf);
 
     return 0;
 }
@@ -330,6 +298,14 @@ client_free_when_called_with_handle_close_handle()
 }
 
 static void
+client_lookup_dns_when_client_null_returns()
+{
+    client_lookup_dns(NULL);
+
+    OP_VERIFY();
+}
+
+static void
 client_lookup_dns_when_getnameinfo_fails_sets_ip_as_host()
 {
     setup_dns();
@@ -345,6 +321,19 @@ client_lookup_dns_when_getnameinfo_fails_sets_ip_as_host()
     setup_send();
 
     connection_start_read_ExpectAndReturn(NULL, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
+
+    client_lookup_dns(&TestClient);
+
+    OP_VERIFY();
+}
+
+static void
+client_lookup_dns_when_null_callback_returns_ok()
+{
+    setup_dns();
+
+    uv_getnameinfo_MockWithCallback(set_null_callback);
     Free_ExpectAndReturn(NULL, NULL);
 
     client_lookup_dns(&TestClient);
@@ -484,45 +473,6 @@ client_lookup_dns_when_addrcallback_and_host_match_sets_host()
 }
 
 static void
-client_on_buffer_alloc_cb_allocates_buffer()
-{
-    setup_dns();
-
-    uv_getnameinfo_MockWithCallback(&getnameinfo_badstatus);
-
-    uv_read_start_MockWithCallback(uv_read_start_alloc_callback);
-    Free_ExpectAndReturn(&NameRequest, cmp_ptr);
-
-    client_lookup_dns(&TestClient);
-}
-
-static void
-client_on_read_when_error_closes_connection()
-{
-    setup_dns();
-
-    uv_getnameinfo_MockWithCallback(&getnameinfo_badstatus);
-
-    uv_read_start_MockWithCallback(uv_read_start_read_fail_callback);
-    Free_ExpectAndReturn(&NameRequest, cmp_ptr);
-
-    client_lookup_dns(&TestClient);
-}
-
-static void
-client_on_read_when_connection_closed_closes_connection()
-{
-    setup_dns();
-
-    uv_getnameinfo_MockWithCallback(&getnameinfo_badstatus);
-
-    uv_read_start_MockWithCallback(uv_read_start_read_closed_callback);
-    Free_ExpectAndReturn(&NameRequest, cmp_ptr);
-
-    client_lookup_dns(&TestClient);
-}
-
-static void
 client_send_when_no_source_sends_message()
 {
     connection_send_ExpectAndReturn(&TestClient, "Test", cmp_ptr, cmp_cstr);
@@ -633,6 +583,7 @@ client_process_read_buffer_when_too_few_args_does_not_call_handler()
     Client client = { 0 };
 
     setup_parser();
+    setup_command();
 
     vector_length_ExpectAndReturn(NULL, 0, NULL);
     parser_result_free_ExpectAndReturn(&Result, cmp_ptr);
@@ -645,6 +596,147 @@ client_process_read_buffer_when_too_few_args_does_not_call_handler()
     client_process_read_buffer(&client);
 
     OP_ASSERT_FALSE(callback_called);
+}
+
+static void
+client_set_nickname_when_null_client_returns_false()
+{
+    bool ret;
+
+    ret = client_set_nickname(NULL, "foo");
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
+client_set_nickname_when_null_nick_returns_false()
+{
+    bool ret;
+
+    ret = client_set_nickname(&TestClient, NULL);
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
+client_set_nickname_when_called_sets_nickname()
+{
+    bool ret;
+
+    ret = client_set_nickname(&TestClient, "Test");
+
+    OP_ASSERT_TRUE(ret);
+    OP_ASSERT_EQUAL_CSTRING("Test", TestClient.Name);
+}
+
+static void
+client_set_nickname_when_too_long_truncates()
+{
+    bool ret;
+    char longNick[NICKLEN + 10] = { 0 };
+    char expected[NICKLEN + 1] = { 0 };
+
+    memset(longNick, '1', sizeof(longNick) - 1);
+    memset(expected, '1', sizeof(expected) - 1);
+
+    ret = client_set_nickname(&TestClient, longNick);
+
+    OP_ASSERT_TRUE(ret);
+    OP_ASSERT_EQUAL_CSTRING(expected, TestClient.Name);
+}
+
+static void
+client_set_username_when_null_client_returns_false()
+{
+    bool ret;
+
+    ret = client_set_username(NULL, "foo");
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
+client_set_username_when_null_username_returns_false()
+{
+    bool ret;
+
+    ret = client_set_username(&TestClient, NULL);
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
+client_set_username_when_called_sets_username()
+{
+    bool ret;
+
+    ret = client_set_username(&TestClient, "Test");
+
+    OP_ASSERT_TRUE(ret);
+    OP_ASSERT_EQUAL_CSTRING("Test", TestClient.Username);
+}
+
+static void
+client_set_username_when_too_long_truncates()
+{
+    bool ret;
+    char longUser[USERLEN + 10] = { 0 };
+    char expected[USERLEN + 1] = { 0 };
+
+    memset(longUser, '1', sizeof(longUser) - 1);
+    memset(expected, '1', sizeof(expected) - 1);
+
+    ret = client_set_username(&TestClient, longUser);
+
+    OP_ASSERT_TRUE(ret);
+    OP_ASSERT_EQUAL_CSTRING(expected, TestClient.Username);
+}
+
+static void
+client_set_realname_when_null_client_returns_false()
+{
+    bool ret;
+
+    ret = client_set_realname(NULL, "foo");
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
+client_set_realname_when_null_realname_returns_false()
+{
+    bool ret;
+
+    ret = client_set_realname(&TestClient, NULL);
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
+client_set_realname_when_called_sets_realname()
+{
+    bool ret;
+
+    ret = client_set_realname(&TestClient, "Test");
+
+    OP_ASSERT_TRUE(ret);
+    OP_ASSERT_EQUAL_CSTRING("Test", TestClient.Realname);
+}
+
+static void
+client_set_realname_when_too_long_truncates()
+{
+    bool ret;
+    char longReal[REALLEN + 10] = { 0 };
+    char expected[REALLEN + 1] = { 0 };
+
+    memset(longReal, '1', sizeof(longReal) - 1);
+    memset(expected, '1', sizeof(expected) - 1);
+
+    ret = client_set_realname(&TestClient, longReal);
+
+    OP_ASSERT_TRUE(ret);
+    OP_ASSERT_EQUAL_CSTRING(expected, TestClient.Realname);
 }
 
 int main()
@@ -661,8 +753,12 @@ int main()
                          "client_free_when_called_with_null_handle_frees_client");
     opmock_register_test(client_free_when_called_with_handle_close_handle,
                          "client_free_when_called_with_handle_close_handle");
+    opmock_register_test(client_lookup_dns_when_client_null_returns,
+                         "client_lookup_dns_when_client_null_returns");
     opmock_register_test(client_lookup_dns_when_getnameinfo_fails_sets_ip_as_host,
                          "client_lookup_dns_when_getnameinfo_fails_sets_ip_as_host");
+    opmock_register_test(client_lookup_dns_when_null_callback_returns_ok,
+                         "client_lookup_dns_when_null_callback_returns_ok");
     opmock_register_test(client_lookup_dns_when_getnameinfo_succeeds_returns_ok,
                          "client_lookup_dns_when_getnameinfo_succeeds_returns_ok");
     opmock_register_test(client_lookup_dns_when_namecallback_returns_bad_status_frees_request,
@@ -675,12 +771,6 @@ int main()
                          "client_lookup_dns_when_addrcallback_and_no_host_match_sets_ip_as_host");
     opmock_register_test(client_lookup_dns_when_addrcallback_and_host_match_sets_host,
                          "client_lookup_dns_when_addrcallback_and_host_match_sets_host");
-    opmock_register_test(client_on_buffer_alloc_cb_allocates_buffer,
-                         "client_on_buffer_alloc_cb_allocates_buffer");
-    opmock_register_test(client_on_read_when_error_closes_connection,
-                         "client_on_read_when_error_closes_connection");
-    opmock_register_test(client_on_read_when_connection_closed_closes_connection,
-                         "client_on_read_when_connection_closed_closes_connection");
     opmock_register_test(client_send_when_no_source_sends_message,
                          "client_send_when_no_source_sends_message");
     opmock_register_test(client_send_when_source_sends_message_with_source,
@@ -697,6 +787,30 @@ int main()
                          "client_process_read_buffer_when_no_access_does_not_call_handler");
     opmock_register_test(client_process_read_buffer_when_too_few_args_does_not_call_handler,
                          "client_process_read_buffer_when_too_few_args_does_not_call_handler");
+    opmock_register_test(client_set_nickname_when_null_client_returns_false,
+                         "client_set_nickname_when_null_client_returns_false");
+    opmock_register_test(client_set_nickname_when_null_nick_returns_false,
+                         "client_set_nickname_when_null_nick_returns_false");
+    opmock_register_test(client_set_nickname_when_called_sets_nickname,
+                         "client_set_nickname_when_called_sets_nickname");
+    opmock_register_test(client_set_nickname_when_too_long_truncates,
+                         "client_set_nickname_when_too_long_truncates");
+    opmock_register_test(client_set_username_when_null_client_returns_false,
+                         "client_set_username_when_null_client_returns_false");
+    opmock_register_test(client_set_username_when_null_username_returns_false,
+                         "client_set_username_when_null_username_returns_false");
+    opmock_register_test(client_set_username_when_called_sets_username,
+                         "client_set_username_when_called_sets_username");
+    opmock_register_test(client_set_username_when_too_long_truncates,
+                         "client_set_username_when_too_long_truncates");
+    opmock_register_test(client_set_realname_when_null_client_returns_false,
+                         "client_set_realname_when_null_client_returns_false");
+    opmock_register_test(client_set_realname_when_null_realname_returns_false,
+                         "client_set_realname_when_null_realname_returns_false");
+    opmock_register_test(client_set_realname_when_called_sets_realname,
+                         "client_set_realname_when_called_sets_realname");
+    opmock_register_test(client_set_realname_when_too_long_truncates,
+                         "client_set_realname_when_too_long_truncates");
 
     opmock_test_suite_run();
 

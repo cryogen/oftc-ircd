@@ -376,6 +376,27 @@ vector_delete_when_multiple_deletes_middle()
     OP_VERIFY();
 }
 
+static void
+vector_free_when_null_returns()
+{
+    vector_free(NULL);
+
+    OP_VERIFY();
+}
+
+static void
+vector_free_when_called_frees_vector()
+{
+    Vector test = { 0 };
+
+    Free_ExpectAndReturn(test.Data, cmp_ptr);
+    Free_ExpectAndReturn(&test, cmp_ptr);
+
+    vector_free(&test);
+
+    OP_VERIFY();
+}
+
 int
 main()
 {
@@ -421,6 +442,10 @@ main()
                          "vector_delete_when_multiple_deletes_first");
     opmock_register_test(vector_delete_when_multiple_deletes_middle,
                          "vector_delete_when_multiple_deletes_middle");
+    opmock_register_test(vector_free_when_null_returns,
+                         "vector_free_when_null_returns");
+    opmock_register_test(vector_free_when_called_frees_vector,
+                         "vector_free_when_called_frees_vector");
 
     opmock_test_suite_run();
 

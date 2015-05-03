@@ -109,6 +109,11 @@ network_ipstring_from_address(NetworkAddress *address,
 bool
 network_address_from_stream(uv_tcp_t *handle, NetworkAddress *address)
 {
+    if(handle == NULL || address == NULL)
+    {
+        return false;
+    }
+
     address->AddressLength = sizeof(NetworkAddress);
     if(uv_tcp_getsockname(handle,
                           (struct sockaddr *)address,

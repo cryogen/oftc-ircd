@@ -80,12 +80,16 @@ module_on_scandir(uv_fs_t *req)
 
     while(uv_fs_scandir_next(req, &dirEntry) != UV_EOF)
     {
+        const char *extension;
+
         if(dirEntry.type != UV_DIRENT_FILE)
         {
             continue;
         }
 
-        if(strcmp(module_get_extension(dirEntry.name), "so") != 0)
+        extension = module_get_extension(dirEntry.name);
+        if(extension == NULL ||
+           strcmp(module_get_extension(dirEntry.name), "so") != 0)
         {
             continue;
         }

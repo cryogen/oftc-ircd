@@ -212,6 +212,11 @@ parser_result_new()
 void
 parser_result_free(ParserResult *result)
 {
+    if(result == NULL)
+    {
+        return;
+    }
+
     vector_free(result->Params);
     Free(result);
 }
