@@ -59,108 +59,31 @@ connection_set_certificate_file(void *element, json_object *obj)
     CurrentConnectionState.CertificateFile = json_object_get_string(obj);
 }
 
-void
-connection_init()
+static bool
+connection_tls_handshake(Client *client)
 {
-    ConfigSection *connectionSection;
+    uv_os_fd_t fd;
+    struct tls *context = NULL;
+    int ret = TLS_READ_AGAIN;
 
-    connectionSection = config_register_section("connection", false);
-
-    config_register_field(connectionSection, "privatekey", json_type_string,
-                          connection_set_private_key);
-    config_register_field(connectionSection, "certificatefile", json_type_string,
-                          connection_set_certificate_file);
-}
-
-void
-connection_init_tls()
-{
-    tls_init();
-
-    CurrentConnectionState.TlsConfiguration = tls_config_new();
-    CurrentConnectionState.ServerContext = tls_server();
-    CurrentConnectionState.ClientContext = tls_client();
-
-    tls_config_set_key_file(CurrentConnectionState.TlsConfiguration,
-                            CurrentConnectionState.PrivateKey);
-
-    tls_config_set_cert_file(CurrentConnectionState.TlsConfiguration,
-                             CurrentConnectionState.CertificateFile);
-
-    if(tls_configure(CurrentConnectionState.ServerContext,
-                  CurrentConnectionState.TlsConfiguration) != 0)
+    if(uv_fileno((uv_handle_t *)client->handle, &fd) != 0)
     {
-        printf("%s\n", tls_error(CurrentConnectionState.ServerContext));
+        return false;
     }
 
-    if(tls_configure(CurrentConnectionState.ClientContext,
-                  CurrentConnectionState.TlsConfiguration) != 0)
+    while((ret = tls_accept_socket(CurrentConnectionState.ServerContext,
+                                  &context, fd)) != 0)
     {
-        printf("%s\n", tls_error(CurrentConnectionState.ClientContext));
-    }
-}
-
-
-void
-connection_accept(uv_stream_t *handle)
-{
-    Client *newClient;
-    uv_tcp_t *newHandle;
-    NetworkAddress address = { 0 };
-    Listener *listener;
-
-    if(handle == NULL)
-    {
-        return;
-    }
-
-    listener = handle->data;
-
-    newHandle = Malloc(sizeof(uv_tcp_t));
-    uv_tcp_init(serverstate_get_event_loop(), newHandle);
-    if(uv_accept(handle, (uv_stream_t *)newHandle) != 0)
-    {
-        Free(handle);
-        return;
-    }
-
-    if(!network_address_from_stream(newHandle, &address))
-    {
-        uv_close((uv_handle_t *)handle, NULL);
-        Free(handle);
-        return;
-    }
-
-
-    newClient = client_new();
-    newHandle->data = newClient;
-    newClient->handle = newHandle;
-
-    memcpy(&newClient->Address, &address, sizeof(NetworkAddress));
-
-    if(listener->IsTls)
-    {
-        uv_os_fd_t fd;
-        struct tls *context = NULL;
-        int ret = TLS_READ_AGAIN;
-
-        uv_fileno((uv_handle_t *)newHandle, &fd);
-
-        while(ret == TLS_READ_AGAIN || ret == TLS_WRITE_AGAIN)
+        if(ret == -1)
         {
-            ret = tls_accept_socket(CurrentConnectionState.ServerContext, 
-                                    &context, fd);
-
-            if(ret == -1)
-            {
-                printf("%s\n", tls_error(CurrentConnectionState.ServerContext));
-            }
+            printf("%s\n", tls_error(CurrentConnectionState.ServerContext));
+            return false;
         }
-
-        newClient->TlsContext = context;
     }
 
-    client_lookup_dns(newClient);
+    client->TlsContext = context;
+
+    return true;
 }
 
 static void
@@ -206,6 +129,7 @@ connection_poll_callback(uv_poll_t *handle, int status, int events)
     Client *client = handle->data;
     uv_buf_t buffer = { 0 };
     size_t len;
+    int ret;
 
     if(status != 0)
     {
@@ -213,9 +137,108 @@ connection_poll_callback(uv_poll_t *handle, int status, int events)
         return;
     }
 
-    connection_allocate_buffer_callback((uv_handle_t *)handle, 65535, &buffer);
-    tls_read(client->TlsContext, buffer.base, buffer.len, &len);
+    connection_allocate_buffer_callback((uv_handle_t *)handle,
+                                        DEFAULT_READ_SIZE, &buffer);
+
+    while((ret = tls_read(client->TlsContext, buffer.base, buffer.len, &len)) != 0)
+    {
+        if(ret == -1)
+        {
+            return;
+        }
+    }
+
     connection_on_read_callback((uv_stream_t *)handle, len, &buffer);
+}
+
+void
+connection_init()
+{
+    ConfigSection *connectionSection;
+
+    connectionSection = config_register_section("connection", false);
+
+    config_register_field(connectionSection, "privatekey", json_type_string,
+                          connection_set_private_key);
+    config_register_field(connectionSection, "certificatefile", json_type_string,
+                          connection_set_certificate_file);
+}
+
+void
+connection_init_tls()
+{
+    tls_init();
+
+    CurrentConnectionState.TlsConfiguration = tls_config_new();
+    CurrentConnectionState.ServerContext = tls_server();
+    CurrentConnectionState.ClientContext = tls_client();
+
+    tls_config_set_key_file(CurrentConnectionState.TlsConfiguration,
+                            CurrentConnectionState.PrivateKey);
+
+    tls_config_set_cert_file(CurrentConnectionState.TlsConfiguration,
+                             CurrentConnectionState.CertificateFile);
+
+    if(tls_configure(CurrentConnectionState.ServerContext,
+                     CurrentConnectionState.TlsConfiguration) != 0)
+    {
+        printf("%s\n", tls_error(CurrentConnectionState.ServerContext));
+    }
+
+    if(tls_configure(CurrentConnectionState.ClientContext,
+                     CurrentConnectionState.TlsConfiguration) != 0)
+    {
+        printf("%s\n", tls_error(CurrentConnectionState.ClientContext));
+    }
+}
+
+
+void
+connection_accept(uv_stream_t *handle)
+{
+    Client *newClient;
+    uv_tcp_t *newHandle;
+    NetworkAddress address = { 0 };
+    Listener *listener;
+
+    if(handle == NULL)
+    {
+        return;
+    }
+
+    listener = handle->data;
+
+    newHandle = Malloc(sizeof(uv_tcp_t));
+    uv_tcp_init(serverstate_get_event_loop(), newHandle);
+    if(uv_accept(handle, (uv_stream_t *)newHandle) != 0)
+    {
+        Free(handle);
+        return;
+    }
+
+    if(!network_address_from_stream(newHandle, &address))
+    {
+        uv_close((uv_handle_t *)handle, NULL);
+        Free(handle);
+        return;
+    }
+
+
+    newClient = client_new();
+    newHandle->data = newClient;
+    newClient->handle = newHandle;
+
+    memcpy(&newClient->Address, &address, sizeof(NetworkAddress));
+
+    if(listener->IsTls)
+    {
+        if(!connection_tls_handshake(newClient))
+        {
+            return;
+        }
+    }
+    
+    client_lookup_dns(newClient);
 }
 
 void

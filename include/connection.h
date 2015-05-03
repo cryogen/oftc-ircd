@@ -31,6 +31,8 @@
 #include <tls.h>
 #include "client.h"
 
+#define DEFAULT_READ_SIZE (64 * 1024)
+
 typedef struct _ConnectionState ConnectionState;
 
 struct _ConnectionState
