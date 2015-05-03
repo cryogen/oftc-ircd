@@ -78,7 +78,7 @@ setup_dns()
 
     memcpy(&TestClient.Address.Address.Addr4, &addr4, sizeof(addr4));
 
-    TestClient.handle = malloc(sizeof(TestClient.handle));
+    TestClient.handle = malloc(sizeof(uv_tcp_t));
     TestClient.handle->data = &TestClient;
 }
 
@@ -283,7 +283,7 @@ client_free_when_called_with_handle_close_handle()
 {
     Client *testClient = calloc(1, sizeof(Client));
 
-    testClient->handle = calloc(1, sizeof(uv_handle_t));
+    testClient->handle = calloc(1, sizeof(uv_tcp_t));
 
     uv_close_ExpectAndReturn(NULL, NULL, NULL, NULL);
     Free_ExpectAndReturn(NULL, NULL);
