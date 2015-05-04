@@ -475,9 +475,9 @@ client_lookup_dns_when_addrcallback_and_host_match_sets_host()
 static void
 client_send_when_no_source_sends_message()
 {
-    connection_send_ExpectAndReturn(&TestClient, "Test", cmp_ptr, cmp_cstr);
+    connection_send_ExpectAndReturn(&TestClient, "Test * :foo", cmp_ptr, cmp_cstr);
 
-    client_send(NULL, &TestClient, "%s", "Test");
+    client_send(NULL, &TestClient, "Test", "%s", ":foo");
 
     OP_VERIFY();
 }
@@ -489,10 +489,10 @@ client_send_when_source_sends_message_with_source()
 
     strcpy(testServer.Name, "Test.Server");
 
-    connection_send_ExpectAndReturn(&TestClient, ":Test.Server Test",
+    connection_send_ExpectAndReturn(&TestClient, ":Test.Server Test * foo",
                                     cmp_ptr, cmp_cstr);
 
-    client_send(&testServer, &TestClient, "%s", "Test");
+    client_send(&testServer, &TestClient, "Test", "%s", "foo");
 
     OP_VERIFY();
 }
@@ -739,6 +739,40 @@ client_set_realname_when_too_long_truncates()
     OP_ASSERT_EQUAL_CSTRING(expected, TestClient.Realname);
 }
 
+static void
+client_get_nickname_when_null_nick_returns_null()
+{
+    const char *ret;
+
+    ret = client_get_nickname(NULL);
+
+    OP_ASSERT_TRUE(ret == NULL);
+}
+
+static void
+client_get_nickname_when_empty_name_returns_star()
+{
+    const char *ret;
+
+    memset(TestClient.Name, 0, sizeof(TestClient.Name));
+
+    ret = client_get_nickname(&TestClient);
+
+    OP_ASSERT_EQUAL_CSTRING("*", ret);
+}
+
+static void
+client_get_nickname_when_name_returns_name()
+{
+    const char *ret;
+
+    strcpy(TestClient.Name, "Test");
+
+    ret = client_get_nickname(&TestClient);
+
+    OP_ASSERT_EQUAL_CSTRING("Test", ret);
+}
+
 int main()
 {
     opmock_test_suite_reset();
@@ -811,6 +845,12 @@ int main()
                          "client_set_realname_when_called_sets_realname");
     opmock_register_test(client_set_realname_when_too_long_truncates,
                          "client_set_realname_when_too_long_truncates");
+    opmock_register_test(client_get_nickname_when_null_nick_returns_null,
+                         "client_get_nickname_when_null_nick_returns_null");
+    opmock_register_test(client_get_nickname_when_empty_name_returns_star,
+                         "client_get_nickname_when_empty_name_returns_star");
+    opmock_register_test(client_get_nickname_when_name_returns_name,
+                         "client_get_nickname_when_name_returns_name");
 
     opmock_test_suite_run();
 

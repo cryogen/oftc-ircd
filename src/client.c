@@ -39,6 +39,7 @@
 #include "server.h"
 #include "parser.h"
 #include "connection.h"
+#include "lstring.h"
 
 static Vector *clientList;
 static Hash *clientHash;
@@ -134,7 +135,7 @@ client_dns_complete_callback(ClientDnsRequest *request, bool match)
                                       HOSTLEN);
     }
 
-    client_send(server_get_this_server(), client, "NOTICE * :%s",
+    client_send(server_get_this_server(), client, "NOTICE", ":%s",
                 DnsNotices[match ? Found : NotFound]);
 
     connection_start_read(client);
@@ -190,7 +191,7 @@ client_lookup_dns(Client *client)
         return;
     }
 
-    client_send(server_get_this_server(), client, "NOTICE * :%s",
+    client_send(server_get_this_server(), client, "NOTICE", ":%s",
                 DnsNotices[LookingUp]);
 
     dnsRequest = Malloc(sizeof(ClientDnsRequest));
@@ -210,7 +211,11 @@ client_lookup_dns(Client *client)
 
 __attribute__((__format__ (__printf__, 3, 0)))
 void
-client_send(Client *source, Client *client, const char *format, ...)
+client_send(Client *source,
+            Client *target,
+            const char *command,
+            const char *format,
+            ...)
 {
     va_list args;
     char buffer[IRC_MAXLEN + 1];
@@ -221,15 +226,17 @@ client_send(Client *source, Client *client, const char *format, ...)
     vsnprintf(buffer, sizeof(buffer), format, args);
     if(source != NULL)
     {
-        snprintf(actualBuffer, sizeof(actualBuffer), ":%s %s", source->Name,
-                 buffer);
+        snprintf(actualBuffer, sizeof(actualBuffer), ":%s %s %s %s",
+                 client_get_nickname(source), command,
+                 client_get_nickname(target), buffer);
     }
     else
     {
-        snprintf(actualBuffer, sizeof(actualBuffer), "%s", buffer);
+        snprintf(actualBuffer, sizeof(actualBuffer), "%s %s %s",
+                 command, client_get_nickname(target), buffer);
     }
 
-    connection_send(client, actualBuffer);
+    connection_send(target, actualBuffer);
 
     va_end(args);
 }
@@ -314,4 +321,20 @@ client_set_realname(Client *client, const char *realname)
     strncpy(client->Realname, realname, REALLEN);
 
     return true;
+}
+
+const char *
+client_get_nickname(Client *client)
+{
+    if(client == NULL)
+    {
+        return NULL;
+    }
+
+    if(string_is_null_or_empty(client->Name))
+    {
+        return "*";
+    }
+
+    return client->Name;
 }

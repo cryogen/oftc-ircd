@@ -29,6 +29,7 @@
 
 #include <uv.h>
 #include <stdbool.h>
+#include <openssl/sha.h>
 
 #include "network.h"
 #include "buffer.h"
@@ -68,7 +69,7 @@ struct _Client
     Buffer *ReadBuffer;
     CommandAccess AccessLevel;
     struct tls *TlsContext;
-    char CertificateFp[21];
+    char CertificateFp[SHA_DIGEST_LENGTH + 1];
 
     // private
     uv_tcp_t *handle;
@@ -85,10 +86,11 @@ void client_init(void);
 Client *client_new(void);
 void client_free(Client *client);
 void client_lookup_dns(Client *client);
-void client_send(Client *source, Client *client, const char *pattern, ...);
+void client_send(Client *, Client *, const char *,const char *, ...);
 void client_process_read_buffer(Client *client);
 bool client_set_username(Client *client, const char *username);
 bool client_set_nickname(Client *client, const char *nickname);
 bool client_set_realname(Client *client, const char *realname);
+const char *client_get_nickname(Client *client);
 
 #endif /* defined(__oftc_ircd__client__) */
