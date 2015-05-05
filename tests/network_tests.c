@@ -297,7 +297,6 @@ setup_address(void *left, void *right, const char *name, char *message)
     struct sockaddr_in *addr = *(struct sockaddr_in **)right;
 
     addr->sin_addr.s_addr = inet_addr("127.0.0.1");
-    addr->sin_len = sizeof(struct sockaddr_in);
     addr->sin_family = AF_INET;
 
     return 0;
