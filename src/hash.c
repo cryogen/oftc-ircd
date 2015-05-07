@@ -24,18 +24,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <string.h>
+
 #include "hash.h"
 #include "memory.h"
 #include "murmurhash3.h"
-
-#include <string.h>
+#include "lstring.h"
 
 static uint32_t
 get_hash_value(Hash *hash, const char *key)
 {
     uint32_t hashVal;
+    char *upperKey;
 
-    MurmurHash3_x86_32(key, (int)strlen(key), HASHSEED, &hashVal);
+    upperKey = string_to_upper(key);
+
+    MurmurHash3_x86_32(upperKey, (int)strlen(upperKey), HASHSEED, &hashVal);
+
+    Free(upperKey);
 
     return hashVal % hash->Length;
 }

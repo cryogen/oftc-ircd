@@ -28,6 +28,7 @@
 #define oftc_ircd_module_h
 
 #include <stdbool.h>
+#include <uv.h>
 
 typedef struct _Module Module;
 typedef struct _ModuleInfo ModuleInfo;

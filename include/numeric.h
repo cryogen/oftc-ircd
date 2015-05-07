@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2014, Stuart Walsh
+ * Copyright (c) 2015, Stuart Walsh
  * All rights reserved.
- * lstring.c local string helper functions
+ * numeric.h IRC numerics
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -24,38 +24,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#ifndef oftc_ircd_numeric_h
+#define oftc_ircd_numeric_h
 
-#include "lstring.h"
-#include "irc.h"
-#include "memory.h"
+#define ERR_NEEDMOREPARAMS          "461"
 
-inline bool
-string_is_null_or_empty(const char *str)
-{
-    return (str == NULL || *str == '\0');
-}
-
-char *
-string_to_upper(const char *str)
-{
-    char *buffer;
-    size_t len;
-
-    if(str == NULL)
-    {
-        return NULL;
-    }
-
-    buffer = StrDup(str);
-    len = strlen(str);
-
-    for(size_t i = 0; i < len; i++)
-    {
-        buffer[i] = toupper(str[i]);
-    }
-
-    return buffer;
-}
+#endif

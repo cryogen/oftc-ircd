@@ -30,5 +30,6 @@
 #include <stdbool.h>
 
 bool string_is_null_or_empty(const char *);
+char *string_to_upper(const char *str);
 
 #endif /* defined(__oftc_ircd__lstring__) */

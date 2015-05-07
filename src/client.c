@@ -40,6 +40,7 @@
 #include "parser.h"
 #include "connection.h"
 #include "lstring.h"
+#include "numeric.h"
 
 static Vector *clientList;
 static Hash *clientHash;
@@ -271,6 +272,8 @@ client_process_read_buffer(Client *client)
 
         if(vector_length(result->Params) < command->MinParams)
         {
+            client_send(server_get_this_server(), client, ERR_NEEDMOREPARAMS,
+                        "%s :Not enough parameters", command->Name);
             parser_result_free(result);
             continue;
         }

@@ -116,10 +116,15 @@ hash_add_string_when_called_puts_value_in_hash()
     HashItem item = { 0 };
     char ptr[512] = { 0 };
     uint32_t hashVal = 123;
+    char key[5] = { 0 };
 
     Malloc_ExpectAndReturn(0, &hash, NULL);
     Malloc_ExpectAndReturn(0, &ptr, NULL);
     MurmurHash3_x86_32_MockWithCallback(hash_callback);
+
+    StrDup_ExpectAndReturn(NULL, key, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
+
     Malloc_ExpectAndReturn(0, &item, NULL);
 
     h = hash_new("Test", DEFAULT_HASH_SIZE);
@@ -141,11 +146,20 @@ hash_add_string_when_called_twice_puts_value_in_hash_bucket()
     HashItem item2 = { 0 };
     char ptr[512] = { 0 };
     uint32_t hashVal = 123;
+    char key[5] = { 0 };
 
     Malloc_ExpectAndReturn(0, &hash, NULL);
     Malloc_ExpectAndReturn(0, &ptr, NULL);
+
+    StrDup_ExpectAndReturn(NULL, key, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
+
     MurmurHash3_x86_32_MockWithCallback(hash_callback);
     Malloc_ExpectAndReturn(0, &item, NULL);
+
+    StrDup_ExpectAndReturn(NULL, key, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
+
     MurmurHash3_x86_32_MockWithCallback(hash_callback);
     Malloc_ExpectAndReturn(0, &item2, NULL);
 
@@ -181,11 +195,19 @@ hash_find_when_called_with_item_in_hash_returns_item()
     HashItem item = { 0 };
     HashItem *ret;
     char ptr[512] = { 0 };
+    char key[5] = { 0 };
 
     Malloc_ExpectAndReturn(0, &hash, NULL);
     Malloc_ExpectAndReturn(0, &ptr, NULL);
+
+    StrDup_ExpectAndReturn(NULL, key, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
+
     MurmurHash3_x86_32_MockWithCallback(hash_callback);
     Malloc_ExpectAndReturn(0, &item, NULL);
+
+    StrDup_ExpectAndReturn(NULL, key, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
 
     h = hash_new("Test", DEFAULT_HASH_SIZE);
 
@@ -207,11 +229,19 @@ hash_find_when_called_with_item_not_in_hash_returns_null()
     HashItem item = { 0 };
     HashItem *ret;
     char ptr[524280] = { 0 }; // 65535 * sizeof(HashItem *)
+    char key[5] = { 0 };
 
     Malloc_ExpectAndReturn(0, &hash, NULL);
     Malloc_ExpectAndReturn(0, &ptr, NULL);
+
+    StrDup_ExpectAndReturn(NULL, key, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
+
     MurmurHash3_x86_32_MockWithCallback(hash_callback);
     Malloc_ExpectAndReturn(0, &item, NULL);
+
+    StrDup_ExpectAndReturn(NULL, key, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
 
     h = hash_new("Test", DEFAULT_HASH_SIZE);
 
@@ -220,6 +250,40 @@ hash_find_when_called_with_item_not_in_hash_returns_null()
     ret = hash_find(h, "foo");
 
     OP_ASSERT_TRUE(ret == NULL);
+    OP_VERIFY();
+}
+
+static void
+hash_find_when_different_case_returns_item()
+{
+    Hash hash = { 0 };
+    Hash *h;
+    HashItem item = { 0 };
+    HashItem *ret;
+    char ptr[512] = { 0 };
+    char key[5] = { 0 };
+
+    Malloc_ExpectAndReturn(0, &hash, NULL);
+    Malloc_ExpectAndReturn(0, &ptr, NULL);
+
+    StrDup_ExpectAndReturn(NULL, key, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
+
+    MurmurHash3_x86_32_MockWithCallback(hash_callback);
+    Malloc_ExpectAndReturn(0, &item, NULL);
+
+    StrDup_ExpectAndReturn(NULL, key, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
+
+    h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_add_string(h, "Test", &item);
+
+    ret = hash_find(h, "TEST");
+
+    OP_ASSERT_TRUE(ret != NULL);
+    OP_ASSERT_TRUE(ret == &item);
+    
     OP_VERIFY();
 }
 
@@ -246,6 +310,8 @@ main()
                          "hash_find_when_called_with_item_in_hash_returns_item");
     opmock_register_test(hash_find_when_called_with_item_not_in_hash_returns_null,
                          "hash_find_when_called_with_item_not_in_hash_returns_null");
+    opmock_register_test(hash_find_when_different_case_returns_item,
+                         "hash_find_when_different_case_returns_item");
 
     opmock_test_suite_run();
 
