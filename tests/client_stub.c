@@ -3,6 +3,22 @@
 #include <stdio.h>
 #include <string.h>
 
+
+typedef struct
+{
+  char check_params;
+} client_send_call;
+
+typedef struct
+{
+  int expectedCalls;
+  int actualCalls;
+  OPMOCK_client_send_CALLBACK callback;
+  client_send_call calls[MAX_FUNC_CALL];
+} client_send_struct;
+
+static client_send_struct client_send_struct_inst;
+
 typedef struct
 {
     char check_params;
@@ -155,6 +171,7 @@ static void opmock_reset_all_mocks_in_this_header()
     client_set_username_MockReset();
     client_set_nickname_MockReset();
     client_set_realname_MockReset();
+    client_send_MockReset();
 }
 
 static void opmock_verify_all_mocks_in_this_header()
@@ -167,6 +184,80 @@ static void opmock_verify_all_mocks_in_this_header()
     client_set_username_VerifyMock();
     client_set_nickname_VerifyMock();
     client_set_realname_VerifyMock();
+    client_send_VerifyMock();
+}
+
+void client_send(Client *source, Client *client, const char *command, const char *args, ...)
+{
+  int opmock_i;
+  client_send_struct_inst.actualCalls++;
+
+  if(client_send_struct_inst.expectedCalls == 0)
+  {
+    opmock_add_error_message((char *) "WARNING : unexpected call of 'client_send', returning random value.");
+    return;
+  }
+
+  if(strcmp(opmock_get_current_call(), "void client_send ()") != 0) {
+    char buffer[OP_ERROR_MESSAGE_LENGTH];
+    snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'void client_send ()',  but was expecting call to '%s'", opmock_get_current_call());
+    opmock_add_error_message(buffer);
+  }
+  opmock_pop_call();
+
+  if (client_send_struct_inst.calls[0].check_params == 1) {
+  }
+
+  for(opmock_i = 1; opmock_i < client_send_struct_inst.expectedCalls; opmock_i++) {
+    client_send_struct_inst.calls[opmock_i - 1] = client_send_struct_inst.calls[opmock_i];
+  }
+
+  client_send_struct_inst.expectedCalls--;
+}
+
+void client_send_MockReset()
+{
+    client_send_struct_inst.expectedCalls = 0;
+    client_send_struct_inst.actualCalls = 0;
+    client_send_struct_inst.callback = NULL;
+}
+
+void client_send_MockWithCallback(OPMOCK_client_send_CALLBACK callback)
+{
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    client_send_struct_inst.callback = callback;
+    client_send_struct_inst.expectedCalls = 0;
+    client_send_struct_inst.actualCalls = 0;
+}
+
+void client_send_VerifyMock()
+{
+    if (client_send_struct_inst.expectedCalls != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : Bad number of calls (%d) for 'client_send'",client_send_struct_inst.actualCalls);
+        opmock_add_error_message((char *) buffer);
+    }
+}
+
+void client_send_ExpectAndReturn ()
+{
+    if(client_send_struct_inst.callback != NULL)
+    {
+        client_send_MockReset ();
+    }
+
+    if(client_send_struct_inst.expectedCalls >= MAX_FUNC_CALL)
+    {
+        printf("WARNING : aborting client_send_ExpectAndReturn, call stack overload.");
+        return;
+    }
+
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    opmock_add_call((char *)"void client_send ()");
+    client_send_struct_inst.calls[client_send_struct_inst.expectedCalls].check_params = 1;
+    client_send_struct_inst.expectedCalls++;
 }
 
 void client_init()

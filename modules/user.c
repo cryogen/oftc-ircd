@@ -28,12 +28,16 @@
 
 #include "module.h"
 #include "command.h"
+#include "client.h"
+#include "server.h"
+#include "numeric.h"
 
 static void
 user_handler(Client *client, Vector *params)
 {
     if(client->AccessLevel != Unregistered)
     {
+        client_send(server_get_this_server(), client, ERR_ALREADYREGISTERED);
         return;
     }
     

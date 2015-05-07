@@ -31,6 +31,7 @@
 #include "command_stub.h"
 #include "client_stub.h"
 #include "vector_stub.h"
+#include "server_stub.h"
 
 extern ModuleInfo ModuleInfoPtr;
 
@@ -50,6 +51,9 @@ user_handler_when_registered_returns()
     Client TestClient = { 0 };
 
     TestClient.AccessLevel = Standard;
+
+    server_get_this_server_ExpectAndReturn(NULL);
+    client_send_ExpectAndReturn(NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
     handler(&TestClient, NULL);
 

@@ -27,6 +27,7 @@
 #ifndef oftc_ircd_numeric_h
 #define oftc_ircd_numeric_h
 
-#define ERR_NEEDMOREPARAMS          "461"
+#define ERR_NEEDMOREPARAMS          "461", "%s :Not enough parameters"
+#define ERR_ALREADYREGISTERED       "462", ":Unauthorised command (already registered)"
 
 #endif

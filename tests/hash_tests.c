@@ -98,7 +98,7 @@ hash_add_string_when_this_is_null_returns_ok()
 
 static void hash_callback(const void *key, int len, uint32_t seed, void *out, int calls)
 {
-    if(strcmp(key, "foo") == 0)
+    if(strcmp(key, "FOO") == 0)
     {
         *((int*)out) = 1234;
     }
@@ -246,6 +246,8 @@ hash_find_when_called_with_item_not_in_hash_returns_null()
     h = hash_new("Test", DEFAULT_HASH_SIZE);
 
     hash_add_string(h, "Test", &item);
+
+    memset(key, 0, sizeof(key));
 
     ret = hash_find(h, "foo");
 

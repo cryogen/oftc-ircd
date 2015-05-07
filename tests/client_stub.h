@@ -9,6 +9,11 @@
 extern "C" {
 #endif
 
+void client_send_ExpectAndReturn();
+void client_send_MockReset();
+typedef void (* OPMOCK_client_send_CALLBACK)(int calls);
+void client_send_MockWithCallback(OPMOCK_client_send_CALLBACK callback);
+void client_send_VerifyMock();
 void client_init_ExpectAndReturn();
 void client_init_MockReset();
 typedef void (* OPMOCK_client_init_CALLBACK)(int calls);

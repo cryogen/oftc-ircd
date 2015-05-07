@@ -125,6 +125,7 @@ user_tests_SOURCES =        modules/user_tests.c    \
                             command_stub.c          \
                             client_stub.c           \
                             vector_stub.c           \
+                            server_stub.c           \
                             ../modules/user.c
 
 AM_CPPFLAGS = -I../include -I../libuv/include -I.. -I../json-c -I../libtls/include
