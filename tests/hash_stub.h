@@ -29,6 +29,11 @@ void hash_find_MockReset();
 typedef void * (* OPMOCK_hash_find_CALLBACK)(Hash * this, const char * key, int calls);
 void hash_find_MockWithCallback(OPMOCK_hash_find_CALLBACK callback);
 void hash_find_VerifyMock();
+void hash_delete_string_ExpectAndReturn(Hash * this, const char * key, OPMOCK_MATCHER match_this, OPMOCK_MATCHER match_key);
+void hash_delete_string_MockReset();
+typedef void (* OPMOCK_hash_delete_string_CALLBACK)(Hash * this, const char * key, int calls);
+void hash_delete_string_MockWithCallback(OPMOCK_hash_delete_string_CALLBACK callback);
+void hash_delete_string_VerifyMock();
 
 #ifdef __cplusplus
 }

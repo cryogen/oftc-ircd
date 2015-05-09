@@ -82,12 +82,32 @@ typedef struct
 
 static hash_find_struct hash_find_struct_inst;
 
+typedef struct
+{
+    void * this;
+    void * key;
+    OPMOCK_MATCHER match_this;
+    OPMOCK_MATCHER match_key;
+    char check_params;
+} hash_delete_string_call;
+
+typedef struct
+{
+    int expectedCalls;
+    int actualCalls;
+    OPMOCK_hash_delete_string_CALLBACK callback;
+    hash_delete_string_call calls[MAX_FUNC_CALL];
+} hash_delete_string_struct;
+
+static hash_delete_string_struct hash_delete_string_struct_inst;
+
 static void opmock_reset_all_mocks_in_this_header()
 {
     hash_init_MockReset();
     hash_new_MockReset();
     hash_add_string_MockReset();
     hash_find_MockReset();
+    hash_delete_string_MockReset();
 }
 
 static void opmock_verify_all_mocks_in_this_header()
@@ -96,6 +116,7 @@ static void opmock_verify_all_mocks_in_this_header()
     hash_new_VerifyMock();
     hash_add_string_VerifyMock();
     hash_find_VerifyMock();
+    hash_delete_string_VerifyMock();
 }
 
 void hash_init()
@@ -498,5 +519,105 @@ void hash_find_ExpectAndReturn (Hash * this, const char * key, void * to_return,
     hash_find_struct_inst.expectedCalls++;
 }
 
-#pragma GCC diagnostic pop
+void hash_delete_string(Hash * this, const char * key)
+{
+    int opmock_i;
+    hash_delete_string_struct_inst.actualCalls++;
+
+    if (hash_delete_string_struct_inst.callback != NULL)
+    {
+        hash_delete_string_struct_inst.callback (this, key, hash_delete_string_struct_inst.actualCalls);
+        return;
+    }
+    if (hash_delete_string_struct_inst.expectedCalls == 0)
+    {
+        opmock_add_error_message((char *) "WARNING : unexpected call of 'hash_delete_string', returning random value.");
+        return;
+    }
+
+    if(strcmp(opmock_get_current_call(), "void hash_delete_string (Hash * this, const char * key)") != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : got call to 'void hash_delete_string(Hash * this, const char * key)',  but was expecting call to '%s'", opmock_get_current_call());
+        opmock_add_error_message(buffer);
+    }
+    opmock_pop_call();
+
+    if (hash_delete_string_struct_inst.calls[0].check_params == 1) {
+        if(hash_delete_string_struct_inst.calls[0].match_this) {
+            void * val1 = (void *) &hash_delete_string_struct_inst.calls[0].this;
+            void * val2 = (void *) &this;
+            int match_result = hash_delete_string_struct_inst.calls[0].match_this(val1, val2, "this", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'hash_delete_string', %s",hash_delete_string_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+        if(hash_delete_string_struct_inst.calls[0].match_key) {
+            void * val1 = (void *) &hash_delete_string_struct_inst.calls[0].key;
+            void * val2 = (void *) &key;
+            int match_result = hash_delete_string_struct_inst.calls[0].match_key(val1, val2, "key", get_matcher_message());
+            if(match_result){
+                char buffer[OP_ERROR_MESSAGE_LENGTH];
+                snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : on call number %d of 'hash_delete_string', %s",hash_delete_string_struct_inst.actualCalls, get_matcher_message());
+                opmock_add_error_message((char *) buffer);
+            }
+        }
+    }
+
+    for(opmock_i = 1; opmock_i < hash_delete_string_struct_inst.expectedCalls; opmock_i++) {
+        hash_delete_string_struct_inst.calls[opmock_i - 1] = hash_delete_string_struct_inst.calls[opmock_i];
+    }
+
+    hash_delete_string_struct_inst.expectedCalls--;
+}
+
+void hash_delete_string_MockReset()
+{
+    hash_delete_string_struct_inst.expectedCalls = 0;
+    hash_delete_string_struct_inst.actualCalls = 0;
+    hash_delete_string_struct_inst.callback = NULL;
+}
+
+void hash_delete_string_MockWithCallback(OPMOCK_hash_delete_string_CALLBACK callback)
+{
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    hash_delete_string_struct_inst.callback = callback;
+    hash_delete_string_struct_inst.expectedCalls = 0;
+    hash_delete_string_struct_inst.actualCalls = 0;
+}
+
+void hash_delete_string_VerifyMock()
+{
+    if (hash_delete_string_struct_inst.expectedCalls != 0) {
+        char buffer[OP_ERROR_MESSAGE_LENGTH];
+        snprintf(buffer, OP_ERROR_MESSAGE_LENGTH, "WARNING : Bad number of calls (%d) for 'hash_delete_string'",hash_delete_string_struct_inst.actualCalls);
+        opmock_add_error_message((char *) buffer);
+    }
+}
+
+void hash_delete_string_ExpectAndReturn (Hash * this, const char * key, OPMOCK_MATCHER match_this, OPMOCK_MATCHER match_key)
+{
+    if(hash_delete_string_struct_inst.callback != NULL)
+    {
+        hash_delete_string_MockReset ();
+    }
+
+    if(hash_delete_string_struct_inst.expectedCalls >= MAX_FUNC_CALL)
+    {
+        printf("WARNING : aborting hash_delete_string_ExpectAndReturn, call stack overload.");
+        return;
+    }
+
+    opmock_add_reset_callback(opmock_reset_all_mocks_in_this_header);
+    opmock_add_verify_callback(opmock_verify_all_mocks_in_this_header);
+    opmock_add_call((char *)"void hash_delete_string (Hash * this, const char * key)");
+    hash_delete_string_struct_inst.calls[hash_delete_string_struct_inst.expectedCalls].this = (void *)this;
+    hash_delete_string_struct_inst.calls[hash_delete_string_struct_inst.expectedCalls].key = (void *)key;
+    hash_delete_string_struct_inst.calls[hash_delete_string_struct_inst.expectedCalls].match_this = match_this;
+    hash_delete_string_struct_inst.calls[hash_delete_string_struct_inst.expectedCalls].match_key = match_key;
+    hash_delete_string_struct_inst.calls[hash_delete_string_struct_inst.expectedCalls].check_params = 1;
+    hash_delete_string_struct_inst.expectedCalls++;
+}
 
