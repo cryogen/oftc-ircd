@@ -108,3 +108,19 @@ hash_find(Hash *thisHash, const char *key)
 
     return thisHash->Buckets[hashVal]->Data;
 }
+
+void
+hash_delete_string(Hash *thisHash, const char *key)
+{
+    uint32_t hashVal;
+
+    hashVal = get_hash_value(thisHash, key);
+
+    if(thisHash->Buckets[hashVal] == NULL)
+    {
+        return;
+    }
+
+    Free(thisHash->Buckets[hashVal]);
+    thisHash->Buckets[hashVal] = NULL;
+}

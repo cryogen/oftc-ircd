@@ -39,6 +39,11 @@ void client_process_read_buffer_MockReset();
 typedef void (* OPMOCK_client_process_read_buffer_CALLBACK)(Client * client, int calls);
 void client_process_read_buffer_MockWithCallback(OPMOCK_client_process_read_buffer_CALLBACK callback);
 void client_process_read_buffer_VerifyMock();
+void client_find_ExpectAndReturn(const char * name, Client * to_return, OPMOCK_MATCHER match_name);
+void client_find_MockReset();
+typedef Client * (* OPMOCK_client_find_CALLBACK)(const char * name, int calls);
+void client_find_MockWithCallback(OPMOCK_client_find_CALLBACK callback);
+void client_find_VerifyMock();
 void client_set_username_ExpectAndReturn(Client * client, const char * username, _Bool to_return, OPMOCK_MATCHER match_client, OPMOCK_MATCHER match_username);
 void client_set_username_MockReset();
 typedef _Bool (* OPMOCK_client_set_username_CALLBACK)(Client * client, const char * username, int calls);
@@ -54,6 +59,11 @@ void client_set_realname_MockReset();
 typedef _Bool (* OPMOCK_client_set_realname_CALLBACK)(Client * client, const char * realname, int calls);
 void client_set_realname_MockWithCallback(OPMOCK_client_set_realname_CALLBACK callback);
 void client_set_realname_VerifyMock();
+void client_get_nickname_ExpectAndReturn(Client * client, const char * to_return, OPMOCK_MATCHER match_client);
+void client_get_nickname_MockReset();
+typedef const char * (* OPMOCK_client_get_nickname_CALLBACK)(Client * client, int calls);
+void client_get_nickname_MockWithCallback(OPMOCK_client_get_nickname_CALLBACK callback);
+void client_get_nickname_VerifyMock();
 
 #ifdef __cplusplus
 }

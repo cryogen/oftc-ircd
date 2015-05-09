@@ -88,6 +88,7 @@ void client_free(Client *client);
 void client_lookup_dns(Client *client);
 void client_send(Client *, Client *, const char *, const char *, ...);
 void client_process_read_buffer(Client *client);
+Client *client_find(const char *name);
 bool client_set_username(Client *client, const char *username);
 bool client_set_nickname(Client *client, const char *nickname);
 bool client_set_realname(Client *client, const char *realname);

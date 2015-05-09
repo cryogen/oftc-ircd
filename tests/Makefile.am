@@ -11,7 +11,8 @@ TESTS = client_tests        \
         list_tests          \
         parser_tests        \
         connection_tests    \
-        user_tests
+        user_tests          \
+        nick_tests
 
 check_PROGRAMS =    $(TESTS)
 
@@ -127,6 +128,16 @@ user_tests_SOURCES =        modules/user_tests.c    \
                             vector_stub.c           \
                             server_stub.c           \
                             ../modules/user.c
+
+nick_tests_SOURCES =        modules/nick_tests.c    \
+                            opmock.c                \
+                            client_stub.c           \
+                            command_stub.c          \
+                            vector_stub.c           \
+                            server_stub.c           \
+                            memory_stub.c           \
+                            ../src/lstring.c        \
+                            ../modules/nick.c
 
 AM_CPPFLAGS = -I../include -I../libuv/include -I.. -I../json-c -I../libtls/include
 

@@ -52,5 +52,6 @@ void hash_init();
 Hash *hash_new(const char *name, size_t length);
 void hash_add_string(Hash *this, const char *key, void *value);
 void *hash_find(Hash *this, const char *key);
+void hash_delete_string(Hash *this, const char *key);
 
 #endif /* defined(__oftc_ircd__hash__) */

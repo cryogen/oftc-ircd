@@ -28,11 +28,30 @@
 
 #include "module.h"
 #include "command.h"
+#include "lstring.h"
+#include "server.h"
+#include "numeric.h"
 
 static void
 nick_handler(Client *client, Vector *params)
 {
-    client_set_nickname(client, vector_get(params, 0));
+    const char *nick = vector_get(params, 0);
+    Client *target;
+
+    if(string_is_null_or_empty(nick))
+    {
+        client_send(server_get_this_server(), client, ERR_NONICKNAMEGIVEN);
+        return;
+    }
+
+    target = client_find(nick);
+    if(target != NULL)
+    {
+        client_send(server_get_this_server(), client, ERR_NICKNAMEINUSE, nick);
+        return;
+    }
+
+    client_set_nickname(client, nick);
 }
 
 static bool

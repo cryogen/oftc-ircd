@@ -43,7 +43,8 @@
 #include "numeric.h"
 
 static Vector *clientList;
-static Hash *clientHash;
+static Hash *ClientHash;
+
 static char *DnsNotices[] =
 {
     "Looking up your hostname",
@@ -148,7 +149,7 @@ void
 client_init()
 {
     clientList = vector_new(0, sizeof(Client));
-    clientHash = hash_new("Client Hash", 0);
+    ClientHash = hash_new("Client Hash", 0);
 }
 
 Client *
@@ -286,6 +287,12 @@ client_process_read_buffer(Client *client)
     }
 }
 
+Client *
+client_find(const char *name)
+{
+    return hash_find(ClientHash, name);
+}
+
 bool
 client_set_nickname(Client *client, const char *nickname)
 {
@@ -294,7 +301,11 @@ client_set_nickname(Client *client, const char *nickname)
         return false;
     }
 
+    hash_delete_string(ClientHash, client->Name);
+
     strncpy(client->Name, nickname, NICKLEN);
+
+    hash_add_string(ClientHash, nickname, client);
 
     return true;
 }

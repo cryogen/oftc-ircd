@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2015, Stuart Walsh
  * All rights reserved.
- * user_test tests for the user command module
+ * nick_test tests for the nick command module
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -25,14 +25,14 @@
  */
 
 #include "opmock.h"
-#include "module.h"
-#include "client.h"
-#include "numeric.h"
-
 #include "command_stub.h"
-#include "client_stub.h"
 #include "vector_stub.h"
+#include "client_stub.h"
 #include "server_stub.h"
+
+#include "module.h"
+#include "command.h"
+#include "numeric.h"
 
 extern ModuleInfo ModuleInfoPtr;
 
@@ -47,56 +47,46 @@ get_handler(void *left, void *right, const char *name, char *message)
 }
 
 static void
-user_handler_when_registered_returns()
+nick_handler_when_blank_nick_sends_error()
 {
-    Client TestClient = { 0 };
+    Client client = { 0 };
 
-    TestClient.AccessLevel = Standard;
-
+    vector_get_ExpectAndReturn(NULL, 0, "", NULL, cmp_int);
     server_get_this_server_ExpectAndReturn(NULL);
-    client_send_ExpectAndReturn(NULL, &TestClient, ERR_ALREADYREGISTERED, NULL,
+    client_send_ExpectAndReturn(NULL, &client, ERR_NONICKNAMEGIVEN, NULL,
                                 NULL, cmp_ptr, cmp_cstr);
 
-    handler(&TestClient, NULL);
+    handler(&client, NULL);
 
     OP_VERIFY();
 }
 
 static void
-user_handler_when_called_sets_username_and_realname()
+nick_handler_when_in_use_send_error()
 {
-    Client TestClient = { 0 };
+    Client client = { 0 };
 
-    vector_get_ExpectAndReturn(NULL, 0, "User", NULL, cmp_int);
-    client_set_username_ExpectAndReturn(&TestClient, "User", true, cmp_ptr, cmp_cstr);
-    vector_get_ExpectAndReturn(NULL, 3, "Realname", NULL, cmp_int);
-    client_set_realname_ExpectAndReturn(&TestClient, "Realname", true, cmp_ptr,
-                                        cmp_cstr);
+    vector_get_ExpectAndReturn(NULL, 0, "Test", NULL, cmp_int);
+    client_find_ExpectAndReturn("Test", &client, cmp_cstr);
+    server_get_this_server_ExpectAndReturn(NULL);
+    client_send_ExpectAndReturn(NULL, &client, ERR_NICKNAMEINUSE, NULL,
+                                NULL, cmp_ptr, cmp_cstr);
 
-    handler(&TestClient, NULL);
+    handler(&client, NULL);
 
     OP_VERIFY();
 }
 
 static void
-user_handler_when_called_twice_updates_username()
+nick_handler_when_called_changes_nick()
 {
-    Client TestClient = { 0 };
+    Client client = { 0 };
 
-    vector_get_ExpectAndReturn(NULL, 0, "User", NULL, cmp_int);
-    client_set_username_ExpectAndReturn(&TestClient, "User", true, cmp_ptr, cmp_cstr);
-    vector_get_ExpectAndReturn(NULL, 3, "Realname", NULL, cmp_int);
-    client_set_realname_ExpectAndReturn(&TestClient, "Realname", true, cmp_ptr,
-                                        cmp_cstr);
+    vector_get_ExpectAndReturn(NULL, 0, "Test", NULL, cmp_int);
+    client_find_ExpectAndReturn("Test", NULL, cmp_cstr);
+    client_set_nickname_ExpectAndReturn(&client, "Test", true, cmp_ptr, cmp_cstr);
 
-    vector_get_ExpectAndReturn(NULL, 0, "User", NULL, cmp_int);
-    client_set_username_ExpectAndReturn(&TestClient, "User", true, cmp_ptr, cmp_cstr);
-    vector_get_ExpectAndReturn(NULL, 3, "Realname", NULL, cmp_int);
-    client_set_realname_ExpectAndReturn(&TestClient, "Realname", true, cmp_ptr,
-                                        cmp_cstr);
-
-    handler(&TestClient, NULL);
-    handler(&TestClient, NULL);
+    handler(&client, NULL);
 
     OP_VERIFY();
 }
@@ -111,14 +101,14 @@ main()
 
     ModuleInfoPtr.Load();
 
-    opmock_register_test(user_handler_when_registered_returns,
-                         "user_handler_when_registered_returns");
-    opmock_register_test(user_handler_when_called_sets_username_and_realname,
-                         "user_handler_when_called_sets_username_and_realname");
-    opmock_register_test(user_handler_when_called_twice_updates_username,
-                         "user_handler_when_called_twice_updates_username");
+    opmock_register_test(nick_handler_when_blank_nick_sends_error,
+                         "nick_handler_when_blank_nick_sends_error");
+    opmock_register_test(nick_handler_when_in_use_send_error,
+                         "nick_handler_when_in_use_send_error");
+    opmock_register_test(nick_handler_when_called_changes_nick,
+                         "nick_handler_when_called_changes_nick");
 
     opmock_test_suite_run();
-
+    
     return opmock_test_error > 0;
 }

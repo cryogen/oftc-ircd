@@ -27,6 +27,8 @@
 #ifndef oftc_ircd_numeric_h
 #define oftc_ircd_numeric_h
 
+#define ERR_NONICKNAMEGIVEN         "431", ":No nickname given"
+#define ERR_NICKNAMEINUSE           "433", "%s :Nickname is already in use"
 #define ERR_NEEDMOREPARAMS          "461", "%s :Not enough parameters"
 #define ERR_ALREADYREGISTERED       "462", ":Unauthorised command (already registered)"
 
