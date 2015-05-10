@@ -3,6 +3,18 @@ checkout:
     - git submodule sync
     - git submodule update --init # use submodules
 
+dependencies:
+    pre:
+      - sudo apt-get install autoconf-archive automake-1.14 autoconf2.59 build-essential
+
 test:
+  pre:
+    - cd json-c && ./autogen.sh && cd ..
+    - cd libuv && ./autogen.sh && cd ..
+    - cd libtls && ./autogen.sh && cd ..
+    - autoreconf -i -f
+    - ./configure
+    - make
+
   override:
     - make check
