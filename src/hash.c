@@ -35,13 +35,8 @@ static uint32_t
 get_hash_value(Hash *hash, const char *key)
 {
     uint32_t hashVal;
-    char *upperKey;
 
-    upperKey = string_to_upper(key);
-
-    MurmurHash3_x86_32(upperKey, (int)strlen(upperKey), HASHSEED, &hashVal);
-
-    Free(upperKey);
+    MurmurHash3_x86_32(key, (int)strlen(key), HASHSEED, &hashVal);
 
     return hashVal % hash->Length;
 }
@@ -75,38 +70,63 @@ hash_add_string(Hash *thisHash, const char *key, void *value)
 {
     uint32_t hashVal;
     HashItem *newItem;
+    char *upperKey;
 
     if(thisHash == NULL)
     {
         return;
     }
 
-    hashVal = get_hash_value(thisHash, key);
+    upperKey = string_to_upper(key);
+
+    hashVal = get_hash_value(thisHash, upperKey);
     newItem = Malloc(sizeof(HashItem));
 
     newItem->Next = thisHash->Buckets[hashVal];
     newItem->Data = value;
+    strncpy(newItem->Key, upperKey, MAX_KEY_LEN);
     thisHash->Buckets[hashVal] = newItem;
+
+    Free(upperKey);
 }
 
 void *
 hash_find(Hash *thisHash, const char *key)
 {
     uint32_t hashVal;
+    HashItem *ptr;
+    char *upperKey;
 
     if(thisHash == NULL)
     {
         return NULL;
     }
 
-    hashVal = get_hash_value(thisHash, key);
+    upperKey = string_to_upper(key);
 
-    if(thisHash->Buckets[hashVal] == NULL)
+    hashVal = get_hash_value(thisHash, upperKey);
+
+    ptr = thisHash->Buckets[hashVal];
+    
+    if(ptr == NULL)
     {
+        Free(upperKey);
         return NULL;
     }
 
-    return thisHash->Buckets[hashVal]->Data;
+    while(ptr != NULL)
+    {
+        if(strncmp(ptr->Key, upperKey, MAX_KEY_LEN) == 0)
+        {
+            Free(upperKey);
+            return ptr->Data;
+        }
+
+        ptr = ptr->Next;
+    }
+
+    Free(upperKey);
+    return NULL;
 }
 
 void

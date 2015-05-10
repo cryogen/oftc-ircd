@@ -31,6 +31,7 @@
 
 #define DEFAULT_HASH_SIZE 65535
 #define HASHSEED 0x6d4c2a10
+#define MAX_KEY_LEN 128
 
 typedef struct _Hash Hash;
 typedef struct _HashItem HashItem;
@@ -46,6 +47,7 @@ struct _HashItem
 {
     HashItem *Next;
     void *Data;
+    char Key[MAX_KEY_LEN + 1];
 };
 
 void hash_init();

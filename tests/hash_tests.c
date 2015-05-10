@@ -29,15 +29,83 @@
 #include "murmurhash3_stub.h"
 #include "memory_stub.h"
 
+static char HashDataPtr[65535 * sizeof(HashItem *)];
+static Hash HashPtr;
+static char HashKey[64];
+static HashItem Item;
+static HashItem Item2;
+static HashItem *ItemPtr;
+static uint32_t HashValue;
+
+static int
+hash_callback(void *left, void *right, const char *message, char *buffer)
+{
+    if(strcmp(HashKey, "TEST") == 0)
+    {
+        HashValue = 0x1234;
+    }
+    else if(strcmp(HashKey, "SAME") == 0)
+    {
+        HashValue = 0x1234;
+    }
+    else if(strcmp(HashKey, "FOO") == 0)
+    {
+        HashValue = 0x4321;
+    }
+    else
+    {
+        HashValue = 0x9999;
+    }
+
+    **(int **)right = HashValue;
+
+    return 0;
+}
+
+static void
+setup_hash()
+{
+    memset(HashDataPtr, 0, sizeof(HashDataPtr));
+    memset(&HashPtr, 0, sizeof(HashPtr));
+    memset(HashKey, 0, sizeof(HashKey));
+
+    Malloc_ExpectAndReturn(0, &HashPtr, NULL);
+    Malloc_ExpectAndReturn(0, &HashDataPtr, NULL);
+}
+
+static void
+setup_item()
+{
+    memset(HashKey, 0, sizeof(HashKey));
+    memset(ItemPtr, 0, sizeof(HashItem));
+
+    StrDup_ExpectAndReturn(NULL, HashKey, NULL);
+
+    MurmurHash3_x86_32_ExpectAndReturn(HashKey, 0, HASHSEED, NULL,
+                                       cmp_cstr, NULL, cmp_int, hash_callback);
+
+    Free_ExpectAndReturn(HashKey, cmp_ptr);
+
+    Malloc_ExpectAndReturn(0, ItemPtr, NULL);
+}
+
+static void
+setup_find()
+{
+    StrDup_ExpectAndReturn(NULL, HashKey, NULL);
+
+    MurmurHash3_x86_32_ExpectAndReturn(HashKey, 0, HASHSEED, NULL,
+                                       cmp_cstr, NULL, cmp_int, hash_callback);
+
+    Free_ExpectAndReturn(NULL, NULL);
+}
+
 static void
 hash_new_when_called_with_name_and_len_returns_hash()
 {
-    Hash hash = { 0 };
     Hash *h;
-    char ptr[512];
 
-    Malloc_ExpectAndReturn(0, &hash, NULL);
-    Malloc_ExpectAndReturn(0, &ptr, NULL);
+    setup_hash();
 
     h = hash_new("Test hash", DEFAULT_HASH_SIZE);
 
@@ -45,135 +113,82 @@ hash_new_when_called_with_name_and_len_returns_hash()
     OP_ASSERT_TRUE(h->Name != NULL);
     OP_ASSERT_EQUAL_CSTRING("Test hash", h->Name);
     OP_ASSERT_TRUE(h->Buckets != NULL);
-
-    OP_VERIFY();
 }
 
 static void
 hash_new_when_called_with_null_name_and_len_returns_hash()
 {
-    Hash hash = { 0 };
     Hash *h;
-    char ptr[512];
 
-    Malloc_ExpectAndReturn(0, &hash, NULL);
-    Malloc_ExpectAndReturn(0, &ptr, NULL);
+    setup_hash();
 
     h = hash_new(NULL, 20);
 
     OP_ASSERT_TRUE(h != NULL);
     OP_ASSERT_EQUAL_LONG((size_t)20, h->Length);
-
-    OP_VERIFY();
 }
-
 
 static void
 hash_new_when_called_with_zero_len_returns_hash_with_default_length()
 {
-    Hash hash = { 0 };
     Hash *h;
-    char ptr[512];
 
-    Malloc_ExpectAndReturn(0, &hash, NULL);
-    Malloc_ExpectAndReturn(0, &ptr, NULL);
+    setup_hash();
 
     h = hash_new("Test", 0);
 
     OP_ASSERT_TRUE(h != NULL);
     OP_ASSERT_EQUAL_LONG((size_t)DEFAULT_HASH_SIZE, h->Length);
-
-    OP_VERIFY();
 }
 
 static void
 hash_add_string_when_this_is_null_returns_ok()
 {
-    HashItem item;
-
-    hash_add_string(NULL, "Test", &item);
+    hash_add_string(NULL, "Test", &Item);
 
     OP_VERIFY();
-}
-
-static void hash_callback(const void *key, int len, uint32_t seed, void *out, int calls)
-{
-    if(strcmp(key, "FOO") == 0)
-    {
-        *((int*)out) = 1234;
-    }
-    else
-    {
-        *((int*)out) = 123;
-    }
 }
 
 static void
 hash_add_string_when_called_puts_value_in_hash()
 {
-    Hash hash = { 0 };
     Hash *h;
-    HashItem item = { 0 };
-    char ptr[512] = { 0 };
-    uint32_t hashVal = 123;
-    char key[5] = { 0 };
 
-    Malloc_ExpectAndReturn(0, &hash, NULL);
-    Malloc_ExpectAndReturn(0, &ptr, NULL);
-    MurmurHash3_x86_32_MockWithCallback(hash_callback);
+    setup_hash();
 
-    StrDup_ExpectAndReturn(NULL, key, NULL);
-    Free_ExpectAndReturn(NULL, NULL);
-
-    Malloc_ExpectAndReturn(0, &item, NULL);
+    ItemPtr = &Item;
+    setup_item();
 
     h = hash_new("Test", DEFAULT_HASH_SIZE);
 
-    hash_add_string(h, "Test", &item);
+    hash_add_string(h, "Test", &Item);
 
-    OP_ASSERT_TRUE(h->Buckets[hashVal % h->Length] != NULL);
-    OP_ASSERT_TRUE(h->Buckets[hashVal % h->Length]->Data == &item);
-
-    OP_VERIFY();
+    OP_ASSERT_TRUE(h->Buckets[HashValue % h->Length] != NULL);
+    OP_ASSERT_TRUE(h->Buckets[HashValue % h->Length]->Data == &Item);
 }
 
 static void
 hash_add_string_when_called_twice_puts_value_in_hash_bucket()
 {
-    Hash hash = { 0 };
     Hash *h;
-    HashItem item = { 0 };
-    HashItem item2 = { 0 };
-    char ptr[512] = { 0 };
-    uint32_t hashVal = 123;
-    char key[5] = { 0 };
 
-    Malloc_ExpectAndReturn(0, &hash, NULL);
-    Malloc_ExpectAndReturn(0, &ptr, NULL);
+    setup_hash();
 
-    StrDup_ExpectAndReturn(NULL, key, NULL);
-    Free_ExpectAndReturn(NULL, NULL);
+    ItemPtr = &Item;
+    setup_item();
 
-    MurmurHash3_x86_32_MockWithCallback(hash_callback);
-    Malloc_ExpectAndReturn(0, &item, NULL);
-
-    StrDup_ExpectAndReturn(NULL, key, NULL);
-    Free_ExpectAndReturn(NULL, NULL);
-
-    MurmurHash3_x86_32_MockWithCallback(hash_callback);
-    Malloc_ExpectAndReturn(0, &item2, NULL);
+    ItemPtr = &Item2;
+    setup_item();
 
     h = hash_new("Test", DEFAULT_HASH_SIZE);
 
-    hash_add_string(h, "Test", &item);
-    hash_add_string(h, "Test", &item2);
+    hash_add_string(h, "Test", &Item);
+    hash_add_string(h, "Test", &Item2);
 
-    OP_ASSERT_TRUE(h->Buckets[hashVal] != NULL);
-    OP_ASSERT_TRUE(h->Buckets[hashVal]->Data == &item2);
-    OP_ASSERT_TRUE(h->Buckets[hashVal]->Next != NULL);
-    OP_ASSERT_TRUE(h->Buckets[hashVal]->Next->Data == &item);
-
-    OP_VERIFY();
+    OP_ASSERT_TRUE(h->Buckets[HashValue] != NULL);
+    OP_ASSERT_TRUE(h->Buckets[HashValue]->Data == &Item2);
+    OP_ASSERT_TRUE(h->Buckets[HashValue]->Next != NULL);
+    OP_ASSERT_TRUE(h->Buckets[HashValue]->Next->Data == &Item);
 }
 
 
@@ -183,110 +198,136 @@ hash_find_when_called_with_null_this_returns_null()
     HashItem *item = hash_find(NULL, "TEST");
 
     OP_ASSERT_TRUE(item == NULL);
-
-    OP_VERIFY();
 }
 
 static void
 hash_find_when_called_with_item_in_hash_returns_item()
 {
-    Hash hash = { 0 };
     Hash *h;
-    HashItem item = { 0 };
     HashItem *ret;
-    char ptr[512] = { 0 };
-    char key[5] = { 0 };
 
-    Malloc_ExpectAndReturn(0, &hash, NULL);
-    Malloc_ExpectAndReturn(0, &ptr, NULL);
+    setup_hash();
 
-    StrDup_ExpectAndReturn(NULL, key, NULL);
-    Free_ExpectAndReturn(NULL, NULL);
+    ItemPtr = &Item;
+    setup_item();
 
-    MurmurHash3_x86_32_MockWithCallback(hash_callback);
-    Malloc_ExpectAndReturn(0, &item, NULL);
-
-    StrDup_ExpectAndReturn(NULL, key, NULL);
-    Free_ExpectAndReturn(NULL, NULL);
+    setup_find();
 
     h = hash_new("Test", DEFAULT_HASH_SIZE);
 
-    hash_add_string(h, "Test", &item);
+    hash_add_string(h, "Test", &Item);
+
+    memset(HashKey, 0, sizeof(HashKey));
 
     ret = hash_find(h, "Test");
 
     OP_ASSERT_TRUE(ret != NULL);
-    OP_ASSERT_TRUE(ret == &item);
-
-    OP_VERIFY();
+    OP_ASSERT_TRUE(ret == &Item);
 }
 
 static void
 hash_find_when_called_with_item_not_in_hash_returns_null()
 {
-    Hash hash = { 0 };
     Hash *h;
-    HashItem item = { 0 };
     HashItem *ret;
-    char ptr[524280] = { 0 }; // 65535 * sizeof(HashItem *)
-    char key[5] = { 0 };
 
-    Malloc_ExpectAndReturn(0, &hash, NULL);
-    Malloc_ExpectAndReturn(0, &ptr, NULL);
+    setup_hash();
 
-    StrDup_ExpectAndReturn(NULL, key, NULL);
-    Free_ExpectAndReturn(NULL, NULL);
+    ItemPtr = &Item;
+    setup_item();
 
-    MurmurHash3_x86_32_MockWithCallback(hash_callback);
-    Malloc_ExpectAndReturn(0, &item, NULL);
-
-    StrDup_ExpectAndReturn(NULL, key, NULL);
-    Free_ExpectAndReturn(NULL, NULL);
+    setup_find();
 
     h = hash_new("Test", DEFAULT_HASH_SIZE);
 
-    hash_add_string(h, "Test", &item);
+    hash_add_string(h, "Test", &Item);
 
-    memset(key, 0, sizeof(key));
+    memset(HashKey, 0, sizeof(HashKey));
 
     ret = hash_find(h, "foo");
 
     OP_ASSERT_TRUE(ret == NULL);
-    OP_VERIFY();
 }
 
 static void
 hash_find_when_different_case_returns_item()
 {
-    Hash hash = { 0 };
     Hash *h;
-    HashItem item = { 0 };
     HashItem *ret;
-    char ptr[512] = { 0 };
-    char key[5] = { 0 };
 
-    Malloc_ExpectAndReturn(0, &hash, NULL);
-    Malloc_ExpectAndReturn(0, &ptr, NULL);
+    setup_hash();
 
-    StrDup_ExpectAndReturn(NULL, key, NULL);
-    Free_ExpectAndReturn(NULL, NULL);
+    ItemPtr = &Item;
+    setup_item();
 
-    MurmurHash3_x86_32_MockWithCallback(hash_callback);
-    Malloc_ExpectAndReturn(0, &item, NULL);
-
-    StrDup_ExpectAndReturn(NULL, key, NULL);
-    Free_ExpectAndReturn(NULL, NULL);
+    setup_find();
 
     h = hash_new("Test", DEFAULT_HASH_SIZE);
 
-    hash_add_string(h, "Test", &item);
+    hash_add_string(h, "Test", &Item);
 
-    ret = hash_find(h, "TEST");
+    memset(HashKey, 0, sizeof(HashKey));
+
+    ret = hash_find(h, "TeST");
 
     OP_ASSERT_TRUE(ret != NULL);
-    OP_ASSERT_TRUE(ret == &item);
-    
-    OP_VERIFY();
+    OP_ASSERT_TRUE(ret == &Item);
+}
+
+static void
+hash_find_when_in_bucket_returns_item()
+{
+    Hash *h;
+    HashItem *ret;
+
+    setup_hash();
+
+    ItemPtr = &Item;
+    setup_item();
+
+    ItemPtr = &Item2;
+    setup_item();
+
+    setup_find();
+    setup_find();
+
+    h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_add_string(h, "Test", &Item);
+    hash_add_string(h, "Same", &Item2);
+
+    memset(HashKey, 0, sizeof(HashKey));
+
+    ret = hash_find(h, "same");
+
+    OP_ASSERT_TRUE(ret == &Item2);
+
+    ret = hash_find(h, "test");
+    OP_ASSERT_TRUE(ret == &Item);
+}
+
+static void
+hash_Find_when_same_bucket_not_in_hash_returns_null()
+{
+    Hash *h;
+    HashItem *ret;
+
+    setup_hash();
+
+    ItemPtr = &Item;
+    setup_item();
+
+    setup_find();
+    setup_find();
+
+    h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_add_string(h, "Test", &Item);
+
+    memset(HashKey, 0, sizeof(HashKey));
+
+    ret = hash_find(h, "same");
+    OP_ASSERT_TRUE(ret == NULL);
 }
 
 int
@@ -314,6 +355,10 @@ main()
                          "hash_find_when_called_with_item_not_in_hash_returns_null");
     opmock_register_test(hash_find_when_different_case_returns_item,
                          "hash_find_when_different_case_returns_item");
+    opmock_register_test(hash_find_when_in_bucket_returns_item,
+                         "hash_find_when_in_bucket_returns_item");
+    opmock_register_test(hash_Find_when_same_bucket_not_in_hash_returns_null,
+                         "hash_Find_when_same_bucket_not_in_hash_returns_null");
 
     opmock_test_suite_run();
 
