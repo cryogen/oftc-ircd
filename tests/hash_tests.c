@@ -34,6 +34,7 @@ static Hash HashPtr;
 static char HashKey[64];
 static HashItem Item;
 static HashItem Item2;
+static HashItem Item3;
 static HashItem *ItemPtr;
 static uint32_t HashValue;
 
@@ -45,6 +46,10 @@ hash_callback(void *left, void *right, const char *message, char *buffer)
         HashValue = 0x1234;
     }
     else if(strcmp(HashKey, "SAME") == 0)
+    {
+        HashValue = 0x1234;
+    }
+    else if(strcmp(HashKey, "THIRD") == 0)
     {
         HashValue = 0x1234;
     }
@@ -84,9 +89,8 @@ setup_item()
     MurmurHash3_x86_32_ExpectAndReturn(HashKey, 0, HASHSEED, NULL,
                                        cmp_cstr, NULL, cmp_int, hash_callback);
 
-    Free_ExpectAndReturn(HashKey, cmp_ptr);
-
     Malloc_ExpectAndReturn(0, ItemPtr, NULL);
+    Free_ExpectAndReturn(HashKey, cmp_ptr);
 }
 
 static void
@@ -307,7 +311,7 @@ hash_find_when_in_bucket_returns_item()
 }
 
 static void
-hash_Find_when_same_bucket_not_in_hash_returns_null()
+hash_find_when_same_bucket_not_in_hash_returns_null()
 {
     Hash *h;
     HashItem *ret;
@@ -328,6 +332,120 @@ hash_Find_when_same_bucket_not_in_hash_returns_null()
 
     ret = hash_find(h, "same");
     OP_ASSERT_TRUE(ret == NULL);
+}
+
+static void
+hash_delete_string_when_null_hash_returns()
+{
+    hash_delete_string(NULL, "test");
+
+    OP_VERIFY();
+}
+
+static void
+hash_delete_string_when_not_found_returns()
+{
+    Hash *h;
+
+    setup_hash();
+    setup_find();
+
+    strcpy(HashKey, "NotFound");
+
+    h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_delete_string(h, "NotFound");
+
+    OP_VERIFY();
+}
+
+static void
+hash_delete_string_when_found_deletes_key()
+{
+    Hash *h;
+
+    setup_hash();
+
+    ItemPtr = &Item;
+    setup_item();
+
+    setup_find();
+
+    Free_ExpectAndReturn(NULL, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
+
+    h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_add_string(h, "Test", &Item);
+
+    OP_ASSERT_TRUE(h->Buckets[HashValue] != NULL);
+
+    hash_delete_string(h, "Test");
+
+    OP_ASSERT_TRUE(h->Buckets[HashValue] == NULL);
+}
+
+static void
+hash_delete_when_same_bucket_deletes_correct_key()
+{
+    Hash *h;
+
+    setup_hash();
+
+    ItemPtr = &Item;
+    setup_item();
+    ItemPtr = &Item2;
+    setup_item();
+
+    setup_find();
+
+    Free_ExpectAndReturn(NULL, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
+
+    h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_add_string(h, "Test", &Item);
+    hash_add_string(h, "Same", &Item2);
+
+    hash_delete_string(h, "Test");
+
+    OP_ASSERT_TRUE(h->Buckets[HashValue] != NULL);
+    OP_ASSERT_TRUE(h->Buckets[HashValue] == &Item2);
+}
+
+static void
+hash_delete_when_delete_middle_stiches_together()
+{
+    Hash *h;
+
+    setup_hash();
+
+    ItemPtr = &Item;
+    setup_item();
+    ItemPtr = &Item2;
+    setup_item();
+    ItemPtr = &Item3;
+    setup_item();
+
+    setup_find();
+
+    Free_ExpectAndReturn(NULL, NULL);
+    Free_ExpectAndReturn(NULL, NULL);
+
+    h = hash_new("Test", DEFAULT_HASH_SIZE);
+
+    hash_add_string(h, "Test", &Item);
+    hash_add_string(h, "Same", &Item2);
+    hash_add_string(h, "Third", &Item3);
+
+    memset(&HashKey, 0, sizeof(HashKey));
+
+    hash_delete_string(h, "Same");
+
+    OP_ASSERT_TRUE(h->Buckets[HashValue] != NULL);
+    OP_ASSERT_TRUE(h->Buckets[HashValue] == &Item3);
+    OP_ASSERT_TRUE(h->Buckets[HashValue]->Next == &Item);
+    OP_ASSERT_TRUE(h->Buckets[HashValue]->Next->Next == NULL);
 }
 
 int
@@ -357,8 +475,18 @@ main()
                          "hash_find_when_different_case_returns_item");
     opmock_register_test(hash_find_when_in_bucket_returns_item,
                          "hash_find_when_in_bucket_returns_item");
-    opmock_register_test(hash_Find_when_same_bucket_not_in_hash_returns_null,
-                         "hash_Find_when_same_bucket_not_in_hash_returns_null");
+    opmock_register_test(hash_find_when_same_bucket_not_in_hash_returns_null,
+                         "hash_find_when_same_bucket_not_in_hash_returns_null");
+    opmock_register_test(hash_delete_string_when_null_hash_returns,
+                         "hash_delete_string_when_null_hash_returns");
+    opmock_register_test(hash_delete_string_when_not_found_returns,
+                         "hash_delete_string_when_not_found_returns");
+    opmock_register_test(hash_delete_string_when_found_deletes_key,
+                         "hash_delete_string_when_found_deletes_key");
+    opmock_register_test(hash_delete_when_same_bucket_deletes_correct_key,
+                         "hash_delete_when_same_bucket_deletes_correct_key");
+    opmock_register_test(hash_delete_when_delete_middle_stiches_together,
+                         "hash_delete_when_delete_middle_stiches_together");
 
     opmock_test_suite_run();
 

@@ -133,14 +133,35 @@ void
 hash_delete_string(Hash *thisHash, const char *key)
 {
     uint32_t hashVal;
+    char *upperKey;
+    HashItem *ptr, *last;
 
-    hashVal = get_hash_value(thisHash, key);
-
-    if(thisHash->Buckets[hashVal] == NULL)
+    if(thisHash == NULL)
     {
         return;
     }
 
-    Free(thisHash->Buckets[hashVal]);
-    thisHash->Buckets[hashVal] = NULL;
+    upperKey = string_to_upper(key);
+    hashVal = get_hash_value(thisHash, upperKey);
+
+    last = ptr = thisHash->Buckets[hashVal];
+
+    while(ptr != NULL)
+    {
+        if(strncmp(ptr->Key, upperKey, MAX_KEY_LEN) == 0)
+        {
+            last->Next = ptr->Next;
+            if(thisHash->Buckets[hashVal] == ptr && ptr->Next == NULL)
+            {
+                thisHash->Buckets[hashVal] = NULL;
+            }
+            Free(ptr);
+            break;
+        }
+
+        last = ptr;
+        ptr = ptr->Next;
+    }
+
+    Free(upperKey);
 }
