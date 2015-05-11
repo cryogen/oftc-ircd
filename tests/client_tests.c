@@ -773,6 +773,73 @@ client_get_nickname_when_name_returns_name()
     OP_ASSERT_EQUAL_CSTRING("Test", ret);
 }
 
+static void
+client_can_register_when_neither_set_returns_false()
+{
+    bool ret;
+    Client client = { 0 };
+
+    ret = client_can_register(&client);
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
+client_can_register_when_nick_not_set_returns_false()
+{
+    bool ret;
+    Client client = { 0 };
+
+    strcpy(client.Username, "Test");
+
+    ret = client_can_register(&client);
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
+client_can_register_when_user_not_set_returns_false()
+{
+    bool ret;
+    Client client = { 0 };
+
+    strcpy(client.Name, "Test");
+
+    ret = client_can_register(&client);
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
+client_can_register_when_already_registered_returns_false()
+{
+    bool ret;
+    Client client = { 0 };
+
+    strcpy(client.Username, "Test");
+    strcpy(client.Name, "Test");
+
+    client.AccessLevel = Standard;
+
+    ret = client_can_register(&client);
+
+    OP_ASSERT_FALSE(ret);
+}
+
+static void
+client_can_register_when_nick_and_user_set_returns_true()
+{
+    bool ret;
+    Client client = { 0 };
+
+    strcpy(client.Username, "Test");
+    strcpy(client.Name, "Test");
+
+    ret = client_can_register(&client);
+
+    OP_ASSERT_TRUE(ret);
+}
+
 int main()
 {
     opmock_test_suite_reset();
@@ -851,6 +918,16 @@ int main()
                          "client_get_nickname_when_empty_name_returns_star");
     opmock_register_test(client_get_nickname_when_name_returns_name,
                          "client_get_nickname_when_name_returns_name");
+    opmock_register_test(client_can_register_when_neither_set_returns_false,
+                         "client_can_register_when_neither_set_returns_false");
+    opmock_register_test(client_can_register_when_nick_not_set_returns_false,
+                         "client_can_register_when_nick_not_set_returns_false");
+    opmock_register_test(client_can_register_when_user_not_set_returns_false,
+                         "client_can_register_when_user_not_set_returns_false");
+    opmock_register_test(client_can_register_when_already_registered_returns_false,
+                         "client_can_register_when_already_registered_returns_false");
+    opmock_register_test(client_can_register_when_nick_and_user_set_returns_true,
+                         "client_can_register_when_nick_and_user_set_returns_true");
 
     opmock_test_suite_run();
 

@@ -72,6 +72,7 @@ user_handler_when_called_sets_username_and_realname()
     vector_get_ExpectAndReturn(NULL, 3, "Realname", NULL, cmp_int);
     client_set_realname_ExpectAndReturn(&TestClient, "Realname", true, cmp_ptr,
                                         cmp_cstr);
+    client_can_register_ExpectAndReturn(&TestClient, false, cmp_ptr);
 
     handler(&TestClient, NULL);
 
@@ -89,13 +90,35 @@ user_handler_when_called_twice_updates_username()
     client_set_realname_ExpectAndReturn(&TestClient, "Realname", true, cmp_ptr,
                                         cmp_cstr);
 
+    client_can_register_ExpectAndReturn(&TestClient, false, cmp_ptr);
+
     vector_get_ExpectAndReturn(NULL, 0, "User", NULL, cmp_int);
     client_set_username_ExpectAndReturn(&TestClient, "User", true, cmp_ptr, cmp_cstr);
     vector_get_ExpectAndReturn(NULL, 3, "Realname", NULL, cmp_int);
     client_set_realname_ExpectAndReturn(&TestClient, "Realname", true, cmp_ptr,
                                         cmp_cstr);
 
+    client_can_register_ExpectAndReturn(&TestClient, false, cmp_ptr);
+
     handler(&TestClient, NULL);
+    handler(&TestClient, NULL);
+
+    OP_VERIFY();
+}
+
+static void
+user_handler_when_can_register_registers()
+{
+    Client TestClient = { 0 };
+
+    vector_get_ExpectAndReturn(NULL, 0, "User", NULL, cmp_int);
+    client_set_username_ExpectAndReturn(&TestClient, "User", true, cmp_ptr, cmp_cstr);
+    vector_get_ExpectAndReturn(NULL, 3, "Realname", NULL, cmp_int);
+    client_set_realname_ExpectAndReturn(&TestClient, "Realname", true, cmp_ptr,
+                                        cmp_cstr);
+    client_can_register_ExpectAndReturn(&TestClient, true, cmp_ptr);
+    client_register_ExpectAndReturn(&TestClient, cmp_ptr);
+
     handler(&TestClient, NULL);
 
     OP_VERIFY();
@@ -117,6 +140,8 @@ main()
                          "user_handler_when_called_sets_username_and_realname");
     opmock_register_test(user_handler_when_called_twice_updates_username,
                          "user_handler_when_called_twice_updates_username");
+    opmock_register_test(user_handler_when_can_register_registers,
+                         "user_handler_when_can_register_registers");
 
     opmock_test_suite_run();
 

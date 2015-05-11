@@ -43,6 +43,11 @@ user_handler(Client *client, Vector *params)
     
     client_set_username(client, vector_get(params, 0));
     client_set_realname(client, vector_get(params, 3));
+
+    if(client_can_register(client))
+    {
+        client_register(client);
+    }
 }
 
 static bool

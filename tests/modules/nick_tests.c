@@ -78,13 +78,30 @@ nick_handler_when_in_use_send_error()
 }
 
 static void
-nick_handler_when_called_changes_nick()
+nick_handler_when_can_not_register_changes_nick()
 {
     Client client = { 0 };
 
     vector_get_ExpectAndReturn(NULL, 0, "Test", NULL, cmp_int);
     client_find_ExpectAndReturn("Test", NULL, cmp_cstr);
     client_set_nickname_ExpectAndReturn(&client, "Test", true, cmp_ptr, cmp_cstr);
+    client_can_register_ExpectAndReturn(&client, false, cmp_ptr);
+
+    handler(&client, NULL);
+
+    OP_VERIFY();
+}
+
+static void
+nick_handler_when_can_register_registers()
+{
+    Client client = { 0 };
+
+    vector_get_ExpectAndReturn(NULL, 0, "Test", NULL, cmp_int);
+    client_find_ExpectAndReturn("Test", NULL, cmp_cstr);
+    client_set_nickname_ExpectAndReturn(&client, "Test", true, cmp_ptr, cmp_cstr);
+    client_can_register_ExpectAndReturn(&client, true, cmp_ptr);
+    client_register_ExpectAndReturn(&client, cmp_ptr);
 
     handler(&client, NULL);
 
@@ -105,8 +122,10 @@ main()
                          "nick_handler_when_blank_nick_sends_error");
     opmock_register_test(nick_handler_when_in_use_send_error,
                          "nick_handler_when_in_use_send_error");
-    opmock_register_test(nick_handler_when_called_changes_nick,
-                         "nick_handler_when_called_changes_nick");
+    opmock_register_test(nick_handler_when_can_not_register_changes_nick,
+                         "nick_handler_when_can_not_register_changes_nick");
+    opmock_register_test(nick_handler_when_can_register_registers,
+                         "nick_handler_when_can_register_registers");
 
     opmock_test_suite_run();
     

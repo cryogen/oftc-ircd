@@ -293,6 +293,34 @@ client_find(const char *name)
     return hash_find(ClientHash, name);
 }
 
+void
+client_register(Client *client)
+{
+    client_send(server_get_this_server(), client, RPL_WELCOME, client->Name);
+    client_send(server_get_this_server(), client, RPL_YOURHOST,
+                server_get_this_server()->Name, "0.0.0");
+    client_send(server_get_this_server(), client, RPL_CREATED, "sometime");
+    client_send(server_get_this_server(), client, RPL_MYINFO,
+                server_get_this_server()->Name, "0.0.0", "", "");
+}
+
+bool
+client_can_register(Client *client)
+{
+    if(string_is_null_or_empty(client->Name) ||
+       string_is_null_or_empty(client->Username))
+    {
+        return false;
+    }
+
+    if(client->AccessLevel != Unregistered)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 bool
 client_set_nickname(Client *client, const char *nickname)
 {

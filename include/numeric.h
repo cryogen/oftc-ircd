@@ -27,6 +27,11 @@
 #ifndef oftc_ircd_numeric_h
 #define oftc_ircd_numeric_h
 
+#define RPL_WELCOME                 "001", ":Welcome to the Internet Relay Network %s"
+#define RPL_YOURHOST                "002", ":Your host is %s, running version %s"
+#define RPL_CREATED                 "003", ":This server was created %s"
+#define RPL_MYINFO                  "004", "%s %s %s %s"
+
 #define ERR_NONICKNAMEGIVEN         "431", ":No nickname given"
 #define ERR_NICKNAMEINUSE           "433", "%s :Nickname is already in use"
 #define ERR_NEEDMOREPARAMS          "461", "%s :Not enough parameters"

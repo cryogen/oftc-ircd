@@ -52,6 +52,11 @@ nick_handler(Client *client, Vector *params)
     }
 
     client_set_nickname(client, nick);
+
+    if(client_can_register(client))
+    {
+        client_register(client);
+    }
 }
 
 static bool
