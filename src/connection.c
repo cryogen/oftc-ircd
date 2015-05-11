@@ -76,7 +76,6 @@ connection_tls_handshake(Client *client)
     {
         if(ret == -1)
         {
-            printf("%s\n", tls_error(CurrentConnectionState.ServerContext));
             return false;
         }
     }
@@ -108,13 +107,13 @@ connection_on_read_callback(uv_stream_t *stream, ssize_t nRead, const uv_buf_t *
     {
         // TODO: exit client due to connection closed, probably get consolidated
         // with below
-        uv_close((uv_handle_t *)client->handle, NULL);
+        client_free(client);
         return;
     }
     else if(nRead < 0)
     {
         // TODO: exit client due to read error
-        uv_close((uv_handle_t *)client->handle, NULL);
+        client_free(client);
         return;
     }
 
@@ -135,7 +134,7 @@ connection_poll_callback(uv_poll_t *handle, int status, int events)
 
     if(status != 0)
     {
-        // TODO: Exit client
+        client_free(client);
         return;
     }
 
@@ -146,6 +145,7 @@ connection_poll_callback(uv_poll_t *handle, int status, int events)
     {
         if(ret == -1)
         {
+            client_free(client);
             return;
         }
     }
@@ -238,6 +238,7 @@ connection_accept(uv_stream_t *handle)
     {
         if(!connection_tls_handshake(newClient))
         {
+            client_free(newClient);
             return;
         }
     }
@@ -265,7 +266,7 @@ connection_start_read(Client *client)
         uv_poll_init(serverstate_get_event_loop(), handle, fd);
         if(uv_poll_start(handle, UV_READABLE, connection_poll_callback) < 0)
         {
-            // TODO: Exit client
+            client_free(client);
         }
     }
     else
@@ -274,7 +275,7 @@ connection_start_read(Client *client)
                          connection_allocate_buffer_callback,
                          connection_on_read_callback) < 0)
         {
-            // TODO: Exit client
+            client_free(client);
         }
     }
 }
@@ -311,4 +312,3 @@ connection_send(Client *client, char *buffer)
                  connection_write_callback);
     }
 }
-

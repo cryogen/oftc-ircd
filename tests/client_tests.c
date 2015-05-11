@@ -269,6 +269,7 @@ client_free_when_called_with_null_handle_frees_client()
 {
     Client *testClient = calloc(1, sizeof(Client));
 
+    hash_delete_string_ExpectAndReturn(NULL, NULL, NULL, NULL);
     Free_ExpectAndReturn(testClient, cmp_ptr);
 
     client_free(testClient);
@@ -286,7 +287,7 @@ client_free_when_called_with_handle_close_handle()
     testClient->handle = calloc(1, sizeof(uv_tcp_t));
 
     uv_close_ExpectAndReturn(NULL, NULL, NULL, NULL);
-    Free_ExpectAndReturn(NULL, NULL);
+    hash_delete_string_ExpectAndReturn(NULL, NULL, NULL, NULL);
     Free_ExpectAndReturn(testClient, cmp_ptr);
 
     client_free(testClient);

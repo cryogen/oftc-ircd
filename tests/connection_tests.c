@@ -227,7 +227,7 @@ connection_accept_when_tls_handshake_fails_return()
     client_new_ExpectAndReturn(&TestClient);
     uv_fileno_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
     tls_accept_socket_ExpectAndReturn(NULL, NULL, 0, -1, NULL, NULL, NULL);
-    tls_error_ExpectAndReturn(NULL, "Handshake failed", NULL);
+    client_free_ExpectAndReturn(&TestClient, cmp_ptr);
 
     connection_accept((uv_stream_t *)&Handle);
 
@@ -250,6 +250,7 @@ connection_accept_when_uv_fileno_fails_returns()
 
     client_new_ExpectAndReturn(&TestClient);
     uv_fileno_ExpectAndReturn(NULL, NULL, -1, NULL, NULL);
+    client_free_ExpectAndReturn(&TestClient, cmp_ptr);
 
     connection_accept((uv_stream_t *)&Handle);
     
@@ -274,7 +275,7 @@ connection_accept_when_tls_wants_read_calls_again()
     uv_fileno_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
     tls_accept_socket_ExpectAndReturn(NULL, NULL, 0, TLS_READ_AGAIN, NULL, NULL, NULL);
     tls_accept_socket_ExpectAndReturn(NULL, NULL, 0, -1, NULL, NULL, NULL);
-    tls_error_ExpectAndReturn(NULL, "Failed second time around", NULL);
+    client_free_ExpectAndReturn(&TestClient, cmp_ptr);
 
     connection_accept((uv_stream_t *)&Handle);
     
@@ -299,7 +300,7 @@ connection_accept_when_tls_wants_write_calls_again()
     uv_fileno_ExpectAndReturn(NULL, NULL, 0, NULL, NULL);
     tls_accept_socket_ExpectAndReturn(NULL, NULL, 0, TLS_WRITE_AGAIN, NULL, NULL, NULL);
     tls_accept_socket_ExpectAndReturn(NULL, NULL, 0, -1, NULL, NULL, NULL);
-    tls_error_ExpectAndReturn(NULL, "Failed second time around", NULL);
+    client_free_ExpectAndReturn(&TestClient, cmp_ptr);
 
     connection_accept((uv_stream_t *)&Handle);
 
@@ -463,7 +464,7 @@ connection_on_read_callback_when_eof_closes_connection()
 
     uv_read_start_ExpectAndReturn(NULL, NULL, NULL, 0, NULL, NULL,
                                   call_read_callback);
-    uv_close_ExpectAndReturn((uv_handle_t *)TestClient.handle, NULL, cmp_ptr, NULL);
+    client_free_ExpectAndReturn(&TestClient, cmp_ptr);
 
     connection_start_read(&TestClient);
 
@@ -477,7 +478,7 @@ connection_on_read_callback_when_error_closes_connection()
 
     uv_read_start_ExpectAndReturn(NULL, NULL, NULL, 0, NULL, NULL,
                                   call_read_callback);
-    uv_close_ExpectAndReturn((uv_handle_t *)TestClient.handle, NULL, cmp_ptr, NULL);
+    client_free_ExpectAndReturn(&TestClient, cmp_ptr);
 
     connection_start_read(&TestClient);
 
@@ -525,6 +526,8 @@ connection_poll_callback_when_bad_status_returns()
     uv_poll_init_ExpectAndReturn(NULL, NULL, 1, 0, NULL, NULL, NULL);
     uv_poll_start_ExpectAndReturn(&PollHandle, UV_READABLE, NULL, 0, cmp_ptr,
                                   cmp_int, call_poll_callback);
+
+    client_free_ExpectAndReturn(&TestClient, cmp_ptr);
 
     connection_start_read(&TestClient);
 
@@ -603,6 +606,7 @@ connection_poll_callback_when_tls_fails_returns()
     Malloc_ExpectAndReturn(0, NULL, NULL);
     tls_read_ExpectAndReturn(NULL, NULL, 0, NULL, -1, NULL,
                              NULL, NULL, NULL);
+    client_free_ExpectAndReturn(&TestClient, cmp_ptr);
 
     connection_start_read(&TestClient);
 
@@ -623,6 +627,7 @@ connection_start_when_read_fails_returns()
     TestClient.TlsContext = NULL;
     
     uv_read_start_ExpectAndReturn(NULL, NULL, NULL, -1, NULL, NULL, NULL);
+    client_free_ExpectAndReturn(&TestClient, cmp_ptr);
 
     connection_start_read(&TestClient);
 
@@ -639,6 +644,7 @@ connection_start_when_poll_fails_returns()
     serverstate_get_event_loop_ExpectAndReturn(NULL);
     uv_poll_init_ExpectAndReturn(NULL, NULL, 0, 0, NULL, NULL, NULL);
     uv_poll_start_ExpectAndReturn(NULL, 0, NULL, -1, NULL, NULL, NULL);
+    client_free_ExpectAndReturn(&TestClient, cmp_ptr);
 
     connection_start_read(&TestClient);
 

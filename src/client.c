@@ -145,6 +145,12 @@ client_dns_complete_callback(ClientDnsRequest *request, bool match)
     Free(request);
 }
 
+static void
+client_close_callback(uv_handle_t *handle)
+{
+    Free(handle);
+}
+
 void
 client_init()
 {
@@ -174,10 +180,11 @@ client_free(Client *client)
 
     if(client->handle != NULL)
     {
-        uv_close((uv_handle_t *)client->handle, NULL);
-        Free(client->handle);
+        uv_close((uv_handle_t *)client->handle, client_close_callback);
         client->handle = NULL;
     }
+
+    hash_delete_string(ClientHash, client->Name);
 
     Free(client);
 }
@@ -302,6 +309,8 @@ client_register(Client *client)
     client_send(server_get_this_server(), client, RPL_CREATED, "sometime");
     client_send(server_get_this_server(), client, RPL_MYINFO,
                 server_get_this_server()->Name, "0.0.0", "", "");
+
+    client->AccessLevel = Standard;
 }
 
 bool
